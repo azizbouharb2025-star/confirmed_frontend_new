@@ -1,0 +1,1 @@
+add dark mode support and every component should have dark mode support!

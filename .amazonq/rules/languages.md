@@ -1,0 +1,1 @@
+use i18n for english, french and arabic language support for the frontend and every component you generate make sure it has translation to all languages!!
