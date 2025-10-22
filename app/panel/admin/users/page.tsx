@@ -1,0 +1,160 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import api from '@/lib/api'
+
+interface User {
+  _id: string
+  name: string
+  email: string
+  role: string
+  isActive: boolean
+  lastLogin: string
+  shopId?: { name: string }
+  stats?: { totalOrders?: number; totalCalls?: number; confirmationRate?: number }
+}
+
+export default function UsersManagement() {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get(`/api/admin/users?page=1&limit=50&role=${roleFilter !== 'all' ? roleFilter : ''}`)
+      setUsers(response.data.users)
+    } catch (error) {
+      console.error('Failed to fetch users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleUserStatus = async (userId: string) => {
+    try {
+      await api.patch(`/api/admin/users/${userId}/toggle-status`, {})
+      fetchUsers()
+    } catch (error) {
+      console.error('Failed to toggle user status:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers()
+  }, [roleFilter])
+
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  return (
+    <ProtectedRoute allowedRoles={['admin']}>
+      <DashboardLayout userRole="admin">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-semibold">User Management</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Manage system users and permissions</p>
+          </div>
+
+          <div className="card p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-slate-400 light:text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="px-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Roles</option>
+                <option value="admin">Admin</option>
+                <option value="operator">Operator</option>
+                <option value="shop_owner">Shop Owner</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="p-4 border-b dark:border-slate-800 light:border-gray-200">
+              <h2 className="font-semibold flex items-center gap-2">
+                <UsersIcon className="h-5 w-5" />
+                Users ({filteredUsers.length})
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="p-4 space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="animate-pulse p-4 rounded-lg dark:bg-slate-800 light:bg-gray-100" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="dark:bg-slate-800 light:bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Shop</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Stats</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">
+                    {filteredUsers.map((user) => (
+                      <tr key={user._id} className="dark:hover:bg-slate-800/50 light:hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-sm">{user.name}</td>
+                        <td className="px-4 py-3 text-sm dark:text-slate-400 light:text-gray-600">{user.email}</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500">
+                            {user.role.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">{user.shopId?.name || '-'}</td>
+                        <td className="px-4 py-3 text-xs">
+                          {user.stats?.totalOrders && <div>Orders: {user.stats.totalOrders}</div>}
+                          {user.stats?.totalCalls && <div>Calls: {user.stats.totalCalls}</div>}
+                          {user.stats?.confirmationRate && <div>Rate: {user.stats.confirmationRate.toFixed(1)}%</div>}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            user.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
+                          }`}>
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => toggleUserStatus(user._id)}
+                            className="text-sm text-blue-500 hover:text-blue-600"
+                          >
+                            {user.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </DashboardLayout>
+    </ProtectedRoute>
+  )
+}
