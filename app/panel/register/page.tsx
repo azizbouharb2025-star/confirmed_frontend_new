@@ -1,41 +1,66 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { EnvelopeIcon, LockClosedIcon, UserIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, LockClosedIcon, UserIcon, PhoneIcon, GlobeAltIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 import AuthCard from '@/components/ui/AuthCard'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { useLanguage } from '@/hooks/useLanguage'
+import { useTheme } from '@/hooks/useTheme'
 import { api } from '@/lib/api'
 
 export default function RegisterPage() {
   const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
+  const { theme } = useTheme()
+  const [step, setStep] = useState(1)
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
+    phoneNumber: '',
+    whatsappNumber: '',
+    isWhatsappLinked: true,
+    country: 'Tunisia',
     role: 'shop_owner'
   })
 
+  useEffect(() => {
+    if (formData.isWhatsappLinked) {
+      setFormData(prev => ({ ...prev, whatsappNumber: prev.phoneNumber }))
+    }
+  }, [formData.phoneNumber, formData.isWhatsappLinked])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setErrors({})
     
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
-      setLoading(false)
+    const newErrors: {[key: string]: string} = {}
+    if (!validatePhone(formData.phoneNumber)) newErrors.phoneNumber = t('auth.invalidPhone')
+    if (!formData.isWhatsappLinked && !validatePhone(formData.whatsappNumber)) newErrors.whatsappNumber = t('auth.invalidWhatsapp')
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
     
+    setLoading(true)
+    
     try {
       const response = await api.auth.register({
-        name: formData.name,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
+        phoneNumber: formData.phoneNumber,
+        whatsappNumber: formData.whatsappNumber,
+        isWhatsappLinked: formData.isWhatsappLinked,
+        country: formData.country,
         role: formData.role
       })
       
@@ -53,91 +78,290 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const validatePhone = (phone: string) => {
+    return /^\+?[0-9]{8,15}$/.test(phone.replace(/\s/g, ''))
+  }
+
+  const validatePassword = (password: string) => {
+    return password.length >= 8
+  }
+
+  const nextStep = () => {
+    setErrors({})
+    if (step === 1) {
+      const newErrors: {[key: string]: string} = {}
+      if (!formData.firstName.trim()) newErrors.firstName = t('auth.firstNameRequired')
+      if (!formData.lastName.trim()) newErrors.lastName = t('auth.lastNameRequired')
+      if (!validateEmail(formData.email)) newErrors.email = t('auth.invalidEmail')
+      
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
+        return
+      }
+      setStep(2)
+    } else if (step === 2) {
+      const newErrors: {[key: string]: string} = {}
+      if (!validatePassword(formData.password)) newErrors.password = t('auth.passwordTooShort')
+      if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t('auth.passwordMismatch')
+      
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors)
+        return
+      }
+      setStep(3)
+    }
+  }
+
+  const prevStep = () => setStep(step - 1)
+
   return (
     <AuthCard 
-      title="Create Account" 
-      subtitle="Join the future of order management"
+      title={t('auth.signup')} 
+      subtitle={t('hero.description')}
     >
+      {/* Progress Steps */}
+      <div className="flex items-center justify-center mb-8">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex items-center">
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: step >= s ? 1 : 0.8 }}
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
+                step >= s
+                  ? 'bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] text-black shadow-lg'
+                  : theme === 'dark'
+                  ? 'bg-slate-700 text-slate-400'
+                  : 'bg-gray-200 text-gray-400'
+              }`}
+            >
+              {step > s ? <CheckCircleIcon className="w-6 h-6" /> : s}
+            </motion.div>
+            {s < 3 && (
+              <div className={`w-16 h-1 mx-2 rounded transition-all duration-300 ${
+                step > s
+                  ? 'bg-gradient-to-r from-[#ADFF2F] to-[#32CD32]'
+                  : theme === 'dark'
+                  ? 'bg-slate-700'
+                  : 'bg-gray-200'
+              }`} />
+            )}
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Input
-          label="Full Name"
-          type="text"
-          placeholder="Enter your full name"
-          icon={<UserIcon className="w-5 h-5" />}
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-        />
-        
-        <Input
-          label="Email"
-          type="email"
-          placeholder="Enter your email"
-          icon={<EnvelopeIcon className="w-5 h-5" />}
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          required
-        />
-        
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-300">
-            Role
-          </label>
-          <select
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm shadow-inner"
+        {/* Step 1: Personal Info */}
+        {step === 1 && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
           >
-            <option value="shop_owner" className="bg-slate-800">Shop Owner</option>
-            <option value="operator" className="bg-slate-800">Operator</option>
-          </select>
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Input
+                  label={t('auth.firstName')}
+                  type="text"
+                  placeholder={t('auth.firstName')}
+                  icon={<UserIcon className="w-5 h-5" />}
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  required
+                />
+                {errors.firstName && <p className="text-sm text-red-500 mt-1">{errors.firstName}</p>}
+              </div>
+              <div>
+                <Input
+                  label={t('auth.lastName')}
+                  type="text"
+                  placeholder={t('auth.lastName')}
+                  icon={<UserIcon className="w-5 h-5" />}
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  required
+                />
+                {errors.lastName && <p className="text-sm text-red-500 mt-1">{errors.lastName}</p>}
+              </div>
+            </div>
+            
+            <div>
+              <Input
+                label={t('auth.email')}
+                type="email"
+                placeholder="example@email.com"
+                icon={<EnvelopeIcon className="w-5 h-5" />}
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+              {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+            </div>
+
+            <Button type="button" onClick={nextStep} className="w-full">
+              {t('auth.continue')}
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Step 2: Security */}
+        {step === 2 && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div>
+              <Input
+                label={t('auth.password')}
+                type="password"
+                placeholder="••••••••"
+                icon={<LockClosedIcon className="w-5 h-5" />}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+              />
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                {t('auth.passwordHint')}
+              </p>
+              {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+            </div>
+            
+            <div>
+              <Input
+                label={t('auth.confirmPassword')}
+                type="password"
+                placeholder="••••••••"
+                icon={<LockClosedIcon className="w-5 h-5" />}
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                required
+              />
+              {errors.confirmPassword && <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>}
+            </div>
+
+
+
+            <div className="flex gap-3">
+              <Button type="button" onClick={prevStep} className="w-full" variant="outline">
+                {t('auth.back')}
+              </Button>
+              <Button type="button" onClick={nextStep} className="w-full">
+                {t('auth.continue')}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Contact Info */}
+        {step === 3 && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="space-y-6"
+          >
+            <div>
+              <Input
+                label={t('auth.phoneNumber')}
+                type="tel"
+                placeholder="+216 12 345 678"
+                icon={<PhoneIcon className="w-5 h-5" />}
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                required
+              />
+              {errors.phoneNumber && <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>}
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
+                  {t('auth.whatsappNumber')}
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.isWhatsappLinked}
+                    onChange={(e) => setFormData({ ...formData, isWhatsappLinked: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300 bg-white text-[#ADFF2F] focus:ring-[#ADFF2F]/50 dark:border-slate-600 dark:bg-slate-800"
+                  />
+                  <span className="ml-2 text-sm text-gray-600 dark:text-slate-400">
+                    {t('auth.sameAsPhone')}
+                  </span>
+                </label>
+              </div>
+              <div>
+                <Input
+                  type="tel"
+                  placeholder="+216 12 345 678"
+                  icon={<PhoneIcon className="w-5 h-5" />}
+                  value={formData.whatsappNumber}
+                  onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                  disabled={formData.isWhatsappLinked}
+                  required
+                />
+                {errors.whatsappNumber && <p className="text-sm text-red-500 mt-1">{errors.whatsappNumber}</p>}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                {t('auth.country')}
+              </label>
+              <div className="relative">
+                <GlobeAltIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+                <select
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-white/50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600/50 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]/50 focus:border-[#ADFF2F]/50 transition-all duration-300 backdrop-blur-sm shadow-inner"
+                >
+                  <option value="Tunisia">🇹🇳 Tunisia</option>
+                  <option value="Algeria">🇩🇿 Algeria</option>
+                  <option value="Morocco">🇲🇦 Morocco</option>
+                  <option value="Egypt">🇪🇬 Egypt</option>
+                  <option value="Libya">🇱🇾 Libya</option>
+                </select>
+              </div>
+            </div>
         
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Create a password"
-          icon={<LockClosedIcon className="w-5 h-5" />}
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          required
-        />
-        
-        <Input
-          label="Confirm Password"
-          type="password"
-          placeholder="Confirm your password"
-          icon={<LockClosedIcon className="w-5 h-5" />}
-          value={formData.confirmPassword}
-          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-          required
-        />
-        
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            required
-            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500/50"
-          />
-          <span className="ml-2 text-sm text-slate-300">
-            I agree to the{' '}
-            <Link href="#" className="text-primary-400 hover:text-primary-300">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="#" className="text-primary-400 hover:text-primary-300">
-              Privacy Policy
-            </Link>
-          </span>
-        </div>
-        
-        <Button
-          type="submit"
-          loading={loading}
-          className="w-full"
-        >
-          Create Account
-        </Button>
+            <div className="flex items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">
+              <input
+                type="checkbox"
+                required
+                className="w-4 h-4 rounded border-gray-300 bg-white text-[#ADFF2F] focus:ring-[#ADFF2F]/50 dark:border-slate-600 dark:bg-slate-800 flex-shrink-0"
+              />
+              <span className="ml-3 text-sm text-gray-700 dark:text-slate-300">
+                {t('auth.termsAgree')}{' '}
+                <Link href="/terms" className="text-[#32CD32] hover:text-[#ADFF2F] font-medium">
+                  {t('auth.termsService')}
+                </Link>{' '}
+                {t('auth.and')}{' '}
+                <Link href="/privacy" className="text-[#32CD32] hover:text-[#ADFF2F] font-medium">
+                  {t('auth.privacyPolicy')}
+                </Link>
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <Button type="button" onClick={prevStep} className="w-full" variant="outline">
+                {t('auth.back')}
+              </Button>
+              <Button
+                type="submit"
+                loading={loading}
+                className="w-full"
+              >
+                {t('auth.createAccount')}
+              </Button>
+            </div>
+          </motion.div>
+        )}
         
         <motion.div
           initial={{ opacity: 0 }}
@@ -145,12 +369,12 @@ export default function RegisterPage() {
           transition={{ delay: 0.3 }}
           className="text-center"
         >
-          <span className="text-slate-400">Already have an account? </span>
+          <span className="text-gray-600 dark:text-slate-400">{t('auth.alreadyHaveAccount')} </span>
           <Link 
             href="/panel/login"
-            className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+            className="text-[#32CD32] hover:text-[#ADFF2F] transition-colors font-medium"
           >
-            Sign in
+            {t('auth.signIn')}
           </Link>
         </motion.div>
       </form>

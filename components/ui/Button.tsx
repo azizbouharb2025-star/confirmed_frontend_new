@@ -28,9 +28,9 @@ export default function Button({
   const baseClasses = 'relative overflow-hidden rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500/50'
   
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-500 hover:to-purple-500 text-white shadow-neon hover:shadow-neon-lg',
-    secondary: 'glass-button text-slate-100',
-    ghost: 'hover:bg-white/10 text-slate-300 hover:text-white'
+    primary: 'bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] hover:from-[#32CD32] hover:to-[#ADFF2F] text-black font-bold shadow-lg hover:shadow-2xl hover:shadow-[#ADFF2F]/25',
+    secondary: 'bg-white/10 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-slate-100 hover:bg-white/20 dark:hover:bg-slate-700/50',
+    ghost: 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white'
   }
   
   const sizes = {

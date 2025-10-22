@@ -1,62 +1,63 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { ArrowRightIcon } from '@heroicons/react/24/outline'
-import LanguageSelector from '@/components/ui/LanguageSelector'
-import ThemeToggle from '@/components/ui/ThemeToggle'
+import { useTheme } from '@/hooks/useTheme'
+import HeroSection from '@/components/landing/HeroSection'
+import TrustSection from '@/components/landing/TrustSection'
+import ProductSection from '@/components/landing/ProductSection'
+import FeaturesSection from '@/components/landing/FeaturesSection'
+import MobileAppSection from '@/components/landing/MobileAppSection'
+import BenefitsSection from '@/components/landing/BenefitsSection'
+import IntegrationsSection from '@/components/landing/IntegrationsSection'
+import MidPageCTASection from '@/components/landing/MidPageCTASection'
+import PricingSection from '@/components/landing/PricingSection'
+import TestimonialsSection from '@/components/landing/TestimonialsSection'
+import CTASection from '@/components/landing/CTASection'
+import Footer from '@/components/landing/Footer'
+import Header from '@/components/landing/Header'
+import ParticleBackground from '@/components/ui/ParticleBackground'
+import FloatingActionButton from '@/components/ui/FloatingActionButton'
+import ScrollProgress from '@/components/ui/ScrollProgress'
 
 export default function HomePage() {
+  const { theme } = useTheme()
+  
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      {/* Language and Theme Controls */}
-      <div className="fixed top-4 right-4 flex items-center gap-4 z-50">
-        <LanguageSelector />
-        <ThemeToggle />
+    <div className={`min-h-screen transition-colors duration-300 relative overflow-hidden ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a] text-white' 
+        : 'bg-gradient-to-br from-white via-gray-50 to-blue-50 text-[#1A1A1A]'
+    }`}>
+      <ScrollProgress />
+      <ParticleBackground />
+      <div className="relative z-10">
+        <Header />
+        <main>
+          <HeroSection />
+          <TrustSection />
+          <section id="product">
+            <ProductSection />
+          </section>
+          <section id="features">
+            <FeaturesSection />
+          </section>
+          <MobileAppSection />
+          <BenefitsSection />
+          <IntegrationsSection />
+          <section id="pricing">
+            <PricingSection />
+          </section>
+          <MidPageCTASection />
+          <section id="testimonials">
+            <TestimonialsSection />
+          </section>
+          <section id="about">
+            <CTASection />
+          </section>
+        </main>
+        <Footer />
       </div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center max-w-4xl mx-auto"
-      >
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-6xl md:text-8xl font-bold gradient-text mb-8 floating-animation"
-        >
-          Confirmed
-        </motion.h1>
-        
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="text-xl md:text-2xl text-slate-300 mb-12"
-        >
-          Revolutionary AI-powered order confirmation platform
-        </motion.p>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-        >
-          <Link href="/panel/login" className="glass-button group">
-            <span className="flex items-center gap-2">
-              Access Dashboard
-              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </Link>
-          
-          <Link href="/panel/register" className="glass-button">
-            Get Started
-          </Link>
-        </motion.div>
-      </motion.div>
+      <FloatingActionButton />
     </div>
   )
 }

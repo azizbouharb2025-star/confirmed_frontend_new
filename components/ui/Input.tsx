@@ -19,14 +19,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         className="space-y-2"
       >
         {label && (
-          <label className="block text-sm font-medium text-slate-300">
+          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
             {label}
           </label>
         )}
         
         <div className="relative">
           {icon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-slate-400">
               {icon}
             </div>
           )}
@@ -34,9 +34,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             className={clsx(
-              'w-full px-4 py-3 bg-slate-800/50 border border-slate-600/50 rounded-xl',
-              'text-white placeholder-slate-400',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50',
+              'w-full px-4 py-3 bg-white/50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-600/50 rounded-xl',
+              'text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400',
+              'focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]/50 focus:border-[#ADFF2F]/50',
               'transition-all duration-300',
               'backdrop-blur-sm shadow-inner',
               icon && 'pl-10',

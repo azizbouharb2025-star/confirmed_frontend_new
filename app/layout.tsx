@@ -1,13 +1,19 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-import ParticleBackground from '@/components/ui/ParticleBackground'
+import ThemeProvider from '@/components/providers/ThemeProvider'
 import AuthDebug from '@/components/debug/AuthDebug'
+import CookieConsent from '@/components/ui/CookieConsent'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'Confirmed - AI Order Management',
   description: 'Revolutionary AI-powered order confirmation platform',
+  icons: {
+    icon: '/assets/logo3.png',
+    shortcut: '/assets/logo3.png',
+    apple: '/assets/logo3.png',
+  },
 }
 
 export default function RootLayout({
@@ -16,13 +22,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="fr">
       <body className={inter.className}>
-        <ParticleBackground />
-        <div className="relative z-10">
+        <ThemeProvider>
           {children}
-        </div>
+        </ThemeProvider>
         <AuthDebug />
+        <CookieConsent />
       </body>
     </html>
   )

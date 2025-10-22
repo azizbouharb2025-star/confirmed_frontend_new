@@ -114,16 +114,16 @@ export default function LoginPage() {
           <label className="flex items-center">
             <input
               type="checkbox"
-              className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-500 focus:ring-blue-500/50"
+              className="w-4 h-4 rounded border-gray-300 bg-white text-[#ADFF2F] focus:ring-[#ADFF2F]/50 dark:border-slate-600 dark:bg-slate-800"
             />
-            <span className="ml-2 text-sm text-slate-300">Remember me</span>
+            <span className="ml-2 text-sm text-gray-700 dark:text-slate-300">{t('auth.rememberMe')}</span>
           </label>
           
           <Link 
             href="/panel/forgot-password"
-            className="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+            className="text-sm text-[#32CD32] hover:text-[#ADFF2F] transition-colors"
           >
-            Forgot password?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
         
@@ -141,12 +141,12 @@ export default function LoginPage() {
           transition={{ delay: 0.3 }}
           className="text-center"
         >
-          <span className="text-slate-400">Don't have an account? </span>
+          <span className="text-gray-600 dark:text-slate-400">{t('auth.dontHaveAccount')} </span>
           <Link 
             href="/panel/register"
-            className="text-primary-400 hover:text-primary-300 transition-colors font-medium"
+            className="text-[#32CD32] hover:text-[#ADFF2F] transition-colors font-medium"
           >
-            Sign up
+            {t('auth.signup')}
           </Link>
         </motion.div>
       </form>
