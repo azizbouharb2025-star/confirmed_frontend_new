@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import { CogIcon, ServerIcon, CreditCardIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 export default function SystemSettings() {
+  const { t } = useLanguage()
   const [health, setHealth] = useState<any>(null)
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -48,15 +50,15 @@ export default function SystemSettings() {
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">System Settings</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">System health and configuration</p>
+            <h1 className="text-2xl font-semibold">{t('page.systemSettings')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.systemSettingsDesc')}</p>
           </div>
 
           {health && (
             <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <ServerIcon className="h-5 w-5" />
-                System Health
+                {t('section.systemHealth')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg dark:bg-slate-800 light:bg-gray-50">
@@ -93,15 +95,15 @@ export default function SystemSettings() {
               {health.systemMetrics && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600">Memory Usage</p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('label.memoryUsage')}</p>
                     <p className="text-lg font-semibold">{health.systemMetrics.memory?.percentage?.toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600">CPU Usage</p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('label.cpuUsage')}</p>
                     <p className="text-lg font-semibold">{health.systemMetrics.cpu?.usage?.toFixed(1)}%</p>
                   </div>
                   <div>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600">Disk Usage</p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('label.diskUsage')}</p>
                     <p className="text-lg font-semibold">{health.systemMetrics.disk?.percentage?.toFixed(1)}%</p>
                   </div>
                 </div>
@@ -112,7 +114,7 @@ export default function SystemSettings() {
           <div className="card p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <CreditCardIcon className="h-5 w-5" />
-              Subscription Plans
+              {t('section.subscriptionPlans')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {plans.map((plan) => (
@@ -124,16 +126,16 @@ export default function SystemSettings() {
                   </p>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="dark:text-slate-400 light:text-gray-600">Operators</span>
-                      <span className="font-medium">{plan.features.maxOperators === -1 ? 'Unlimited' : plan.features.maxOperators}</span>
+                      <span className="dark:text-slate-400 light:text-gray-600">{t('label.operators')}</span>
+                      <span className="font-medium">{plan.features.maxOperators === -1 ? t('label.unlimited') : plan.features.maxOperators}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="dark:text-slate-400 light:text-gray-600">AI Calls</span>
-                      <span className="font-medium">{plan.features.maxAICalls === -1 ? 'Unlimited' : plan.features.maxAICalls}</span>
+                      <span className="dark:text-slate-400 light:text-gray-600">{t('label.aiCalls')}</span>
+                      <span className="font-medium">{plan.features.maxAICalls === -1 ? t('label.unlimited') : plan.features.maxAICalls}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="dark:text-slate-400 light:text-gray-600">Shops</span>
-                      <span className="font-medium">{plan.features.maxShops === -1 ? 'Unlimited' : plan.features.maxShops}</span>
+                      <span className="dark:text-slate-400 light:text-gray-600">{t('label.shops')}</span>
+                      <span className="font-medium">{plan.features.maxShops === -1 ? t('label.unlimited') : plan.features.maxShops}</span>
                     </div>
                   </div>
                 </div>

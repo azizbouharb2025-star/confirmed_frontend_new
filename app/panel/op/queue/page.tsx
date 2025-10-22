@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { PhoneIcon, UserIcon, ShoppingBagIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 interface Order {
@@ -23,6 +24,7 @@ interface Order {
 }
 
 export default function CallQueue() {
+  const { t } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -68,15 +70,15 @@ export default function CallQueue() {
       <DashboardLayout userRole="operator">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">Call Queue</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Outgoing calls • {orders.length} pending</p>
+            <h1 className="text-2xl font-semibold">{t('page.callQueue')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.callQueueDesc')} • {orders.length} {t('common.pending')}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Orders List */}
             <div className="lg:col-span-1">
               <div className="card p-4">
-                <h2 className="font-semibold mb-4">Pending Calls ({orders.length})</h2>
+                <h2 className="font-semibold mb-4">{t('common.pending')} ({orders.length})</h2>
                 {loading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
@@ -86,7 +88,7 @@ export default function CallQueue() {
                 ) : orders.length === 0 ? (
                   <div className="text-center py-8">
                     <PhoneIcon className="h-12 w-12 mx-auto mb-2 dark:text-slate-600 light:text-gray-400" />
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600">No pending calls</p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('message.noPendingCalls')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -120,8 +122,8 @@ export default function CallQueue() {
                 {!selectedOrder ? (
                   <div className="flex flex-col items-center justify-center h-full text-center">
                     <PhoneIcon className="h-16 w-16 mb-4 dark:text-slate-600 light:text-gray-400" />
-                    <h3 className="text-xl font-semibold mb-2">Ready to Connect</h3>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600">Select an order from the queue to start calling</p>
+                    <h3 className="text-xl font-semibold mb-2">{t('message.readyToConnect')}</h3>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('message.selectOrder')}</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -136,19 +138,19 @@ export default function CallQueue() {
                       <div className="card p-4">
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <UserIcon className="h-5 w-5" />
-                          Customer Info
+                          {t('info.customerInfo')}
                         </h3>
                         <div className="space-y-2 text-sm">
                           <div>
-                            <p className="dark:text-slate-400 light:text-gray-600">Phone</p>
+                            <p className="dark:text-slate-400 light:text-gray-600">{t('info.phone')}</p>
                             <p className="font-medium">{selectedOrder.clientInfo.phone}</p>
                           </div>
                           <div>
-                            <p className="dark:text-slate-400 light:text-gray-600">Email</p>
+                            <p className="dark:text-slate-400 light:text-gray-600">{t('info.email')}</p>
                             <p className="font-medium">{selectedOrder.clientInfo.email}</p>
                           </div>
                           <div>
-                            <p className="dark:text-slate-400 light:text-gray-600">Location</p>
+                            <p className="dark:text-slate-400 light:text-gray-600">{t('info.location')}</p>
                             <p className="font-medium">{selectedOrder.clientInfo.address.city}, {selectedOrder.clientInfo.address.state}</p>
                           </div>
                         </div>
@@ -157,7 +159,7 @@ export default function CallQueue() {
                       <div className="card p-4">
                         <h3 className="font-semibold mb-3 flex items-center gap-2">
                           <ShoppingBagIcon className="h-5 w-5" />
-                          Order Summary
+                          {t('info.orderSummary')}
                         </h3>
                         <div className="space-y-2 text-sm">
                           {selectedOrder.items.map((item, i) => (
@@ -167,7 +169,7 @@ export default function CallQueue() {
                             </div>
                           ))}
                           <div className="pt-2 border-t dark:border-slate-700 light:border-gray-200 flex justify-between font-semibold">
-                            <span>Total</span>
+                            <span>{t('info.total')}</span>
                             <span className="text-green-500">${selectedOrder.totalAmount.toFixed(2)}</span>
                           </div>
                         </div>
@@ -175,11 +177,11 @@ export default function CallQueue() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2">Call Notes</label>
+                      <label className="block text-sm font-medium mb-2">{t('info.callNotes')}</label>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Add notes about the call..."
+                        placeholder={t('info.addNotes')}
                         className="w-full p-3 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                       />
@@ -192,7 +194,7 @@ export default function CallQueue() {
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                       >
                         <CheckCircleIcon className="h-5 w-5" />
-                        {processing ? 'Processing...' : 'Confirm'}
+                        {processing ? t('action.processing') : t('action.confirm')}
                       </button>
 
                       <button
@@ -201,7 +203,7 @@ export default function CallQueue() {
                         className="flex items-center justify-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                       >
                         <XCircleIcon className="h-5 w-5" />
-                        {processing ? 'Processing...' : 'Reject'}
+                        {processing ? t('action.processing') : t('action.reject')}
                       </button>
                     </div>
                   </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { UsersIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 interface User {
@@ -18,6 +19,7 @@ interface User {
 }
 
 export default function UsersManagement() {
+  const { t } = useLanguage()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -57,8 +59,8 @@ export default function UsersManagement() {
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">User Management</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Manage system users and permissions</p>
+            <h1 className="text-2xl font-semibold">{t('page.userManagement')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.userManagementDesc')}</p>
           </div>
 
           <div className="card p-4">
@@ -67,7 +69,7 @@ export default function UsersManagement() {
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-slate-400 light:text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder={t('common.search')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -79,7 +81,7 @@ export default function UsersManagement() {
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="px-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Roles</option>
+                <option value="all">{t('filter.allRoles')}</option>
                 <option value="admin">Admin</option>
                 <option value="operator">Operator</option>
                 <option value="shop_owner">Shop Owner</option>
@@ -106,13 +108,13 @@ export default function UsersManagement() {
                 <table className="w-full">
                   <thead className="dark:bg-slate-800 light:bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Shop</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Stats</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.name')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.email')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.role')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.shop')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.stats')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.status')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">
@@ -135,7 +137,7 @@ export default function UsersManagement() {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             user.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                           }`}>
-                            {user.isActive ? 'Active' : 'Inactive'}
+                            {user.isActive ? t('status.active') : t('status.inactive')}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -143,7 +145,7 @@ export default function UsersManagement() {
                             onClick={() => toggleUserStatus(user._id)}
                             className="text-sm text-blue-500 hover:text-blue-600"
                           >
-                            {user.isActive ? 'Deactivate' : 'Activate'}
+                            {user.isActive ? t('action.deactivate') : t('action.activate')}
                           </button>
                         </td>
                       </tr>

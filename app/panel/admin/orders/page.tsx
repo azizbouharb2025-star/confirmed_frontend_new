@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ShoppingBagIcon, MagnifyingGlassIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 interface Order {
@@ -18,6 +19,7 @@ interface Order {
 }
 
 export default function OrdersManagement() {
+  const { t } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -67,8 +69,8 @@ export default function OrdersManagement() {
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">Order Management</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">View and manage all orders</p>
+            <h1 className="text-2xl font-semibold">{t('page.orderManagement')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.orderManagementDesc')}</p>
           </div>
 
           <div className="card p-4">
@@ -77,7 +79,7 @@ export default function OrdersManagement() {
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-slate-400 light:text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search orders..."
+                  placeholder={t('common.search')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -89,10 +91,10 @@ export default function OrdersManagement() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="rejected">Rejected</option>
+                <option value="all">{t('filter.allStatus')}</option>
+                <option value="pending">{t('common.pending')}</option>
+                <option value="confirmed">{t('common.confirmed')}</option>
+                <option value="rejected">{t('common.rejected')}</option>
               </select>
             </div>
           </div>
@@ -116,13 +118,13 @@ export default function OrdersManagement() {
                 <table className="w-full">
                   <thead className="dark:bg-slate-800 light:bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Order ID</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Customer</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Shop</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Amount</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Operator</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.orderId')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.customer')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.shop')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.amount')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.status')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.operator')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.date')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">
@@ -143,7 +145,7 @@ export default function OrdersManagement() {
                             {order.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm">{order.assignedOperatorId?.name || 'Unassigned'}</td>
+                        <td className="px-4 py-3 text-sm">{order.assignedOperatorId?.name || t('status.unassigned')}</td>
                         <td className="px-4 py-3 text-sm dark:text-slate-400 light:text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>

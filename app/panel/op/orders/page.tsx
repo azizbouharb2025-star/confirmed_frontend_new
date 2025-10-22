@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ClipboardDocumentListIcon, CheckCircleIcon, XCircleIcon, ClockIcon, TruckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 interface Order {
@@ -17,6 +18,7 @@ interface Order {
 }
 
 export default function OrdersReception() {
+  const { t } = useLanguage()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -71,8 +73,8 @@ export default function OrdersReception() {
       <DashboardLayout userRole="operator">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">Orders - Reception</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">View and manage all order records</p>
+            <h1 className="text-2xl font-semibold">{t('page.ordersReception')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.ordersReceptionDesc')}</p>
           </div>
 
           {/* Filters */}
@@ -94,11 +96,11 @@ export default function OrdersReception() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="rejected">Rejected</option>
-                <option value="shipped">Shipped</option>
+                <option value="all">{t('filter.allStatus')}</option>
+                <option value="pending">{t('common.pending')}</option>
+                <option value="confirmed">{t('common.confirmed')}</option>
+                <option value="rejected">{t('common.rejected')}</option>
+                <option value="shipped">{t('common.shipped')}</option>
               </select>
             </div>
           </div>
@@ -128,12 +130,12 @@ export default function OrdersReception() {
                 <table className="w-full">
                   <thead className="dark:bg-slate-800 light:bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Order ID</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Customer</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Amount</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Operator</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.orderId')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.customer')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.amount')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.status')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.operator')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.date')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">

@@ -5,9 +5,11 @@ import { ChartBarIcon, TrophyIcon, CurrencyDollarIcon } from '@heroicons/react/2
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import MetricCard from '@/components/dashboard/MetricCard'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 export default function Analytics() {
+  const { t } = useLanguage()
   const [dashboard, setDashboard] = useState<any>(null)
   const [operators, setOperators] = useState<any[]>([])
   const [revenue, setRevenue] = useState<any>(null)
@@ -54,31 +56,31 @@ export default function Analytics() {
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">Analytics Dashboard</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Performance metrics and insights</p>
+            <h1 className="text-2xl font-semibold">{t('page.analytics')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.analyticsDesc')}</p>
           </div>
 
           {dashboard && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <MetricCard
-                title="Total Orders"
+                title={t('metric.totalOrders')}
                 value={dashboard.overview?.totalOrders || 0}
                 icon={<ChartBarIcon className="w-5 h-5" />}
               />
               <MetricCard
-                title="Confirmed"
+                title={t('metric.confirmed')}
                 value={dashboard.overview?.confirmedOrders || 0}
                 icon={<ChartBarIcon className="w-5 h-5" />}
               />
               <MetricCard
-                title="Confirmation Rate"
+                title={t('metric.confirmationRate')}
                 value={dashboard.overview?.confirmationRate || 0}
                 suffix="%"
                 decimals={1}
                 icon={<ChartBarIcon className="w-5 h-5" />}
               />
               <MetricCard
-                title="Avg Order Value"
+                title={t('metric.avgOrderValue')}
                 value={dashboard.overview?.averageOrderValue || 0}
                 prefix="$"
                 decimals={2}
@@ -91,19 +93,19 @@ export default function Analytics() {
             <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <CurrencyDollarIcon className="h-5 w-5" />
-                Revenue Overview
+                {t('section.revenueOverview')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm dark:text-slate-400 light:text-gray-600">Total Revenue</p>
+                  <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.totalRevenue')}</p>
                   <p className="text-2xl font-semibold text-green-500">${revenue.overview?.totalRevenue?.toFixed(2) || 0}</p>
                 </div>
                 <div>
-                  <p className="text-sm dark:text-slate-400 light:text-gray-600">Monthly Revenue</p>
+                  <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.monthlyRevenue')}</p>
                   <p className="text-2xl font-semibold">${revenue.overview?.monthlyRevenue?.toFixed(2) || 0}</p>
                 </div>
                 <div>
-                  <p className="text-sm dark:text-slate-400 light:text-gray-600">MRR</p>
+                  <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.mrr')}</p>
                   <p className="text-2xl font-semibold">${revenue.subscriptionRevenue?.monthlyRecurringRevenue?.toFixed(2) || 0}</p>
                 </div>
               </div>
@@ -113,18 +115,18 @@ export default function Analytics() {
           <div className="card p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <TrophyIcon className="h-5 w-5" />
-              Operator Performance
+              {t('section.operatorPerformance')}
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="dark:bg-slate-800 light:bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Rank</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Total Calls</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Confirmed</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Rate</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium">Efficiency</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('label.rank')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('table.name')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('label.totalCalls')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('metric.confirmed')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('label.rate')}</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium">{t('label.efficiency')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">

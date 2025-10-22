@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { BuildingStorefrontIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
 interface Shop {
@@ -20,6 +21,7 @@ interface Shop {
 }
 
 export default function ShopsManagement() {
+  const { t } = useLanguage()
   const [shops, setShops] = useState<Shop[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -49,8 +51,8 @@ export default function ShopsManagement() {
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-semibold">Shop Management</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Manage all registered shops</p>
+            <h1 className="text-2xl font-semibold">{t('page.shopManagement')}</h1>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.shopManagementDesc')}</p>
           </div>
 
           <div className="card p-4">
@@ -85,12 +87,12 @@ export default function ShopsManagement() {
                 <table className="w-full">
                   <thead className="dark:bg-slate-800 light:bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Domain</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Platform</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Subscription</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.name')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.domain')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.platform')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.subscription')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.status')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">{t('table.created')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">
@@ -116,7 +118,7 @@ export default function ShopsManagement() {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             shop.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
                           }`}>
-                            {shop.isActive ? 'Active' : 'Inactive'}
+                            {shop.isActive ? t('status.active') : t('status.inactive')}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm dark:text-slate-400 light:text-gray-600">
