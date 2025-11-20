@@ -1,9 +1,55 @@
-const API_BASE_URL = '/api'
+const getAuthToken = () => {
+  if (typeof window !== 'undefined') {
+    const authData = localStorage.getItem('auth-storage')
+    if (authData) {
+      const parsed = JSON.parse(authData)
+      return parsed.state?.token
+    }
+  }
+  return null
+}
 
-export const api = {
+const api = {
+  get: async (url: string) => {
+    const token = getAuthToken()
+    const response = await fetch(`http://localhost:3000${url}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      }
+    })
+    return { data: await response.json() }
+  },
+  
+  post: async (url: string, data: any) => {
+    const token = getAuthToken()
+    const response = await fetch(`http://localhost:3000${url}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+      body: JSON.stringify(data)
+    })
+    return { data: await response.json() }
+  },
+  
+  patch: async (url: string, data: any) => {
+    const token = getAuthToken()
+    const response = await fetch(`http://localhost:3000${url}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+      body: JSON.stringify(data)
+    })
+    return { data: await response.json() }
+  },
+  
   auth: {
     login: async (email: string, password: string) => {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`http://localhost:3000/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -14,7 +60,7 @@ export const api = {
     },
     
     register: async (userData: any) => {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`http://localhost:3000/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,7 +71,7 @@ export const api = {
     },
     
     me: async (token: string) => {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      const response = await fetch(`http://localhost:3000/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         }
@@ -34,3 +80,6 @@ export const api = {
     }
   }
 }
+
+export default api
+export { api }

@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { forwardRef } from 'react'
 import { clsx } from 'clsx'
 
@@ -40,23 +39,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               'transition-all duration-300',
               'backdrop-blur-sm shadow-inner',
               icon && 'pl-10',
-              error && 'border-red-500/50 focus:ring-red-500/50',
+              error && 'border-red-500 focus:ring-red-500',
               className
             )}
             {...props}
           />
         </div>
         
-        {error && (
-          <motion.p
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm text-red-400"
-          >
-            {error}
-          </motion.p>
-        )}
-      </motion.div>
+        {error && <p className="text-sm text-red-500">{error}</p>}
+      </div>
     )
   }
 )

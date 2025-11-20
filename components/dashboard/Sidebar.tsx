@@ -1,22 +1,12 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  XMarkIcon,
-  HomeIcon,
-  ShoppingBagIcon,
-  UsersIcon,
-  ChartBarIcon,
-  CogIcon,
-  PhoneIcon,
-  BuildingStorefrontIcon,
-  CreditCardIcon,
-  TruckIcon,
-  DocumentTextIcon
-} from '@heroicons/react/24/outline'
+import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, CreditCardIcon, TruckIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
+import { useTheme } from '@/hooks/useTheme'
+import { TranslationKey } from '@/lib/i18n'
+import Image from 'next/image'
 
 interface SidebarProps {
   isOpen: boolean
@@ -24,7 +14,7 @@ interface SidebarProps {
   userRole: 'admin' | 'operator' | 'shop_owner'
 }
 
-const getNavigationItems = (t: (key: string) => string) => ({
+const getNavigationItems = (t: (key: TranslationKey) => string) => ({
   admin: [
     { name: t('nav.dashboard'), href: '/panel/admin', icon: HomeIcon },
     { name: t('nav.users'), href: '/panel/admin/users', icon: UsersIcon },
@@ -53,122 +43,73 @@ const getNavigationItems = (t: (key: string) => string) => ({
 export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
+  const { theme } = useTheme()
   const navigation = getNavigationItems(t)[userRole]
-
-  const sidebarVariants = {
-    open: { x: 0 },
-    closed: { x: '-100%' }
-  }
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <motion.div
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="flex grow flex-col gap-y-5 overflow-y-auto glass-card border-0 border-r border-white/10 px-6 pb-4"
-        >
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r dark:bg-slate-900 dark:border-slate-800 light:bg-white light:border-gray-200 px-6">
           <div className="flex h-16 shrink-0 items-center">
-            <h1 className="text-2xl font-bold gradient-text">Confirmed</h1>
+            <Link href="/">
+              <Image src={theme === 'dark' ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} className="object-contain" />
+            </Link>
           </div>
           
           <nav className="flex flex-1 flex-col">
-            <ul role="list" className="flex flex-1 flex-col gap-y-7">
-              <li>
-                <ul role="list" className="-mx-2 space-y-1">
-                  {navigation.map((item, index) => {
-                    const isActive = pathname === item.href
-                    return (
-                      <motion.li
-                        key={item.name}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <Link
-                          href={item.href}
-                          className={`
-                            group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold transition-all duration-300
-                            ${isActive 
-                              ? 'bg-gradient-to-r from-primary-600/20 to-purple-600/20 text-white border border-primary-500/30 shadow-neon' 
-                              : 'text-slate-300 hover:text-white hover:bg-white/10'
-                            }
-                          `}
-                        >
-                          <item.icon className="h-6 w-6 shrink-0" />
-                          {item.name}
-                        </Link>
-                      </motion.li>
-                    )
-                  })}
-                </ul>
-              </li>
+            <ul className="space-y-1">
+              {navigation.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <li key={item.name}>
+                    <Link href={item.href} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      isActive 
+                        ? 'bg-blue-500 text-white' 
+                        : 'dark:text-slate-300 dark:hover:bg-slate-800 light:text-gray-700 light:hover:bg-gray-100'
+                    }`}>
+                      <item.icon className="h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Mobile sidebar */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial="closed"
-            animate="open"
-            exit="closed"
-            variants={sidebarVariants}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 z-50 flex w-72 flex-col lg:hidden"
-          >
-            <div className="flex grow flex-col gap-y-5 overflow-y-auto glass-card px-6 pb-4">
-              <div className="flex h-16 shrink-0 items-center justify-between">
-                <h1 className="text-2xl font-bold gradient-text">Confirmed</h1>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-xl hover:bg-white/10 transition-colors"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-              </div>
-              
-              <nav className="flex flex-1 flex-col">
-                <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                  <li>
-                    <ul role="list" className="-mx-2 space-y-1">
-                      {navigation.map((item, index) => {
-                        const isActive = pathname === item.href
-                        return (
-                          <motion.li
-                            key={item.name}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                          >
-                            <Link
-                              href={item.href}
-                              onClick={onClose}
-                              className={`
-                                group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold transition-all duration-300
-                                ${isActive 
-                                  ? 'bg-gradient-to-r from-primary-600/20 to-purple-600/20 text-white border border-primary-500/30 shadow-neon' 
-                                  : 'text-slate-300 hover:text-white hover:bg-white/10'
-                                }
-                              `}
-                            >
-                              <item.icon className="h-6 w-6 shrink-0" />
-                              {item.name}
-                            </Link>
-                          </motion.li>
-                        )
-                      })}
-                    </ul>
-                  </li>
-                </ul>
-              </nav>
+      {isOpen && (
+        <div className="fixed inset-y-0 z-50 flex w-64 flex-col lg:hidden">
+          <div className="flex grow flex-col gap-y-5 overflow-y-auto dark:bg-slate-900 light:bg-white px-6 border-r dark:border-slate-800 light:border-gray-200">
+            <div className="flex h-16 shrink-0 items-center justify-between">
+              <Image src={theme === 'dark' ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} />
+              <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-gray-100">
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            
+            <nav className="flex flex-1 flex-col">
+              <ul className="space-y-1">
+                {navigation.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <li key={item.name}>
+                      <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isActive 
+                          ? 'bg-blue-500 text-white' 
+                          : 'dark:text-slate-300 dark:hover:bg-slate-800 light:text-gray-700 light:hover:bg-gray-100'
+                      }`}>
+                        <item.icon className="h-5 w-5" />
+                        {item.name}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
+          </div>
+        </div>
+      )}
     </>
   )
 }
