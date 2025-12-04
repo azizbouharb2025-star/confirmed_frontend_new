@@ -31,12 +31,10 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
   ],
   shop_owner: [
     { name: t('nav.dashboard'), href: '/panel/client', icon: HomeIcon },
+    { name: t('nav.myShops'), href: '/panel/client/shops', icon: BuildingStorefrontIcon },
     { name: t('nav.orders'), href: '/panel/client/orders', icon: ShoppingBagIcon },
     { name: t('nav.products'), href: '/panel/client/products', icon: DocumentTextIcon },
-    { name: t('nav.analytics'), href: '/panel/client/analytics', icon: ChartBarIcon },
-    { name: t('nav.delivery'), href: '/panel/client/delivery', icon: TruckIcon },
-    { name: t('nav.subscription'), href: '/panel/client/subscription', icon: CreditCardIcon },
-    { name: t('nav.settings'), href: '/panel/client/settings', icon: CogIcon },
+    { name: t('nav.api'), href: '/panel/client/api', icon: CogIcon },
   ]
 })
 

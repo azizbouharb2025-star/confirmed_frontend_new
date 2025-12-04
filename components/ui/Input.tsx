@@ -12,11 +12,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, icon, className, ...props }, ref) => {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-2"
-      >
+      <div className="space-y-2">
         {label && (
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
             {label}
