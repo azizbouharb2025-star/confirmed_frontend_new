@@ -6,6 +6,8 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
+import toast from 'react-hot-toast'
+import logger from '@/lib/logger'
 
 interface User {
   _id: string
@@ -16,7 +18,10 @@ interface User {
   lastLogin: string
   shopId?: { name: string }
   stats?: { totalOrders?: number; totalCalls?: number; confirmationRate?: number }
+  subscription?: { plan: string }
 }
+
+type SubscriptionPlan = 'starter' | 'pro' | 'business' | 'enterprise'
 
 export default function UsersManagement() {
   const { t } = useLanguage()
@@ -30,7 +35,7 @@ export default function UsersManagement() {
       const response = await api.get(`/api/admin/users?page=1&limit=50&role=${roleFilter !== 'all' ? roleFilter : ''}`)
       setUsers(response.data.users)
     } catch (error) {
-      console.error('Failed to fetch users:', error)
+      logger.error('Failed to fetch users:', error, 'Admin')
     } finally {
       setLoading(false)
     }
@@ -41,7 +46,27 @@ export default function UsersManagement() {
       await api.patch(`/api/admin/users/${userId}/toggle-status`, {})
       fetchUsers()
     } catch (error) {
-      console.error('Failed to toggle user status:', error)
+      logger.error('Failed to toggle user status:', error, 'Admin')
+    }
+  }
+
+  const updateUserSubscription = async (userId: string, plan: SubscriptionPlan) => {
+    try {
+      logger.debug('Updating subscription for user:', { userId, plan }, 'Admin')
+      const response = await api.patch(`/api/admin/users/${userId}/subscription`, { plan })
+      logger.debug('Subscription update response:', response.data, 'Admin')
+      toast.success(`Subscription updated to ${plan}`)
+      // Update user locally since backend may not return subscription in users list
+      setUsers(prev => prev.map(user => 
+        user._id === userId 
+          ? { ...user, subscription: { plan } }
+          : user
+      ))
+    } catch (error) {
+      logger.error('Failed to update subscription:', error, 'Admin')
+      const err = error as { response?: { data?: { message?: string } }; message?: string }
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to update subscription'
+      toast.error(errorMsg)
     }
   }
 
@@ -50,8 +75,8 @@ export default function UsersManagement() {
   }, [roleFilter])
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -111,6 +136,7 @@ export default function UsersManagement() {
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.name')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.email')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.role')}</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Subscription</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.shop')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.stats')}</th>
                       <th className="px-4 py-3 text-left text-sm font-medium">{t('table.status')}</th>
@@ -126,6 +152,26 @@ export default function UsersManagement() {
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500">
                             {user.role.replace('_', ' ')}
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {user.role === 'shop_owner' ? (
+                            <select
+                              value={user.subscription?.plan || 'starter'}
+                              onChange={(e) => {
+                                e.stopPropagation()
+                                updateUserSubscription(user._id, e.target.value as SubscriptionPlan)
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-2 py-1 text-xs rounded border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                            >
+                              <option value="starter">Starter</option>
+                              <option value="pro">Pro</option>
+                              <option value="business">Business</option>
+                              <option value="enterprise">Enterprise</option>
+                            </select>
+                          ) : (
+                            <span className="text-xs dark:text-slate-400 light:text-gray-500">-</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm">{user.shopId?.name || '-'}</td>
                         <td className="px-4 py-3 text-xs">

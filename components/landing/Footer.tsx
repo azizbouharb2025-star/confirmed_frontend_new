@@ -197,7 +197,7 @@ export default function Footer() {
           <p className={`text-sm ${
             theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#6C757D]'
           }`}>
-            © 2024 Confirmed. {t('footer.rights')}
+            © 2025 Confirmed. {t('footer.rights')}
           </p>
           
           <div className="flex space-x-6">

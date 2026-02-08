@@ -7,9 +7,12 @@ import { EnvelopeIcon, LockClosedIcon, UserIcon, PhoneIcon, GlobeAltIcon, CheckC
 import AuthCard from '@/components/ui/AuthCard'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import AuthRedirect from '@/components/auth/AuthRedirect'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { api } from '@/lib/api'
+import logger from '@/lib/logger'
+import toast from 'react-hot-toast'
 
 export default function RegisterPage() {
   const { t } = useLanguage()
@@ -65,14 +68,14 @@ export default function RegisterPage() {
       })
       
       if (response.token) {
-        alert('Registration successful! Please login.')
+        toast.success('Registration successful! Please login.')
         window.location.href = '/panel/login'
       } else {
-        alert(response.error || 'Registration failed')
+        toast.error(response.error || 'Registration failed')
       }
     } catch (error) {
-      console.error('Registration error:', error)
-      alert('Registration failed. Please try again.')
+      logger.error('Registration error:', error, 'Auth')
+      toast.error('Registration failed. Please try again.')
     }
     
     setLoading(false)
@@ -119,10 +122,11 @@ export default function RegisterPage() {
   const prevStep = () => setStep(step - 1)
 
   return (
-    <AuthCard 
-      title={t('auth.signup')} 
-      subtitle={t('hero.description')}
-    >
+    <AuthRedirect redirectIfAuth={true}>
+      <AuthCard 
+        title={t('auth.signup')} 
+        subtitle={t('hero.description')}
+      >
       {/* Progress Steps */}
       <div className="flex items-center justify-center mb-8">
         {[1, 2, 3].map((s) => (
@@ -379,5 +383,6 @@ export default function RegisterPage() {
         </motion.div>
       </form>
     </AuthCard>
+    </AuthRedirect>
   )
 }

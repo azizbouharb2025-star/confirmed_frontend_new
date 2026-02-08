@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
+import logger from '@/lib/logger'
 
 interface Order {
   _id: string
@@ -29,7 +30,7 @@ export default function OrdersReception() {
       const response = await api.get('/api/orders?page=1&limit=50')
       setOrders(response.data.orders)
     } catch (error) {
-      console.error('Failed to fetch orders:', error)
+      logger.error('Failed to fetch orders:', error, 'Orders')
     } finally {
       setLoading(false)
     }

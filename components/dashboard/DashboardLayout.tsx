@@ -5,6 +5,8 @@ import { Bars3Icon, BellIcon, UserCircleIcon, ChevronDownIcon } from '@heroicons
 import Sidebar from './Sidebar'
 import LanguageSelector from '@/components/ui/LanguageSelector'
 import ThemeToggle from '@/components/ui/ThemeToggle'
+import ConnectionStatus from '@/components/ui/ConnectionStatus'
+import RealTimeNotifications from '@/components/ui/RealTimeNotifications'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 
@@ -18,6 +20,8 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const [profileOpen, setProfileOpen] = useState(false)
   const { logout, user } = useAuth()
   const { t } = useLanguage()
+  
+
 
   return (
     <div className="min-h-screen">
@@ -37,6 +41,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
+              <ConnectionStatus />
               <LanguageSelector />
               <ThemeToggle />
               
@@ -66,6 +71,9 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
 
         <main className="p-6">{children}</main>
       </div>
+      
+      {/* Real-time notifications */}
+      <RealTimeNotifications />
     </div>
   )
 }

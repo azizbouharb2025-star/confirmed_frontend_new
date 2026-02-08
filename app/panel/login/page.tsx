@@ -7,12 +7,17 @@ import { EnvelopeIcon, LockClosedIcon, EyeIcon, EyeSlashIcon } from '@heroicons/
 import AuthCard from '@/components/ui/AuthCard'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import AuthRedirect from '@/components/auth/AuthRedirect'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/hooks/useAuth'
+import { useSession } from '@/hooks/useSession'
+import logger from '@/lib/logger'
+import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const { t } = useLanguage()
   const { login } = useAuth()
+  const { redirectToDashboard } = useSession()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -44,38 +49,27 @@ export default function LoginPage() {
         // Login user with real data from backend
         login(data.user, data.token)
         
-        // Role-based redirect
+        // Role-based redirect using session management
         setTimeout(() => {
-          switch (data.user.role) {
-            case 'admin':
-              window.location.href = '/panel/admin'
-              break
-            case 'operator':
-              window.location.href = '/panel/op'
-              break
-            case 'shop_owner':
-              window.location.href = '/panel/client'
-              break
-            default:
-              window.location.href = '/panel/client'
-          }
+          redirectToDashboard()
         }, 200)
       } else {
-        alert(data.error || 'Login failed')
+        toast.error(data.error || 'Login failed')
       }
     } catch (error) {
-      console.error('Login error:', error)
-      alert('Login failed. Please check your connection.')
+      logger.error('Login error:', error, 'Auth')
+      toast.error('Login failed. Please check your connection.')
     }
     
     setLoading(false)
   }
 
   return (
-    <AuthCard 
-      title={t('auth.welcome')} 
-      subtitle={t('auth.signin')}
-    >
+    <AuthRedirect redirectIfAuth={true}>
+      <AuthCard 
+        title={t('auth.welcome')} 
+        subtitle={t('auth.signin')}
+      >
       <form onSubmit={handleSubmit} className="space-y-6">
         <Input
           label={t('auth.email')}
@@ -151,5 +145,6 @@ export default function LoginPage() {
         </motion.div>
       </form>
     </AuthCard>
+    </AuthRedirect>
   )
 }

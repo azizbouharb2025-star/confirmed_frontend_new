@@ -14,25 +14,25 @@ export default function FloatingActionButton() {
       icon: ChatBubbleLeftRightIcon,
       label: 'Live Chat',
       color: 'from-blue-500 to-blue-600',
-      onClick: () => console.log('Live chat')
+      onClick: () => { /* TODO: Implement live chat */ }
     },
     {
       icon: PhoneIcon,
       label: 'Call Us',
       color: 'from-green-500 to-green-600',
-      onClick: () => console.log('Call us')
+      onClick: () => { /* TODO: Implement call action */ }
     },
     {
       icon: EnvelopeIcon,
       label: 'Email',
       color: 'from-purple-500 to-purple-600',
-      onClick: () => console.log('Email')
+      onClick: () => { /* TODO: Implement email action */ }
     },
     {
       icon: QuestionMarkCircleIcon,
       label: 'Help',
       color: 'from-orange-500 to-orange-600',
-      onClick: () => console.log('Help')
+      onClick: () => { /* TODO: Implement help action */ }
     }
   ]
 

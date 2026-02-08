@@ -2,12 +2,15 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import type { SubscriptionPlan } from '@/types/subscription'
+import logger from '@/lib/logger'
 
 interface User {
   id: string
   name: string
   email: string
   role: 'admin' | 'operator' | 'shop_owner'
+  subscriptionPlan?: SubscriptionPlan
 }
 
 interface AuthStore {
@@ -25,11 +28,11 @@ export const useAuth = create<AuthStore>()(
       token: null,
       isAuthenticated: false,
       login: (user: User, token: string) => {
-        console.log('Login called with user:', user)
+        logger.debug('Login called with user:', user, 'Auth')
         set({ user, token, isAuthenticated: true })
       },
       logout: () => {
-        console.log('Logout called')
+        logger.debug('Logout called', undefined, 'Auth')
         set({ user: null, token: null, isAuthenticated: false })
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth-storage')
@@ -41,7 +44,7 @@ export const useAuth = create<AuthStore>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        console.log('Auth rehydrated:', state)
+        logger.debug('Auth rehydrated:', state, 'Auth')
       }
     }
   )

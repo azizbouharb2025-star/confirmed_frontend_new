@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
+import { useSession } from '@/hooks/useSession'
 import LanguageSelector from '@/components/ui/LanguageSelector'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import Link from 'next/link'
@@ -20,6 +21,7 @@ const scrollToSection = (sectionId: string) => {
 export default function Header() {
   const { t } = useLanguage()
   const { theme } = useTheme()
+  const { isAuthenticated, getDashboardPath } = useSession()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { scrollY } = useScroll()
@@ -113,11 +115,13 @@ export default function Header() {
             whileTap={{ scale: 0.95 }}
           >
             <Link 
-              href="/panel/register"
+              href={isAuthenticated ? getDashboardPath() : "/panel/register"}
               className="relative px-3 sm:px-6 py-2 rounded-full text-xs sm:text-base font-semibold transition-all duration-300 overflow-hidden group bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] text-black shadow-md hover:shadow-lg hover:shadow-[#ADFF2F]/25 whitespace-nowrap"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-[#32CD32] to-[#ADFF2F] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
-              <span className="relative z-10">{t('nav.getStarted')}</span>
+              <span className="relative z-10">
+                {isAuthenticated ? t('nav.myDashboard') : t('nav.getStarted')}
+              </span>
             </Link>
           </motion.div>
           <button

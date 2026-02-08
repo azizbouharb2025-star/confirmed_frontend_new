@@ -21,6 +21,8 @@ import ScrollProgress from '@/components/ui/ScrollProgress'
 
 export default function HomePage() {
   const { theme } = useTheme()
+
+
   
   return (
     <div className={`min-h-screen transition-colors duration-300 relative overflow-hidden ${

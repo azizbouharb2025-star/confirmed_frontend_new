@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
+import logger from '@/lib/logger'
 
 interface Shop {
   _id: string
@@ -31,7 +32,7 @@ export default function ShopsManagement() {
       const response = await api.get('/api/shops')
       setShops(response.data)
     } catch (error) {
-      console.error('Failed to fetch shops:', error)
+      logger.error('Failed to fetch shops:', error, 'Admin')
     } finally {
       setLoading(false)
     }

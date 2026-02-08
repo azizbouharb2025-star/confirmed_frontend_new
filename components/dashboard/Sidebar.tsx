@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, CreditCardIcon, TruckIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, CreditCardIcon, TruckIcon, DocumentTextIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { TranslationKey } from '@/lib/i18n'
@@ -34,6 +34,7 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
     { name: t('nav.myShops'), href: '/panel/client/shops', icon: BuildingStorefrontIcon },
     { name: t('nav.orders'), href: '/panel/client/orders', icon: ShoppingBagIcon },
     { name: t('nav.products'), href: '/panel/client/products', icon: DocumentTextIcon },
+    { name: t('nav.complaints'), href: '/panel/client/complaints', icon: ExclamationCircleIcon },
     { name: t('nav.api'), href: '/panel/client/api', icon: CogIcon },
   ]
 })
@@ -42,7 +43,8 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   const pathname = usePathname()
   const { t } = useLanguage()
   const { theme } = useTheme()
-  const navigation = getNavigationItems(t)[userRole]
+  const navigationItems = getNavigationItems(t)
+  const navigation = navigationItems[userRole] || navigationItems.shop_owner
 
   return (
     <>

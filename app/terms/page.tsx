@@ -12,7 +12,7 @@ export default function TermsPage() {
   const content = {
     en: {
       title: 'Terms of Service',
-      lastUpdate: 'Last updated: January 2024',
+      lastUpdate: 'Last updated: January 2025',
       sections: [
         { title: '1. Acceptance', content: 'By accessing Confirmed, you agree to these Terms of Service and Tunisian Law n°2004-63.' },
         { title: '2. Service Description', content: 'Confirmed provides AI-powered order confirmation services for e-commerce businesses in Tunisia.' },
@@ -31,7 +31,7 @@ export default function TermsPage() {
     },
     fr: {
       title: 'Conditions d\'Utilisation',
-      lastUpdate: 'Dernière mise à jour : Janvier 2024',
+      lastUpdate: 'Dernière mise à jour : Janvier 2025',
       sections: [
         { title: '1. Acceptation', content: 'En accédant à Confirmed, vous acceptez ces Conditions et la Loi tunisienne n°2004-63.' },
         { title: '2. Description du Service', content: 'Confirmed fournit des services de confirmation de commandes par IA pour les entreprises e-commerce en Tunisie.' },
@@ -50,7 +50,7 @@ export default function TermsPage() {
     },
     ar: {
       title: 'شروط الخدمة',
-      lastUpdate: 'آخر تحديث: يناير 2024',
+      lastUpdate: 'آخر تحديث: يناير 2025',
       sections: [
         { title: '1. القبول', content: 'بالوصول إلى Confirmed، توافق على هذه الشروط والقانون التونسي رقم 2004-63.' },
         { title: '2. وصف الخدمة', content: 'توفر Confirmed خدمات تأكيد الطلبات بالذكاء الاصطناعي لشركات التجارة الإلكترونية في تونس.' },

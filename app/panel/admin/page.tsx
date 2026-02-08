@@ -1,75 +1,249 @@
 'use client'
 
-import { UsersIcon, ShoppingBagIcon, CurrencyDollarIcon, ChartBarIcon, PhoneIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
+/**
+ * Admin Dashboard Page
+ * Displays system-wide KPIs, charts, activity feed, and system health
+ * Requirements: 8.1, 8.2, 8.3, 8.4
+ * 
+ * Feature: subscription-tiered-dashboards, Property 9: Admin dashboard shows system-wide KPIs
+ * Validates: Requirements 8.1
+ */
+
+import { useState, useEffect } from 'react'
+import { UsersIcon, ShoppingBagIcon, CurrencyDollarIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
+import api from '@/lib/api'
+import logger from '@/lib/logger'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import MetricCard from '@/components/dashboard/MetricCard'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import OrdersChartWidget from '@/components/dashboard/widgets/OrdersChartWidget'
+import RevenueChartWidget from '@/components/dashboard/widgets/RevenueChartWidget'
+import ActivityFeedWidget from '@/components/dashboard/widgets/ActivityFeedWidget'
+import SystemHealthWidget from '@/components/dashboard/widgets/SystemHealthWidget'
+import type { OrdersTrendData, TimePeriod } from '@/components/dashboard/widgets/OrdersChartWidget'
+import type { RevenueTrendData, ViewMode } from '@/components/dashboard/widgets/RevenueChartWidget'
+import type { Activity } from '@/components/dashboard/widgets/ActivityFeedWidget'
+import type { ServiceHealth } from '@/components/dashboard/widgets/SystemHealthWidget'
 
-const metrics = [
-  { title: 'Total Users', value: 1247, change: 12.5, icon: <UsersIcon className="w-5 h-5" /> },
-  { title: 'Total Orders', value: 8934, change: 8.2, icon: <ShoppingBagIcon className="w-5 h-5" /> },
-  { title: 'Revenue', value: 245750, change: 15.3, icon: <CurrencyDollarIcon className="w-5 h-5" />, prefix: '$' },
-  { title: 'Active Shops', value: 156, change: 5.7, icon: <BuildingStorefrontIcon className="w-5 h-5" /> },
-  { title: 'Confirmation Rate', value: 87.5, change: 2.1, icon: <PhoneIcon className="w-5 h-5" />, suffix: '%', decimals: 1 },
-  { title: 'System Health', value: 99.9, change: 0.1, icon: <ChartBarIcon className="w-5 h-5" />, suffix: '%', decimals: 1 }
-]
+/**
+ * Admin KPI data structure
+ * Property 9: Admin dashboard shows system-wide KPIs
+ */
+export interface AdminKPIs {
+  totalUsers: number;
+  totalUsersChange: number;
+  totalOrders: number;
+  totalOrdersChange: number;
+  revenue: number;
+  revenueChange: number;
+  activeShops: number;
+  activeShopsChange: number;
+}
 
-const activities = [
-  { action: 'New user registered', detail: 'john@example.com', time: '2 min ago' },
-  { action: 'Order confirmed', detail: '#ORD-001', time: '5 min ago' },
-  { action: 'Shop connected', detail: 'TechStore', time: '10 min ago' },
-  { action: 'Payment processed', detail: '$299.99', time: '15 min ago' }
-]
+/**
+ * Check if admin KPIs contain all required metrics
+ * Property 9: Admin dashboard shows system-wide KPIs
+ */
+export function hasRequiredAdminKPIs(kpis: AdminKPIs): boolean {
+  return (
+    typeof kpis.totalUsers === 'number' &&
+    typeof kpis.totalOrders === 'number' &&
+    typeof kpis.revenue === 'number' &&
+    typeof kpis.activeShops === 'number'
+  );
+}
+
+
+// Mock data - in production, this would come from the analytics API
+const mockKPIs: AdminKPIs = {
+  totalUsers: 1247,
+  totalUsersChange: 12.5,
+  totalOrders: 8934,
+  totalOrdersChange: 8.2,
+  revenue: 245750,
+  revenueChange: 15.3,
+  activeShops: 156,
+  activeShopsChange: 5.7,
+};
+
+const mockOrdersData: OrdersTrendData[] = [
+  { date: 'Mon', orders: 120, previousPeriod: 100 },
+  { date: 'Tue', orders: 145, previousPeriod: 115 },
+  { date: 'Wed', orders: 132, previousPeriod: 125 },
+  { date: 'Thu', orders: 168, previousPeriod: 140 },
+  { date: 'Fri', orders: 195, previousPeriod: 160 },
+  { date: 'Sat', orders: 210, previousPeriod: 180 },
+  { date: 'Sun', orders: 185, previousPeriod: 165 },
+];
+
+const mockRevenueData: RevenueTrendData[] = [
+  { date: 'Mon', revenue: 12500, cumulative: 12500 },
+  { date: 'Tue', revenue: 18200, cumulative: 30700 },
+  { date: 'Wed', revenue: 15800, cumulative: 46500 },
+  { date: 'Thu', revenue: 22100, cumulative: 68600 },
+  { date: 'Fri', revenue: 28500, cumulative: 97100 },
+  { date: 'Sat', revenue: 35200, cumulative: 132300 },
+  { date: 'Sun', revenue: 29800, cumulative: 162100 },
+];
+
+const mockActivities: Activity[] = [
+  { id: '1', type: 'user', action: 'New user registered', detail: 'john@example.com', timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString() },
+  { id: '2', type: 'order', action: 'Order confirmed', detail: '#ORD-001', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
+  { id: '3', type: 'system', action: 'Shop connected', detail: 'TechStore', timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
+  { id: '4', type: 'payment', action: 'Payment processed', detail: '299.99 TND', timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
+  { id: '5', type: 'order', action: 'Order shipped', detail: '#ORD-002', timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString() },
+  { id: '6', type: 'user', action: 'User upgraded plan', detail: 'sarah@example.com', timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
+];
+
+const mockSystemHealth: ServiceHealth[] = [
+  { name: 'API', status: 'healthy', latency: 45, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
+  { name: 'Database', status: 'healthy', latency: 12, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
+  { name: 'Queue', status: 'healthy', latency: 8, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
+  { name: 'Cache', status: 'degraded', latency: 250, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
+];
+
 
 export default function AdminDashboard() {
+  const [kpis, setKpis] = useState<AdminKPIs>(mockKPIs);
+  const [ordersData, setOrdersData] = useState<OrdersTrendData[]>(mockOrdersData);
+  const [revenueData, setRevenueData] = useState<RevenueTrendData[]>(mockRevenueData);
+  const [activities, setActivities] = useState<Activity[]>(mockActivities);
+  const [systemHealth, setSystemHealth] = useState<ServiceHealth[]>(mockSystemHealth);
+  const [isLoading, setIsLoading] = useState(true);
+  const [ordersPeriod, setOrdersPeriod] = useState<TimePeriod>('daily');
+  const [revenueViewMode, setRevenueViewMode] = useState<ViewMode>('daily');
+
+  // Fetch data from analytics API
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch system health
+        const healthResponse = await api.get('/api/admin/system-health');
+        if (healthResponse.data?.services) {
+          setSystemHealth(healthResponse.data.services);
+        }
+
+        // Fetch activity feed
+        const activityResponse = await api.get('/api/admin/activity-feed');
+        if (activityResponse.data?.activities) {
+          setActivities(activityResponse.data.activities);
+        }
+
+        // Fetch orders chart data
+        const ordersResponse = await api.get('/api/admin/charts/orders');
+        if (ordersResponse.data) {
+          if (ordersResponse.data.data) setOrdersData(ordersResponse.data.data);
+          if (ordersResponse.data.totalOrders) setKpis(prev => ({ ...prev, totalOrders: ordersResponse.data.totalOrders }));
+        }
+
+        // Fetch revenue chart data
+        const revenueResponse = await api.get('/api/admin/charts/revenue');
+        if (revenueResponse.data) {
+          if (revenueResponse.data.data) setRevenueData(revenueResponse.data.data);
+          if (revenueResponse.data.totalRevenue) setKpis(prev => ({ ...prev, revenue: revenueResponse.data.totalRevenue }));
+        }
+      } catch (err) {
+        logger.error('Failed to fetch admin dashboard data:', err, 'Admin');
+        // Keep mock data on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdminData();
+  }, []);
+
+  const handleOrdersPeriodChange = (period: TimePeriod) => {
+    setOrdersPeriod(period);
+    // In production, refetch data for the new period
+  };
+
+  const handleRevenueViewModeChange = (mode: ViewMode) => {
+    setRevenueViewMode(mode);
+  };
+
+  // Calculate totals for charts
+  const totalOrders = ordersData.reduce((sum, d) => sum + d.orders, 0);
+  const ordersChangePercent = 8.2; // In production, calculate from data
+  const totalRevenue = revenueData[revenueData.length - 1]?.cumulative || 0;
+  const revenueGrowthPercent = 15.3; // In production, calculate from data
+
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <DashboardLayout userRole="admin">
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">Complete system overview and management</p>
+            <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">
+              Complete system overview and management
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {metrics.map((metric) => <MetricCard key={metric.title} {...metric} />)}
+          {/* KPI Cards - Property 9: Admin dashboard shows system-wide KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-kpi-cards">
+            <MetricCard
+              title="Total Users"
+              value={kpis.totalUsers}
+              change={kpis.totalUsersChange}
+              icon={<UsersIcon className="w-5 h-5" />}
+              isLoading={isLoading}
+            />
+            <MetricCard
+              title="Total Orders"
+              value={kpis.totalOrders}
+              change={kpis.totalOrdersChange}
+              icon={<ShoppingBagIcon className="w-5 h-5" />}
+              isLoading={isLoading}
+            />
+            <MetricCard
+              title="Revenue"
+              value={kpis.revenue}
+              change={kpis.revenueChange}
+              icon={<CurrencyDollarIcon className="w-5 h-5" />}
+              suffix=" TND"
+              isLoading={isLoading}
+            />
+            <MetricCard
+              title="Active Shops"
+              value={kpis.activeShops}
+              change={kpis.activeShopsChange}
+              icon={<BuildingStorefrontIcon className="w-5 h-5" />}
+              isLoading={isLoading}
+            />
           </div>
 
+          {/* Charts - Requirements 8.2 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">Orders Overview</h3>
-              <div className="h-64 flex items-center justify-center dark:text-slate-400 light:text-gray-400">
-                <div className="text-center">
-                  <ChartBarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Chart will be implemented</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">Revenue Trends</h3>
-              <div className="h-64 flex items-center justify-center dark:text-slate-400 light:text-gray-400">
-                <div className="text-center">
-                  <CurrencyDollarIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Chart will be implemented</p>
-                </div>
-              </div>
-            </div>
+            <OrdersChartWidget
+              data={ordersData}
+              period={ordersPeriod}
+              onPeriodChange={handleOrdersPeriodChange}
+              totalOrders={totalOrders}
+              changePercent={ordersChangePercent}
+              isLoading={isLoading}
+            />
+            <RevenueChartWidget
+              data={revenueData}
+              viewMode={revenueViewMode}
+              onViewModeChange={handleRevenueViewModeChange}
+              totalRevenue={totalRevenue}
+              growthPercent={revenueGrowthPercent}
+              isLoading={isLoading}
+            />
           </div>
 
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              {activities.map((activity, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg dark:bg-slate-800/50 light:bg-gray-50">
-                  <div>
-                    <p className="font-medium text-sm">{activity.action}</p>
-                    <p className="text-xs dark:text-slate-400 light:text-gray-600">{activity.detail}</p>
-                  </div>
-                  <span className="text-xs dark:text-slate-400 light:text-gray-500">{activity.time}</span>
-                </div>
-              ))}
-            </div>
+          {/* Activity Feed and System Health - Requirements 8.3, 8.4 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ActivityFeedWidget
+              activities={activities}
+              maxItems={6}
+              isLoading={isLoading}
+            />
+            <SystemHealthWidget
+              services={systemHealth}
+              isLoading={isLoading}
+            />
           </div>
         </div>
       </DashboardLayout>

@@ -82,7 +82,7 @@ export default function Analytics() {
               <MetricCard
                 title={t('metric.avgOrderValue')}
                 value={dashboard.overview?.averageOrderValue || 0}
-                prefix="$"
+                suffix=" TND"
                 decimals={2}
                 icon={<CurrencyDollarIcon className="w-5 h-5" />}
               />
@@ -98,15 +98,15 @@ export default function Analytics() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.totalRevenue')}</p>
-                  <p className="text-2xl font-semibold text-green-500">${revenue.overview?.totalRevenue?.toFixed(2) || 0}</p>
+                  <p className="text-2xl font-semibold text-green-500">{revenue.overview?.totalRevenue?.toFixed(2) || 0} TND</p>
                 </div>
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.monthlyRevenue')}</p>
-                  <p className="text-2xl font-semibold">${revenue.overview?.monthlyRevenue?.toFixed(2) || 0}</p>
+                  <p className="text-2xl font-semibold">{revenue.overview?.monthlyRevenue?.toFixed(2) || 0} TND</p>
                 </div>
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.mrr')}</p>
-                  <p className="text-2xl font-semibold">${revenue.subscriptionRevenue?.monthlyRecurringRevenue?.toFixed(2) || 0}</p>
+                  <p className="text-2xl font-semibold">{revenue.subscriptionRevenue?.monthlyRecurringRevenue?.toFixed(2) || 0} TND</p>
                 </div>
               </div>
             </div>

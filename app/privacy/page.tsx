@@ -12,7 +12,7 @@ export default function PrivacyPage() {
   const content = {
     en: {
       title: 'Privacy Policy',
-      lastUpdate: 'Last updated: January 2024',
+      lastUpdate: 'Last updated: January 2025',
       sections: [
         { title: '1. Introduction', content: 'Confirmed is committed to protecting your privacy in accordance with Tunisian Law n°2004-63 on the Protection of Personal Data.' },
         { title: '2. Data Controller', content: 'Confirmed is the data controller. Contact: privacy@confirmed.tn' },
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
     },
     fr: {
       title: 'Politique de Confidentialité',
-      lastUpdate: 'Dernière mise à jour : Janvier 2024',
+      lastUpdate: 'Dernière mise à jour : Janvier 2025',
       sections: [
         { title: '1. Introduction', content: 'Confirmed s\'engage à protéger votre vie privée conformément à la Loi tunisienne n°2004-63 relative à la Protection des Données Personnelles.' },
         { title: '2. Responsable', content: 'Confirmed est le responsable du traitement. Contact : privacy@confirmed.tn' },
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
     },
     ar: {
       title: 'سياسة الخصوصية',
-      lastUpdate: 'آخر تحديث: يناير 2024',
+      lastUpdate: 'آخر تحديث: يناير 2025',
       sections: [
         { title: '1. المقدمة', content: 'تلتزم Confirmed بحماية خصوصيتك وفقاً للقانون التونسي رقم 2004-63 المتعلق بحماية البيانات الشخصية.' },
         { title: '2. المسؤول', content: 'Confirmed هي المسؤولة عن البيانات. الاتصال: privacy@confirmed.tn' },
