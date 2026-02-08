@@ -9,12 +9,10 @@ import {
   ShoppingBagIcon,
   PhoneIcon
 } from '@heroicons/react/24/outline'
-import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 
 export default function OperatorNavbar() {
   const pathname = usePathname()
-  const { t } = useLanguage()
   const { theme } = useTheme()
 
   const navItems = [

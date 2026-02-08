@@ -7,7 +7,7 @@
  */
 
 import { ChartBarIcon, ArrowTrendingUpIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Area, ComposedChart, Legend } from 'recharts';
+import { Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Area, ComposedChart, Legend } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
 
 export interface ForecastDataPoint {

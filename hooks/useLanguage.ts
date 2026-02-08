@@ -17,7 +17,7 @@ export const useLanguage = create<LanguageStore>()(
       setLanguage: (lang: Language) => set({ language: lang }),
       t: (key: TranslationKey) => {
         const { language } = get()
-        return translations[language][key] || translations.en[key] || key
+        return (translations[language] as Record<string, string>)[key] || (translations.en as Record<string, string>)[key] || key
       }
     }),
     {

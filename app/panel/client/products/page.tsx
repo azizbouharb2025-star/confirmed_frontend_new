@@ -68,12 +68,14 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchShops()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (selectedShop) {
       fetchProducts()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedShop])
 
   const fetchShops = async () => {
@@ -156,9 +158,9 @@ export default function ProductsPage() {
       } else if (response.data.error || response.data.message) {
         setError(response.data.error || response.data.message)
       }
-    } catch (err) {
-      const error = err as { message?: string }
-      setError(error.message || 'Failed to save product')
+    } catch {
+      const errorMsg = 'Failed to save product'
+      setError(errorMsg)
     } finally {
       setSaving(false)
     }
@@ -182,7 +184,7 @@ export default function ProductsPage() {
       } else if (response.data.error) {
         setError(response.data.error)
       }
-    } catch (err) {
+    } catch {
       setError('Sync endpoint not available. Please ensure the backend API is running.')
     } finally {
       setSyncing(false)
@@ -330,7 +332,7 @@ export default function ProductsPage() {
                     : 'dark:bg-slate-800 light:bg-gray-100 dark:text-slate-300 light:text-gray-700 hover:opacity-80'
                 }`}
               >
-                {t(`products.${f}`)} {filter === f && `(${filteredProducts.length})`}
+                {f === 'all' ? t('products.all') : f === 'manual' ? t('products.manual') : t('products.synced')} {filter === f && `(${filteredProducts.length})`}
               </button>
             ))}
           </div>
@@ -363,6 +365,7 @@ export default function ProductsPage() {
                   {/* Product Image */}
                   <div className="relative h-48 bg-slate-800">
                     {product.images?.[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

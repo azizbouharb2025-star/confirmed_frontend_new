@@ -13,6 +13,7 @@ import {
   ComplaintAnalytics,
   TokenValidationResponse,
   ComplaintSubmission,
+  ComplaintCategory,
 } from '@/types/complaint';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
@@ -165,7 +166,7 @@ function transformComplaint(complaint: RawComplaint): Complaint {
 
   // Transform media attachments to have full URLs
   const mediaAttachments = (complaint.mediaAttachments || []).map(
-    (attachment: RawComplaint['mediaAttachments'][0]) => {
+    (attachment) => {
       // Get the raw URL/path value
       let url = attachment.url || attachment.path || attachment.filename || '';
 
@@ -193,9 +194,10 @@ function transformComplaint(complaint: RawComplaint): Complaint {
       return {
         ...attachment,
         url,
-        type:
+        type: (
           attachment.type ||
-          (attachment.mimeType?.startsWith('video') ? 'video' : 'image'),
+          (attachment.mimeType?.startsWith('video') ? 'video' : 'image')
+        ) as 'image' | 'video',
         mimeType: attachment.mimeType || '',
         size: attachment.size || 0,
         uploadedAt: attachment.uploadedAt || attachment.createdAt || '',
@@ -205,7 +207,7 @@ function transformComplaint(complaint: RawComplaint): Complaint {
 
   // Transform resolutionHistory to handle populated userId objects
   const resolutionHistory = (complaint.resolutionHistory || []).map(
-    (entry: RawComplaint['resolutionHistory'][0]) => {
+    (entry) => {
       let userId: string = typeof entry.userId === 'string' ? entry.userId : '';
       // Handle userId being a populated user object {_id, email}
       if (typeof entry.userId === 'object' && entry.userId !== null) {
@@ -213,22 +215,36 @@ function transformComplaint(complaint: RawComplaint): Complaint {
         userId = userObj.email || userObj._id || 'Unknown';
       }
       return {
-        ...entry,
+        status: ((entry as { status?: string }).status || 'open') as 'open' | 'in_progress' | 'resolved' | 'closed' | 'escalated',
+        note: (entry as { note?: string }).note,
         userId,
+        timestamp: (entry as { timestamp?: string }).timestamp || new Date().toISOString(),
       };
     }
   );
 
   return {
     ...complaint,
+    _id: complaint._id || '',
+    referenceNumber: (complaint as { referenceNumber?: string }).referenceNumber || '',
     orderId,
     shopId,
     customerInfo: customerInfo || { name: '', phone: '' },
+    category: ((complaint as { category?: string }).category || 'other') as ComplaintCategory,
+    description: (complaint as { description?: string }).description || '',
     productIds: complaint.productIds || [],
     mediaAttachments,
-    aiTags: complaint.aiTags || [],
+    aiTags: (complaint.aiTags || []).map(tag => 
+      typeof tag === 'string' ? { tag, confidence: 1 } : tag
+    ),
+    aiPrimaryCategory: (complaint as { aiPrimaryCategory?: string }).aiPrimaryCategory || '',
+    requiresManualReview: (complaint as { requiresManualReview?: boolean }).requiresManualReview || false,
+    status: ((complaint as { status?: string }).status || 'open') as ComplaintStatus,
     resolutionHistory,
-  };
+    region: (complaint as { region?: string }).region || '',
+    createdAt: (complaint as { createdAt?: string }).createdAt || new Date().toISOString(),
+    updatedAt: (complaint as { updatedAt?: string }).updatedAt || new Date().toISOString(),
+  } as Complaint;
 }
 
 /**

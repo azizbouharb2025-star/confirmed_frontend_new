@@ -139,6 +139,7 @@ function OperatorRow({
       {/* Avatar */}
       <div className="flex-shrink-0">
         {operator.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img 
             src={operator.avatar} 
             alt={operator.name}

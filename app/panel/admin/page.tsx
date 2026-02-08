@@ -24,35 +24,7 @@ import type { OrdersTrendData, TimePeriod } from '@/components/dashboard/widgets
 import type { RevenueTrendData, ViewMode } from '@/components/dashboard/widgets/RevenueChartWidget'
 import type { Activity } from '@/components/dashboard/widgets/ActivityFeedWidget'
 import type { ServiceHealth } from '@/components/dashboard/widgets/SystemHealthWidget'
-
-/**
- * Admin KPI data structure
- * Property 9: Admin dashboard shows system-wide KPIs
- */
-export interface AdminKPIs {
-  totalUsers: number;
-  totalUsersChange: number;
-  totalOrders: number;
-  totalOrdersChange: number;
-  revenue: number;
-  revenueChange: number;
-  activeShops: number;
-  activeShopsChange: number;
-}
-
-/**
- * Check if admin KPIs contain all required metrics
- * Property 9: Admin dashboard shows system-wide KPIs
- */
-export function hasRequiredAdminKPIs(kpis: AdminKPIs): boolean {
-  return (
-    typeof kpis.totalUsers === 'number' &&
-    typeof kpis.totalOrders === 'number' &&
-    typeof kpis.revenue === 'number' &&
-    typeof kpis.activeShops === 'number'
-  );
-}
-
+import type { AdminKPIs } from '@/lib/adminUtils'
 
 // Mock data - in production, this would come from the analytics API
 const mockKPIs: AdminKPIs = {

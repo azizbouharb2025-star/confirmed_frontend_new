@@ -53,7 +53,7 @@ const RISK_COLORS = {
 /**
  * Labels for risk categories
  */
-const RISK_LABELS = {
+const _RISK_LABELS = {
   high: 'High Confidence (>70)',
   medium: 'Medium Confidence (40-70)',
   low: 'Low Confidence (<40)',
@@ -115,7 +115,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
 /**
  * Custom legend renderer
  */
-function renderLegend(props: { payload?: Array<{ value: string; color: string }> }) {
+function renderLegend(props: { payload?: Array<{ value: string; color?: string }> }) {
   const { payload } = props;
   if (!payload) return null;
 
@@ -125,7 +125,7 @@ function renderLegend(props: { payload?: Array<{ value: string; color: string }>
         <li key={`legend-${index}`} className="flex items-center gap-2 text-xs">
           <span
             className="w-3 h-3 rounded-full"
-            style={{ backgroundColor: entry.color }}
+            style={{ backgroundColor: entry.color || '#888' }}
           />
           <span className="text-slate-400 dark:text-slate-400 light:text-gray-600">
             {entry.value}

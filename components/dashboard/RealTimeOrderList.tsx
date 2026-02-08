@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import ConnectionStatus from '@/components/ui/ConnectionStatus'
 
 export default function RealTimeOrderList() {
-  const { orders, loading, isConnected } = useRealTimeOrders()
+  const { orders, loading } = useRealTimeOrders()
   const { t } = useLanguage()
 
   if (loading) {
@@ -60,7 +60,7 @@ export default function RealTimeOrderList() {
                       ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                       : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                   }`}>
-                    {t(`common.${order.status}`)}
+                    {order.status}
                   </span>
                 </div>
               </div>
@@ -70,7 +70,7 @@ export default function RealTimeOrderList() {
 
         {orders.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            {t('message.noOrdersFound')}
+            No orders found
           </div>
         )}
       </div>

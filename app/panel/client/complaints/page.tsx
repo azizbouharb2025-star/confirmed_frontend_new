@@ -15,8 +15,7 @@ import ComplaintDetailPanel from '@/components/complaints/ComplaintDetailPanel';
 import { useComplaints } from '@/hooks/useComplaints';
 import { useComplaintDetail } from '@/hooks/useComplaintDetail';
 import { useRealTimeComplaints } from '@/hooks/useRealTimeComplaints';
-import { useAuth } from '@/hooks/useAuth';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscription } from '@/hooks/useSubscription'
 import { WidgetGate } from '@/components/dashboard/WidgetGate';
 import { Complaint, ComplaintFilters as ComplaintFiltersType, ComplaintStatus } from '@/types/complaint';
 
@@ -31,11 +30,10 @@ import { Complaint, ComplaintFilters as ComplaintFiltersType, ComplaintStatus } 
  * - Real-time updates via WebSocket (Requirements: 2.4, 2.5)
  */
 export default function ClientComplaintsPage() {
-  const { user } = useAuth();
   const { plan, canAccess } = useSubscription();
   
   // Check if user has Pro+ access
-  const hasProAccess = canAccess('pro');
+  const _hasProAccess = canAccess('pro');
   
   // Selected complaint for detail panel
   const [selectedComplaintId, setSelectedComplaintId] = useState<string | null>(null);
@@ -60,7 +58,6 @@ export default function ClientComplaintsPage() {
   // Initialize complaint detail hook
   const {
     complaint: selectedComplaint,
-    isLoading: isDetailLoading,
     updateStatus,
     addNote,
     isUpdatingStatus,
@@ -143,7 +140,7 @@ export default function ClientComplaintsPage() {
   }, [refetch]);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout userRole="shop_owner">
       <WidgetGate
         requiredPlan="pro"
         currentPlan={plan}

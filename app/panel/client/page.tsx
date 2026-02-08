@@ -41,7 +41,7 @@ export default function ClientDashboard() {
   const { plan, onPlanChange } = useSubscription()
   
   // Track refresh key to force re-render on plan change
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [_refreshKey, setRefreshKey] = useState(0)
   
   // Pro widget data states
   const [riskScoreData, setRiskScoreData] = useState<RiskScoreData>({ high: 0, medium: 0, low: 0 })
@@ -197,7 +197,7 @@ export default function ClientDashboard() {
     // Apply the recommendation based on its type
     try {
       await api.post(`/api/analytics/recommendations/${recommendation.id}/apply`, {
-        action: recommendation.action,
+        recommendationId: recommendation.id,
       })
       // Refresh recommendations after applying
       const response = await api.get('/api/analytics/automation-recommendations')

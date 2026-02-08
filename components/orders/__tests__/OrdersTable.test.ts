@@ -7,8 +7,8 @@
 import { describe, it, expect } from 'vitest'
 import * as fc from 'fast-check'
 import type { Order, OrderStatus, OrderPriority } from '@/types/order'
-import type { SubscriptionPlan } from '@/types/subscription'
-import { getVisibleColumns, selectAllOrders, ColumnConfig } from '../OrdersTable'
+import { SubscriptionPlan } from '@/types/subscription'
+import { selectAllOrders } from '../OrdersTable'
 
 // All valid order statuses
 const ALL_STATUSES: OrderStatus[] = ['pending', 'assigned', 'in_progress', 'confirmed', 'rejected', 'cancelled']
@@ -18,7 +18,7 @@ const ALL_PLANS: SubscriptionPlan[] = ['starter', 'pro', 'business', 'enterprise
 // Arbitrary for generating order statuses
 const orderStatusArb = fc.constantFrom<OrderStatus>(...ALL_STATUSES)
 const orderPriorityArb = fc.constantFrom<OrderPriority>(...ALL_PRIORITIES)
-const subscriptionPlanArb = fc.constantFrom<SubscriptionPlan>(...ALL_PLANS)
+const _subscriptionPlanArb = fc.constantFrom<SubscriptionPlan>(...ALL_PLANS)
 
 // Arbitrary for generating client info
 const clientInfoArb = fc.record({

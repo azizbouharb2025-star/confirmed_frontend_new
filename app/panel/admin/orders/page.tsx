@@ -6,7 +6,6 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import OrdersTable from '@/components/orders/OrdersTable'
 import OrderFilters from '@/components/orders/OrderFilters'
 import BulkActionsToolbar from '@/components/orders/BulkActionsToolbar'
-import OrderDetailPanel from '@/components/orders/OrderDetailPanel'
 import StatusBadge from '@/components/ui/StatusBadge'
 import { useOrderStore, useSelectedOrders } from '@/stores/orderStore'
 import { orderService, downloadCSV } from '@/services/orderService'
@@ -45,24 +44,6 @@ interface OrderAnalytics {
   averageProcessingTime: number // in hours
   statusDistribution: Record<OrderStatus, number>
   totalOrders: number
-}
-
-/**
- * Filter orders by shop ID
- * Property 15: Admin shop filter returns shop-specific orders
- * Validates: Requirements 6.2
- */
-export function filterByShop(orders: Order[], shopId: string | undefined): Order[] {
-  if (!shopId || shopId === '') {
-    return orders
-  }
-  
-  return orders.filter((order) => {
-    const orderShopId = typeof order.shopId === 'string' 
-      ? order.shopId 
-      : (order.shopId as ShopRef)?._id
-    return orderShopId === shopId
-  })
 }
 
 /**

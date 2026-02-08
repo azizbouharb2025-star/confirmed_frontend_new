@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, ReactNode } from 'react'
+import { createContext, useContext, ReactNode } from 'react'
 import { useWebSocket } from '@/hooks/useWebSocket'
 import { Socket } from 'socket.io-client'
 

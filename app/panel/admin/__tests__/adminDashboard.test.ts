@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
-import { hasRequiredAdminKPIs, AdminKPIs } from '../page';
+import { hasRequiredAdminKPIs, AdminKPIs } from '@/lib/adminUtils';
 
 /**
  * Arbitrary for generating valid AdminKPIs
@@ -29,7 +29,7 @@ const adminKPIsArb: fc.Arbitrary<AdminKPIs> = fc.record({
  * Arbitrary for generating AdminKPIs with missing fields
  * Note: noNaN is required to exclude NaN values from float generation
  */
-const partialAdminKPIsArb: fc.Arbitrary<Partial<AdminKPIs>> = fc.record({
+const _partialAdminKPIsArb: fc.Arbitrary<Partial<AdminKPIs>> = fc.record({
   totalUsers: fc.option(fc.integer({ min: 0, max: 1000000 }), { nil: undefined }),
   totalUsersChange: fc.option(fc.float({ min: -100, max: 100, noNaN: true }), { nil: undefined }),
   totalOrders: fc.option(fc.integer({ min: 0, max: 10000000 }), { nil: undefined }),

@@ -18,7 +18,7 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, userRole }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const { logout, user } = useAuth()
+  const { logout } = useAuth()
   const { t } = useLanguage()
   
 

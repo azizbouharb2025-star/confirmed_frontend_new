@@ -56,14 +56,9 @@ export default function RegisterPage() {
     
     try {
       const response = await api.auth.register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password,
-        phoneNumber: formData.phoneNumber,
-        whatsappNumber: formData.whatsappNumber,
-        isWhatsappLinked: formData.isWhatsappLinked,
-        country: formData.country,
         role: formData.role
       })
       
@@ -252,7 +247,7 @@ export default function RegisterPage() {
 
 
             <div className="flex gap-3">
-              <Button type="button" onClick={prevStep} className="w-full" variant="outline">
+              <Button type="button" onClick={prevStep} className="w-full" variant="secondary">
                 {t('auth.back')}
               </Button>
               <Button type="button" onClick={nextStep} className="w-full">
@@ -353,7 +348,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex gap-3">
-              <Button type="button" onClick={prevStep} className="w-full" variant="outline">
+              <Button type="button" onClick={prevStep} className="w-full" variant="secondary">
                 {t('auth.back')}
               </Button>
               <Button

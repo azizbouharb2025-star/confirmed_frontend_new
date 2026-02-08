@@ -53,6 +53,7 @@ export default function APIPage() {
     if (selectedShop) {
       loadCredentials()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedShop])
 
   const fetchShops = async () => {

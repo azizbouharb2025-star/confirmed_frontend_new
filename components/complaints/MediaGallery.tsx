@@ -161,6 +161,7 @@ function Lightbox({
             Your browser does not support the video tag.
           </video>
         ) : (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={currentMedia.url}
             alt={`Attachment ${currentIndex + 1}`}
@@ -239,6 +240,7 @@ function MediaThumbnail({
           <PlayIcon />
         </>
       ) : (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={attachment.url}
           alt={`Attachment ${index + 1}`}

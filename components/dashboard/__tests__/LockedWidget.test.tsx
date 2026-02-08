@@ -17,10 +17,10 @@ import {
 const subscriptionPlanArb = fc.constantFrom<SubscriptionPlan>(...ALL_PLANS);
 
 // Arbitrary for generating feature names
-const featureNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
+const _featureNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0);
 
 // Arbitrary for generating feature descriptions
-const featureDescriptionArb = fc.string({ minLength: 1, maxLength: 200 }).filter(s => s.trim().length > 0);
+const _featureDescriptionArb = fc.string({ minLength: 1, maxLength: 200 }).filter(s => s.trim().length > 0);
 
 /**
  * Simulates the LockedWidget display logic

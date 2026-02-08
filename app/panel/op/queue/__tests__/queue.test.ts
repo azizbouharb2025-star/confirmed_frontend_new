@@ -13,7 +13,6 @@ import {
   processConfirmation,
   processRejection,
   isValidRejectionReason,
-  createDefaultFeedback,
 } from '../queueUtils'
 
 // All valid order priorities

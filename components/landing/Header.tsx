@@ -71,20 +71,26 @@ export default function Header() {
         </motion.div>
 
         <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-          {['features', 'pricing', 'product', 'testimonials', 'about'].map((item, index) => (
+          {[
+            { key: 'features', label: 'Features' },
+            { key: 'pricing', label: 'Pricing' },
+            { key: 'product', label: 'Product' },
+            { key: 'testimonials', label: 'Testimonials' },
+            { key: 'about', label: 'About' }
+          ].map((item, index) => (
             <motion.div
-              key={item}
+              key={item.key}
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index, duration: 0.6 }}
             >
               <button 
-                onClick={() => scrollToSection(item)}
+                onClick={() => scrollToSection(item.key)}
                 className={`relative font-medium transition-all duration-300 group ${
                   theme === 'dark' ? 'text-white hover:text-[#ADFF2F]' : 'text-gray-800 hover:text-[#ADFF2F]'
                 }`}
               >
-                {t(`nav.${item}`)}
+                {item.label}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] transition-all duration-300 group-hover:w-full" />
               </button>
             </motion.div>
@@ -150,18 +156,24 @@ export default function Header() {
           } backdrop-blur-xl`}
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-4">
-            {['features', 'pricing', 'product', 'testimonials', 'about'].map((item) => (
+            {[
+              { key: 'features', label: 'Features' },
+              { key: 'pricing', label: 'Pricing' },
+              { key: 'product', label: 'Product' },
+              { key: 'testimonials', label: 'Testimonials' },
+              { key: 'about', label: 'About' }
+            ].map((item) => (
               <button
-                key={item}
+                key={item.key}
                 onClick={() => {
-                  scrollToSection(item)
+                  scrollToSection(item.key)
                   setIsMobileMenuOpen(false)
                 }}
                 className={`block w-full text-left py-2 font-medium transition-colors ${
                   theme === 'dark' ? 'text-white hover:text-[#ADFF2F]' : 'text-gray-800 hover:text-[#ADFF2F]'
                 }`}
               >
-                {t(`nav.${item}`)}
+                {item.label}
               </button>
             ))}
           </nav>

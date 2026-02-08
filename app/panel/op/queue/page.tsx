@@ -13,7 +13,6 @@ import {
   getPriorityColor,
   getAIScoreColor,
   createDefaultFeedback,
-  PRIORITY_WEIGHTS,
 } from './queueUtils'
 
 export default function CallQueue() {
@@ -161,9 +160,9 @@ export default function CallQueue() {
                   /* Empty queue state - Requirements: 5.6 */
                   <div className="text-center py-8">
                     <CheckCircleIcon className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                    <p className="text-lg font-medium mb-1">{t('message.queueEmpty') || 'Queue is empty'}</p>
+                    <p className="text-lg font-medium mb-1">Queue is empty</p>
                     <p className="text-sm dark:text-slate-400 light:text-gray-600">
-                      {t('message.noPendingCalls') || 'No pending orders to process'}
+                      No pending orders to process
                     </p>
                   </div>
                 ) : (
@@ -290,7 +289,7 @@ export default function CallQueue() {
                     <div className="card p-4">
                       <h3 className="font-semibold mb-4 flex items-center gap-2">
                         <ClockIcon className="h-5 w-5" />
-                        {t('info.callFeedback') || 'Call Feedback'}
+                        Call Feedback
                       </h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -457,6 +456,3 @@ export default function CallQueue() {
     </ProtectedRoute>
   )
 }
-
-// Re-export utilities for backward compatibility
-export { sortQueueOrders, PRIORITY_WEIGHTS, getPriorityColor, getAIScoreColor } from './queueUtils'

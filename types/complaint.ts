@@ -130,9 +130,9 @@ export interface ComplaintAnalytics {
 }
 
 /**
- * Order item from backend
+ * Order item from backend (for complaint context)
  */
-export interface OrderItem {
+export interface ComplaintOrderItem {
   productId: {
     _id: string;
     name: string;
@@ -153,7 +153,7 @@ export interface OrderData {
     phone: string;
     address: string;
   };
-  items: OrderItem[];
+  items: ComplaintOrderItem[];
   totalAmount: number;
   status: string;
   region: string;

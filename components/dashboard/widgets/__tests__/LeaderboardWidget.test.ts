@@ -30,7 +30,7 @@ const leaderboardListArb = fc.array(leaderboardEntryArb, { minLength: 0, maxLeng
 /**
  * Arbitrary for generating a list with unique ranks
  */
-const uniqueRankLeaderboardArb = fc.array(
+const _uniqueRankLeaderboardArb = fc.array(
   fc.integer({ min: 1, max: 1000 }),
   { minLength: 0, maxLength: 50 }
 ).chain(ranks => {

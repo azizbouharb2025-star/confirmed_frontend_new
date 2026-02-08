@@ -7,7 +7,7 @@
  */
 
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
 
 export interface ComplaintTrendData {

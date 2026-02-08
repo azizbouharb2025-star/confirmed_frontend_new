@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useTheme } from '@/hooks/useTheme'
 import HeroSection from '@/components/landing/HeroSection'
 import TrustSection from '@/components/landing/TrustSection'

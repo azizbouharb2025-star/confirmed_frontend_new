@@ -47,7 +47,7 @@ interface GenerationError {
  */
 export default function SupportCardsPage() {
   const { plan } = useSubscription();
-  const { t } = useLanguage();
+  const { t: _t } = useLanguage();
 
   // Single order generation state
   const [singleOrderId, setSingleOrderId] = useState('');

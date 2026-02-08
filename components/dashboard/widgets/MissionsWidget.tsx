@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { TrophyIcon, CheckCircleIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline';
+import { TrophyIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import WidgetContainer from '../WidgetContainer';
 

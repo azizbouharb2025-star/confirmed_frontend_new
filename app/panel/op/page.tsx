@@ -9,7 +9,6 @@
 import { useState, useEffect } from 'react';
 import { 
   PhoneIcon, 
-  ClockIcon, 
   ChartBarIcon, 
   ClipboardDocumentListIcon,
   QueueListIcon
@@ -45,7 +44,7 @@ interface OperatorKPIs {
 /**
  * Operator dashboard data
  */
-interface OperatorDashboardData {
+interface _OperatorDashboardData {
   kpis: OperatorKPIs;
   missions: Mission[];
   leaderboard: LeaderboardEntry[];
@@ -131,7 +130,7 @@ const mockWallet = {
  * Property 6: Operator dashboard shows required KPIs
  * For any operator user, the dashboard SHALL display KPI cards for confirmation rate, calls today, and queue length.
  */
-export function getOperatorKPIMetrics(kpis: OperatorKPIs) {
+function getOperatorKPIMetrics(kpis: OperatorKPIs) {
   return [
     { 
       title: 'Confirmation Rate', 
@@ -171,7 +170,7 @@ export function getOperatorKPIMetrics(kpis: OperatorKPIs) {
  * Check if KPIs contain required fields
  * Property 6: Operator dashboard shows required KPIs
  */
-export function hasRequiredKPIs(kpis: OperatorKPIs): boolean {
+function _hasRequiredKPIs(kpis: OperatorKPIs): boolean {
   return (
     typeof kpis.confirmationRate === 'number' &&
     typeof kpis.callsToday === 'number' &&
@@ -196,7 +195,7 @@ export default function OperatorDashboard() {
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   
   // Error states
-  const [kpisError, setKpisError] = useState<string | null>(null);
+  const [_kpisError, setKpisError] = useState<string | null>(null);
   const [missionsError, setMissionsError] = useState<string | null>(null);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
@@ -212,7 +211,7 @@ export default function OperatorDashboard() {
       if (response.data) {
         setKpis(response.data);
       }
-    } catch (err) {
+    } catch {
       // Use mock data on error for development
       setKpis({
         confirmationRate: 87.5,
@@ -238,7 +237,7 @@ export default function OperatorDashboard() {
       } else {
         setMissions(mockMissions);
       }
-    } catch (err) {
+    } catch {
       setMissions(mockMissions);
     } finally {
       setIsLoadingMissions(false);
@@ -256,7 +255,7 @@ export default function OperatorDashboard() {
       } else {
         setLeaderboard(mockLeaderboard);
       }
-    } catch (err) {
+    } catch {
       setLeaderboard(mockLeaderboard);
     } finally {
       setIsLoadingLeaderboard(false);
@@ -278,7 +277,7 @@ export default function OperatorDashboard() {
       } else {
         setWallet(mockWallet);
       }
-    } catch (err) {
+    } catch {
       setWallet(mockWallet);
     } finally {
       setIsLoadingWallet(false);
@@ -288,7 +287,7 @@ export default function OperatorDashboard() {
   // Handle mission completion
   const handleMissionComplete = async (missionId: string) => {
     try {
-      await api.post(`/api/operators/missions/${missionId}/claim`);
+      await api.post(`/api/operators/missions/${missionId}/claim`, {});
       // Refresh missions and wallet after claiming
       fetchMissions();
       fetchWallet();

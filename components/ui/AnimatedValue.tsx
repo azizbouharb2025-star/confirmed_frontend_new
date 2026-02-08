@@ -6,7 +6,7 @@
  * Requirements: 6.4
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
 
 export interface AnimatedValueProps {
@@ -101,6 +101,7 @@ export default function AnimatedValue({
         cancelAnimationFrame(animationRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration]);
 
   // Cleanup on unmount

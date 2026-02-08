@@ -226,6 +226,7 @@ export default function MediaUploader({ files, onChange, onError }: MediaUploade
                 }`}
               >
                 {preview.type === 'image' ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={preview.preview}
                     alt={preview.file.name}

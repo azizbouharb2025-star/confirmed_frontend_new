@@ -8,11 +8,51 @@ import MetricCard from '@/components/dashboard/MetricCard'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
+interface DashboardData {
+  overview?: {
+    totalOrders?: number;
+    confirmedOrders?: number;
+    confirmationRate?: number;
+    totalRevenue?: number;
+    averageOrderValue?: number;
+  };
+}
+
+interface OperatorMetric {
+  operatorId?: string;
+  operatorName?: string;
+  name?: string;
+  confirmationRate?: number;
+  totalCalls?: number;
+  confirmedCalls?: number;
+  efficiency?: number;
+  performance?: {
+    totalCalls?: number;
+    confirmedOrders?: number;
+    confirmationRate?: number;
+  };
+  trends?: {
+    efficiency?: string;
+  };
+}
+
+interface RevenueData {
+  totalRevenue?: number;
+  monthlyGrowth?: number;
+  overview?: {
+    totalRevenue?: number;
+    monthlyRevenue?: number;
+  };
+  subscriptionRevenue?: {
+    monthlyRecurringRevenue?: number;
+  };
+}
+
 export default function Analytics() {
   const { t } = useLanguage()
-  const [dashboard, setDashboard] = useState<any>(null)
-  const [operators, setOperators] = useState<any[]>([])
-  const [revenue, setRevenue] = useState<any>(null)
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
+  const [operators, setOperators] = useState<OperatorMetric[]>([])
+  const [revenue, setRevenue] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

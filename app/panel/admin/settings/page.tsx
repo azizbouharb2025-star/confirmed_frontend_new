@@ -1,16 +1,61 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CogIcon, ServerIcon, CreditCardIcon } from '@heroicons/react/24/outline'
+import { ServerIcon, CreditCardIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 
+interface ServiceStatus {
+  status?: string;
+  latency?: number;
+}
+
+interface HealthData {
+  status?: string;
+  services?: {
+    mongodb?: ServiceStatus;
+    redis?: ServiceStatus;
+    websocket?: ServiceStatus;
+    queue?: ServiceStatus;
+  };
+  uptime?: number;
+  version?: string;
+  systemMetrics?: {
+    memoryUsage?: number;
+    cpuUsage?: number;
+    activeConnections?: number;
+    memory?: {
+      percentage?: number;
+    };
+    cpu?: {
+      usage?: number;
+    };
+    disk?: {
+      percentage?: number;
+    };
+  };
+}
+
+interface PlanData {
+  id?: string;
+  name?: string;
+  price?: number;
+  features?: {
+    maxOperators?: number;
+    maxShops?: number;
+    maxOrders?: number;
+    maxAICalls?: number;
+    [key: string]: number | undefined;
+  };
+  limits?: Record<string, number>;
+}
+
 export default function SystemSettings() {
   const { t } = useLanguage()
-  const [health, setHealth] = useState<any>(null)
-  const [plans, setPlans] = useState<any[]>([])
+  const [health, setHealth] = useState<HealthData | null>(null)
+  const [plans, setPlans] = useState<PlanData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -127,15 +172,15 @@ export default function SystemSettings() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="dark:text-slate-400 light:text-gray-600">{t('label.operators')}</span>
-                      <span className="font-medium">{plan.features.maxOperators === -1 ? t('label.unlimited') : plan.features.maxOperators}</span>
+                      <span className="font-medium">{plan.features?.maxOperators === -1 ? t('label.unlimited') : plan.features?.maxOperators}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="dark:text-slate-400 light:text-gray-600">{t('label.aiCalls')}</span>
-                      <span className="font-medium">{plan.features.maxAICalls === -1 ? t('label.unlimited') : plan.features.maxAICalls}</span>
+                      <span className="font-medium">{plan.features?.maxAICalls === -1 ? t('label.unlimited') : plan.features?.maxAICalls}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="dark:text-slate-400 light:text-gray-600">{t('label.shops')}</span>
-                      <span className="font-medium">{plan.features.maxShops === -1 ? t('label.unlimited') : plan.features.maxShops}</span>
+                      <span className="font-medium">{plan.features?.maxShops === -1 ? t('label.unlimited') : plan.features?.maxShops}</span>
                     </div>
                   </div>
                 </div>

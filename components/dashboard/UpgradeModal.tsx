@@ -8,7 +8,7 @@
 
 import { Fragment } from 'react';
 import { XMarkIcon, CheckIcon, StarIcon } from '@heroicons/react/24/outline';
-import { SubscriptionPlan, getPlanDisplayName, ALL_PLANS, PLAN_HIERARCHY } from '@/types/subscription';
+import { SubscriptionPlan, getPlanDisplayName, ALL_PLANS } from '@/types/subscription';
 import { subscriptionService } from '@/services/subscriptionService';
 
 export interface UpgradeModalProps {

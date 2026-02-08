@@ -171,7 +171,7 @@ export default function ClientOrdersPage() {
   /**
    * Handle status update from detail panel
    */
-  const handleStatusUpdate = useCallback(async (status: OrderStatus, notes?: string): Promise<void> => {
+  const _handleStatusUpdate = useCallback(async (status: OrderStatus, notes?: string): Promise<void> => {
     if (!selectedOrder) return
     
     try {
@@ -196,7 +196,7 @@ export default function ClientOrdersPage() {
   const selectionCount = selectedIds.length
 
   return (
-    <DashboardLayout>
+    <DashboardLayout userRole="shop_owner">
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
@@ -250,7 +250,6 @@ export default function ClientOrdersPage() {
           order={selectedOrder}
           isOpen={isDetailPanelOpen}
           onClose={handleCloseDetailPanel}
-          onStatusUpdate={handleStatusUpdate}
         />
       </div>
     </DashboardLayout>

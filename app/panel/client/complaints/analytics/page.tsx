@@ -112,7 +112,7 @@ export default function ComplaintsAnalyticsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout userRole="shop_owner">
       <WidgetGate
         requiredPlan="business"
         currentPlan={plan}

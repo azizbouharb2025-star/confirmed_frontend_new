@@ -23,7 +23,7 @@ const riskScoreDataArb: fc.Arbitrary<RiskScoreData> = fc.record({
 /**
  * Arbitrary for generating non-empty RiskScoreData (at least one order)
  */
-const nonEmptyRiskScoreDataArb: fc.Arbitrary<RiskScoreData> = fc.record({
+const _nonEmptyRiskScoreDataArb: fc.Arbitrary<RiskScoreData> = fc.record({
   high: fc.integer({ min: 0, max: 10000 }),
   medium: fc.integer({ min: 0, max: 10000 }),
   low: fc.integer({ min: 0, max: 10000 }),

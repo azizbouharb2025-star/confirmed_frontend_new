@@ -48,8 +48,7 @@ export default function AnimatedWidget({
 
   // Determine if we should animate
   const shouldAnimate = animateOnMount || !isFirstRender;
-  const keyChanged = previousKeyRef.current !== animationKey;
-  
+
   useEffect(() => {
     previousKeyRef.current = animationKey;
   }, [animationKey]);

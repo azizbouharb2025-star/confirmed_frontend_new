@@ -131,6 +131,7 @@ export function RecentOrdersWidget({
 
   useEffect(() => {
     fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxOrders]);
 
   const displayOrders = getDisplayOrders(orders, maxOrders);
@@ -191,7 +192,7 @@ export function RecentOrdersWidget({
                     <StatusBadge status={order.status} size="sm" />
                   </td>
                   <td className="py-3 px-2 text-right font-medium">
-                    {formatCurrency(order.totalAmount ?? (order as any).total ?? (order as any).amount)}
+                    {formatCurrency(order.totalAmount ?? (order as unknown as { total?: number }).total ?? (order as unknown as { amount?: number }).amount)}
                   </td>
                 </tr>
               ))}

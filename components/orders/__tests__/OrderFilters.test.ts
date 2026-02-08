@@ -4,16 +4,16 @@
  * Tests for filter functions used in the Order Management System
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it } from 'vitest'
 import * as fc from 'fast-check'
-import type { OrderStatus, Order, ShopRef } from '@/types/order'
+import type { OrderStatus, ShopRef } from '@/types/order'
 import {
   filterBySearch,
   filterByStatus,
   filterByDateRange,
   applyAllFilters,
 } from '../OrderFilters'
-import { filterByShop } from '@/app/panel/admin/orders/page'
+import { filterByShop } from '@/components/orders/orderFilterUtils'
 
 // All valid order statuses
 const ALL_STATUSES: OrderStatus[] = ['pending', 'assigned', 'in_progress', 'confirmed', 'rejected', 'cancelled']
@@ -420,7 +420,7 @@ describe('OrderFilters - Property Tests', () => {
     it('all filtered orders have shopId matching the selected shop', () => {
       fc.assert(
         fc.property(ordersWithShopsArb, shopIdArb, (orders, shopId) => {
-          const filtered = filterByShop(orders as any, shopId)
+          const filtered = filterByShop(orders as Parameters<typeof filterByShop>[0], shopId)
           
           // Every filtered order must have the specified shopId
           return filtered.every((order) => {
@@ -437,7 +437,7 @@ describe('OrderFilters - Property Tests', () => {
     it('empty shop filter returns all orders', () => {
       fc.assert(
         fc.property(ordersWithShopsArb, (orders) => {
-          const filtered = filterByShop(orders as any, '')
+          const filtered = filterByShop(orders as Parameters<typeof filterByShop>[0], '')
           
           // All orders should be returned when shop filter is empty
           return filtered.length === orders.length
@@ -449,7 +449,7 @@ describe('OrderFilters - Property Tests', () => {
     it('undefined shop filter returns all orders', () => {
       fc.assert(
         fc.property(ordersWithShopsArb, (orders) => {
-          const filtered = filterByShop(orders as any, undefined)
+          const filtered = filterByShop(orders as Parameters<typeof filterByShop>[0], undefined)
           
           // All orders should be returned when shop filter is undefined
           return filtered.length === orders.length
@@ -461,7 +461,7 @@ describe('OrderFilters - Property Tests', () => {
     it('filtered results are a subset of original orders', () => {
       fc.assert(
         fc.property(ordersWithShopsArb, shopIdArb, (orders, shopId) => {
-          const filtered = filterByShop(orders as any, shopId)
+          const filtered = filterByShop(orders as Parameters<typeof filterByShop>[0], shopId)
           
           // Filtered results should never exceed original count
           return filtered.length <= orders.length
@@ -473,7 +473,7 @@ describe('OrderFilters - Property Tests', () => {
     it('orders from other shops are excluded', () => {
       fc.assert(
         fc.property(ordersWithShopsArb, shopIdArb, (orders, shopId) => {
-          const filtered = filterByShop(orders as any, shopId)
+          const filtered = filterByShop(orders as Parameters<typeof filterByShop>[0], shopId)
           const filteredIds = new Set(filtered.map(o => o._id))
           
           // Orders from other shops should not be in the result

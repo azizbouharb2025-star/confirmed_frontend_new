@@ -21,7 +21,7 @@ const missionProgressArb = fc.record({
 /**
  * Arbitrary for generating a complete Mission object
  */
-const missionArb: fc.Arbitrary<Mission> = fc.record({
+const _missionArb: fc.Arbitrary<Mission> = fc.record({
   id: fc.uuid(),
   title: fc.string({ minLength: 1, maxLength: 100 }),
   description: fc.string({ minLength: 1, maxLength: 200 }),

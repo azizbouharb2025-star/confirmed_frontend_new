@@ -86,6 +86,7 @@ function QRCodeCard({
       {/* QR Code Image */}
       <div className="w-48 h-48 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center mb-4">
         {supportCard.qrCodeBase64 ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={supportCard.qrCodeBase64}
             alt={`QR Code for order ${displayId}`}

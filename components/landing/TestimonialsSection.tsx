@@ -73,7 +73,7 @@ export default function TestimonialsSection() {
             >
               {/* Quote mark */}
               <div className="absolute -top-4 -left-4 w-8 h-8 bg-[#ADFF2F] rounded-full flex items-center justify-center">
-                <span className="text-black font-bold text-xl">"</span>
+                <span className="text-black font-bold text-xl">&quot;</span>
               </div>
 
               <div className="space-y-6">
@@ -88,7 +88,7 @@ export default function TestimonialsSection() {
                 <blockquote className={`text-lg leading-relaxed italic ${
                   theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#1A1A1A]'
                 }`}>
-                  "{testimonial.quote}"
+                  &quot;{testimonial.quote}&quot;
                 </blockquote>
 
                 {/* Author */}

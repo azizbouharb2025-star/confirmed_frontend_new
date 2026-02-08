@@ -127,6 +127,24 @@ export default function MetricCard({
   trendValue,
   isLoading = false,
 }: MetricCardProps): JSX.Element {
+  // Track value changes for animation - hooks must be called before any early returns
+  const previousValueRef = useRef(value);
+  const [hasValueChanged, setHasValueChanged] = useState(false);
+
+  useEffect(() => {
+    if (previousValueRef.current !== value) {
+      setHasValueChanged(true);
+      previousValueRef.current = value;
+      
+      // Reset animation state after animation completes
+      const timer = setTimeout(() => {
+        setHasValueChanged(false);
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [value]);
+
   // Show loading skeleton if loading
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -148,24 +166,6 @@ export default function MetricCard({
 
   // Use provided trendValue or calculated change
   const displayTrendValue = trendValue ?? calculatedChange;
-
-  // Track value changes for animation
-  const previousValueRef = useRef(value);
-  const [hasValueChanged, setHasValueChanged] = useState(false);
-
-  useEffect(() => {
-    if (previousValueRef.current !== value) {
-      setHasValueChanged(true);
-      previousValueRef.current = value;
-      
-      // Reset animation state after animation completes
-      const timer = setTimeout(() => {
-        setHasValueChanged(false);
-      }, 600);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [value]);
 
   return (
     <motion.div 

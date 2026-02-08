@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo } from 'react'
 import { clsx } from 'clsx'
-import type { Order, OrderStatus } from '@/types/order'
+import type { Order } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import StatusBadge from '@/components/ui/StatusBadge'
 import RiskScoreIndicator from '@/components/ui/RiskScoreIndicator'
