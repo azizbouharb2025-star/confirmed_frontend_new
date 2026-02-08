@@ -183,8 +183,6 @@ Confirmed V1/
 │   │   ├── LanguageSelector.tsx # Language switcher
 │   │   ├── ThemeToggle.tsx     # Dark/light mode toggle
 │   │   └── ParticleBackground.tsx # Particle system
-│   └── debug/                   # Debug components
-│       └── AuthDebug.tsx       # Auth state debugger
 │
 ├── hooks/                        # Custom React hooks
 │   ├── useAuth.ts               # Authentication hook

@@ -2,7 +2,6 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import { WebSocketProvider } from '@/components/providers/WebSocketProvider'
-import AuthDebug from '@/components/debug/AuthDebug'
 import CookieConsent from '@/components/ui/CookieConsent'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -33,7 +32,6 @@ export default function RootLayout({
               {children}
             </WebSocketProvider>
           </ThemeProvider>
-          <AuthDebug />
           <CookieConsent />
           <Toaster />
         </ErrorBoundary>
