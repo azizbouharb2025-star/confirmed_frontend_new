@@ -1,6 +1,6 @@
 # Subscriptions APIs
 
-Base URL: `http://localhost:3000/api/subscriptions`
+Base URL: `http://51.255.201.244:3000/api/subscriptions`
 
 ## Overview
 Subscription management APIs handle billing plans, payment processing, and feature access control through Stripe integration.

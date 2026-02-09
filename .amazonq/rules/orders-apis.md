@@ -1,6 +1,6 @@
 # Orders APIs
 
-Base URL: `http://localhost:3000/api/orders`
+Base URL: `http://51.255.201.244:3000/api/orders`
 
 ## Overview
 Order management APIs handle order creation, status updates, assignment, and tracking. Integrates with Redis queue system for order processing workflow.

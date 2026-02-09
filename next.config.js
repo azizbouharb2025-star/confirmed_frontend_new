@@ -4,16 +4,16 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'localhost',
+        hostname: '51.255.201.244',
       },
       {
         protocol: 'https',
-        hostname: 'localhost',
+        hostname: '51.255.201.244',
       },
     ],
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://51.255.201.244:8000'
     return [
       {
         source: '/api/:path*',

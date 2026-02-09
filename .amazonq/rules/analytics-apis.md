@@ -1,6 +1,6 @@
 # Analytics APIs
 
-Base URL: `http://localhost:3000/api/analytics`
+Base URL: `http://51.255.201.244:3000/api/analytics`
 
 ## Overview
 Analytics APIs provide comprehensive business intelligence, performance metrics, and data insights for shops, operators, and system administrators.

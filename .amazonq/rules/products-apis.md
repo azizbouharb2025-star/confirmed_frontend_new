@@ -1,6 +1,6 @@
 # Products APIs
 
-Base URL: `http://localhost:3000/api/products`
+Base URL: `http://51.255.201.244:3000/api/products`
 
 ## Overview
 Product management APIs handle product catalog operations, platform synchronization, and inventory management for e-commerce integrations.

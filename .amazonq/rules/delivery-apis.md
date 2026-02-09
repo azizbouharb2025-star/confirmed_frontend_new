@@ -1,6 +1,6 @@
 # Delivery APIs
 
-Base URL: `http://localhost:3000/api/delivery`
+Base URL: `http://51.255.201.244:3000/api/delivery`
 
 ## Overview
 Delivery management APIs handle shipping integrations, tracking, and logistics operations. Currently supports Aramex integration with extensible architecture for additional carriers.

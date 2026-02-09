@@ -1,6 +1,6 @@
 # Operators APIs
 
-Base URL: `http://localhost:3000/api/operators`
+Base URL: `http://51.255.201.244:3000/api/operators`
 
 ## Overview
 Operator APIs provide functionality for call center operators to manage order confirmations, retrieve assigned orders, and view performance statistics.

@@ -1,6 +1,6 @@
 # Shops APIs
 
-Base URL: `http://localhost:3000/api/shops`
+Base URL: `http://51.255.201.244:3000/api/shops`
 
 ## Overview
 Shop management APIs handle e-commerce store integration, configuration, and settings. Supports Shopify, WooCommerce, and custom platforms.

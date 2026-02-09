@@ -82,12 +82,12 @@ System monitoring and service health verification.
 ### 1. Authentication Flow
 ```bash
 # Register a shop owner
-curl -X POST http://localhost:3000/api/auth/register \
+curl -X POST http://51.255.201.244:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"shop@example.com","password":"password123","name":"Shop Owner","role":"shop_owner"}'
 
 # Login and get token
-curl -X POST http://localhost:3000/api/auth/login \
+curl -X POST http://51.255.201.244:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"shop@example.com","password":"password123"}'
 ```
@@ -95,7 +95,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ### 2. Create Shop
 ```bash
 # Create a shop (requires JWT token)
-curl -X POST http://localhost:3000/api/shops \
+curl -X POST http://51.255.201.244:3000/api/shops \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name":"My Store","domain":"mystore.com","platform":"shopify"}'
@@ -104,7 +104,7 @@ curl -X POST http://localhost:3000/api/shops \
 ### 3. Create Order
 ```bash
 # Create an order
-curl -X POST http://localhost:3000/api/orders \
+curl -X POST http://51.255.201.244:3000/api/orders \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"orderId":"ORDER-001","clientInfo":{"name":"John Doe","phone":"+1234567890"},"items":[{"name":"Product","quantity":1,"price":99.99}],"totalAmount":99.99}'
@@ -138,8 +138,8 @@ curl -X POST http://localhost:3000/api/orders \
 ### Required Environment Variables
 ```bash
 # Database
-MONGODB_URI=mongodb://localhost:27017/confirmed
-REDIS_URL=redis://localhost:6379
+MONGODB_URI=mongodb://51.255.201.244:27017/confirmed
+REDIS_URL=redis://51.255.201.244:6379
 
 # Authentication
 JWT_SECRET=your_jwt_secret_here
@@ -172,7 +172,7 @@ docker-compose logs -f app
 ### Postman Collection
 Import the provided Postman collection for comprehensive API testing:
 - **File**: `Confirmed_API.postman_collection.json`
-- **Base URL**: `http://localhost:3000`
+- **Base URL**: `http://51.255.201.244:3000`
 - **Authentication**: Automatic token management
 
 ### Test Scenarios

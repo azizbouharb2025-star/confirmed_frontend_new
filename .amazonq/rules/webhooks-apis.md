@@ -1,6 +1,6 @@
 # Webhooks APIs
 
-Base URL: `http://localhost:3000/api/webhooks`
+Base URL: `http://51.255.201.244:3000/api/webhooks`
 
 ## Overview
 Webhook APIs handle real-time event notifications from external platforms and services. Supports Shopify webhooks and generic order status updates for seamless integration.

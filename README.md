@@ -131,7 +131,7 @@ npm install
 
 3. **Configure environment**
 ```bash
-# Backend API should be running on http://localhost:3000
+# Backend API should be running on http://51.255.201.244:3000
 # Frontend will proxy API requests through Next.js
 ```
 
@@ -142,7 +142,7 @@ npm run dev
 
 5. **Open your browser**
 ```
-http://localhost:3001
+http://51.255.201.244:3001
 ```
 
 ### **Build for Production**
@@ -244,7 +244,7 @@ Use your backend credentials to test different roles:
 The frontend connects to your backend API running on port 3000.
 
 ### **API Proxy**
-Next.js proxies all `/api/*` requests to `http://localhost:3000/api/*` to avoid CORS issues.
+Next.js proxies all `/api/*` requests to `http://51.255.201.244:3000/api/*` to avoid CORS issues.
 
 ### **Endpoints Used**
 - `POST /api/auth/login` - User authentication

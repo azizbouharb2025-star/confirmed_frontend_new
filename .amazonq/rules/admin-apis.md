@@ -1,6 +1,6 @@
 # Admin APIs
 
-Base URL: `http://localhost:3000/api/admin`
+Base URL: `http://51.255.201.244:3000/api/admin`
 
 ## Overview
 Admin APIs provide comprehensive system management capabilities including dashboard analytics, user management, and system monitoring for administrators.

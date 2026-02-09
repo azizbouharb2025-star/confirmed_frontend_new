@@ -1,6 +1,6 @@
 # Authentication APIs
 
-Base URL: `http://localhost:3000/api/auth`
+Base URL: `http://51.255.201.244:3000/api/auth`
 
 ## Overview
 The authentication system handles user registration, login, and profile management with JWT-based authentication. Supports multiple user roles: `shop_owner`, `operator`, and `admin`.

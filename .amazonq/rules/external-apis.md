@@ -1,6 +1,6 @@
 # External APIs
 
-Base URL: `http://localhost:3000/external-api`
+Base URL: `http://51.255.201.244:3000/external-api`
 
 ## Overview
 External APIs provide programmatic access for third-party integrations and external systems. These APIs use API key authentication instead of JWT tokens and are designed for server-to-server communication.
@@ -436,7 +436,7 @@ Before processing requests, the system checks subscription limits:
 ### cURL Example
 ```bash
 # Create order
-curl -X POST http://localhost:3000/external-api/orders \
+curl -X POST http://51.255.201.244:3000/external-api/orders \
   -H "X-API-Key: your_api_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -463,7 +463,7 @@ curl -X POST http://localhost:3000/external-api/orders \
 const axios = require('axios');
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/external-api',
+  baseURL: 'http://51.255.201.244:3000/external-api',
   headers: {
     'X-API-Key': 'your_api_key_here',
     'Content-Type': 'application/json'

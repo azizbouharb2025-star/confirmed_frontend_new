@@ -16,8 +16,8 @@ import {
   ComplaintCategory,
 } from '@/types/complaint';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-const FILE_SERVER_URL = process.env.NEXT_PUBLIC_FILE_SERVER_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://51.255.201.244:3000';
+const FILE_SERVER_URL = process.env.NEXT_PUBLIC_FILE_SERVER_URL || 'http://51.255.201.244:8000';
 
 /**
  * Build query string from complaint filters and pagination
@@ -171,8 +171,8 @@ function transformComplaint(complaint: RawComplaint): Complaint {
       let url = attachment.url || attachment.path || attachment.filename || '';
 
       // Replace port 3000 with port 8000 for file attachments if already absolute
-      if (url && url.includes('localhost:3000/uploads/')) {
-        url = url.replace('localhost:3000', 'localhost:8000');
+      if (url && url.includes('51.255.201.244:3000/uploads/')) {
+        url = url.replace('51.255.201.244:3000', '51.255.201.244:8000');
       }
       // If URL is not absolute, build the full URL
       else if (url && !url.startsWith('http')) {

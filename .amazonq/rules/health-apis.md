@@ -1,6 +1,6 @@
 # Health Check APIs
 
-Base URL: `http://localhost:3000/health`
+Base URL: `http://51.255.201.244:3000/health`
 
 ## Overview
 Health check APIs provide system monitoring, service status verification, and operational health insights for the Confirmed platform. These endpoints are essential for monitoring, load balancing, and deployment automation.
@@ -268,7 +268,7 @@ Health endpoints can be integrated with Prometheus for metrics collection:
 scrape_configs:
   - job_name: 'confirmed-backend'
     static_configs:
-      - targets: ['localhost:3000']
+      - targets: ['51.255.201.244:3000']
     metrics_path: '/health/detailed'
     scrape_interval: 30s
 ```
@@ -313,18 +313,18 @@ backend confirmed-backend
     balance roundrobin
     option httpchk GET /health
     http-check expect status 200
-    server app1 localhost:3001 check
-    server app2 localhost:3002 check
-    server app3 localhost:3003 check
+    server app1 51.255.201.244:3001 check
+    server app2 51.255.201.244:3002 check
+    server app3 51.255.201.244:3003 check
 ```
 
 ### NGINX Example
 ```nginx
 # nginx.conf
 upstream backend {
-    server localhost:3001;
-    server localhost:3002;
-    server localhost:3003;
+    server 51.255.201.244:3001;
+    server 51.255.201.244:3002;
+    server 51.255.201.244:3003;
 }
 
 location /health {
