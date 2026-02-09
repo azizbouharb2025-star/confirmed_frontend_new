@@ -12,6 +12,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { useAuth } from '@/hooks/useAuth'
 import { useSession } from '@/hooks/useSession'
 import logger from '@/lib/logger'
+import api from '@/lib/api'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
@@ -31,21 +32,9 @@ export default function LoginPage() {
     
     try {
       // Call real backend API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
-        mode: 'cors'
-      })
+      const data = await api.auth.login(formData.email, formData.password)
       
-      const data = await response.json()
-      
-      if (response.ok) {
+      if (data.user && data.token) {
         // Login user with real data from backend
         login(data.user, data.token)
         

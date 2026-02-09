@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useWebSocketContext } from '@/components/providers/WebSocketProvider'
+import api from '@/lib/api'
 import logger from '@/lib/logger'
 
 interface Order {
@@ -65,13 +66,8 @@ export const useRealTimeOrders = () => {
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/orders', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        }
-      })
-      const data = await response.json()
-      setOrders(data.orders || [])
+      const response = await api.get('/api/orders')
+      setOrders(response.data.orders || [])
     } catch (error) {
       logger.error('Failed to fetch orders:', error, 'RealTimeOrders')
     } finally {

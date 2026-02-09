@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://51.255.201.244:3000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
 
 const getAuthToken = () => {
   if (typeof window !== 'undefined') {
