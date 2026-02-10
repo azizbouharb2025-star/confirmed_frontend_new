@@ -14,12 +14,102 @@ import { api } from '@/lib/api'
 import logger from '@/lib/logger'
 import toast from 'react-hot-toast'
 
+const COUNTRY_PREFIXES = [
+  { code: '+216', label: 'TN', country: 'Tunisia' },
+  { code: '+213', label: 'DZ', country: 'Algeria' },
+  { code: '+212', label: 'MA', country: 'Morocco' },
+  { code: '+20', label: 'EG', country: 'Egypt' },
+  { code: '+218', label: 'LY', country: 'Libya' },
+  { code: '+33', label: 'FR', country: 'France' },
+  { code: '+1', label: 'US', country: 'USA' },
+  { code: '+44', label: 'GB', country: 'UK' },
+  { code: '+966', label: 'SA', country: 'Saudi Arabia' },
+  { code: '+971', label: 'AE', country: 'UAE' },
+  { code: '+974', label: 'QA', country: 'Qatar' },
+]
+
+const COUNTRY_CODE_MAP: Record<string, string> = {
+  TN: '+216', DZ: '+213', MA: '+212', EG: '+20', LY: '+218',
+  FR: '+33', US: '+1', GB: '+44', SA: '+966', AE: '+971', QA: '+974',
+}
+
+const COUNTRY_NAME_MAP: Record<string, string> = {
+  TN: 'Tunisia', DZ: 'Algeria', MA: 'Morocco', EG: 'Egypt', LY: 'Libya',
+}
+
+function PhonePrefixInput({
+  label,
+  prefix,
+  onPrefixChange,
+  value,
+  onChange,
+  disabled,
+  error,
+  ariaLabel,
+}: {
+  label?: string
+  prefix: string
+  onPrefixChange: (val: string) => void
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  disabled?: boolean
+  error?: string
+  ariaLabel?: string
+}) {
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">
+          {label}
+        </label>
+      )}
+      <div
+        className={`flex items-center bg-white/50 dark:bg-slate-800/50 border rounded-xl transition-all duration-300 backdrop-blur-sm shadow-inner focus-within:ring-2 focus-within:ring-[#ADFF2F]/50 focus-within:border-[#ADFF2F]/50 ${
+          error
+            ? 'border-red-500'
+            : 'border-gray-300 dark:border-slate-600/50'
+        } ${disabled ? 'opacity-50' : ''}`}
+      >
+        <div className="flex items-center pl-3 text-gray-500 dark:text-slate-400">
+          <PhoneIcon className="w-5 h-5" />
+        </div>
+        <select
+          value={prefix}
+          onChange={(e) => onPrefixChange(e.target.value)}
+          disabled={disabled}
+          aria-label={ariaLabel || 'Country code'}
+          className="bg-transparent border-none outline-none text-sm font-medium text-gray-700 dark:text-slate-200 pl-2 pr-1 py-3 cursor-pointer appearance-none"
+          style={{ backgroundImage: 'none' }}
+        >
+          {COUNTRY_PREFIXES.map((p) => (
+            <option key={p.code} value={p.code}>
+              {p.label} {p.code}
+            </option>
+          ))}
+        </select>
+        <div className="w-px h-6 bg-gray-300 dark:bg-slate-600/50 mx-1 flex-shrink-0" />
+        <input
+          type="tel"
+          placeholder="12 345 678"
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+          className="flex-1 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 py-3 pr-4 pl-2 text-sm"
+        />
+      </div>
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
+  )
+}
+
 export default function RegisterPage() {
   const { t } = useLanguage()
   const [loading, setLoading] = useState(false)
   const { theme } = useTheme()
   const [step, setStep] = useState(1)
   const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [phonePrefix, setPhonePrefix] = useState('+216')
+  const [whatsappPrefix, setWhatsappPrefix] = useState('+216')
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -36,16 +126,41 @@ export default function RegisterPage() {
   useEffect(() => {
     if (formData.isWhatsappLinked) {
       setFormData(prev => ({ ...prev, whatsappNumber: prev.phoneNumber }))
+      setWhatsappPrefix(phonePrefix)
     }
-  }, [formData.phoneNumber, formData.isWhatsappLinked])
+  }, [formData.phoneNumber, formData.isWhatsappLinked, phonePrefix])
+
+  useEffect(() => {
+    const detectCountry = async () => {
+      try {
+        const res = await fetch('https://ipapi.co/json/')
+        if (!res.ok) return
+        const data = await res.json()
+        const cc = data.country_code?.toUpperCase()
+        if (cc && COUNTRY_CODE_MAP[cc]) {
+          setPhonePrefix(COUNTRY_CODE_MAP[cc])
+          setWhatsappPrefix(COUNTRY_CODE_MAP[cc])
+        }
+        if (cc && COUNTRY_NAME_MAP[cc]) {
+          setFormData(prev => ({ ...prev, country: COUNTRY_NAME_MAP[cc] }))
+        }
+      } catch {
+        // silently fallback to default (+216 Tunisia)
+      }
+    }
+    detectCountry()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrors({})
     
     const newErrors: {[key: string]: string} = {}
-    if (!validatePhone(formData.phoneNumber)) newErrors.phoneNumber = t('auth.invalidPhone')
-    if (!formData.isWhatsappLinked && !validatePhone(formData.whatsappNumber)) newErrors.whatsappNumber = t('auth.invalidWhatsapp')
+    const fullPhone = `${phonePrefix}${formData.phoneNumber}`
+    const fullWhatsapp = formData.isWhatsappLinked ? fullPhone : `${whatsappPrefix}${formData.whatsappNumber}`
+    
+    if (!validatePhone(fullPhone)) newErrors.phoneNumber = t('auth.invalidPhone')
+    if (!formData.isWhatsappLinked && !validatePhone(fullWhatsapp)) newErrors.whatsappNumber = t('auth.invalidWhatsapp')
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -55,18 +170,59 @@ export default function RegisterPage() {
     setLoading(true)
     
     try {
+      const fullPhone = `${phonePrefix}${formData.phoneNumber.trim()}`
+      const fullWhatsapp = formData.isWhatsappLinked ? fullPhone : `${whatsappPrefix}${formData.whatsappNumber.trim()}`
+
       const response = await api.auth.register({
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim(),
         password: formData.password,
+        phoneNumber: fullPhone,
+        whatsappNumber: fullWhatsapp,
+        isWhatsappLinked: formData.isWhatsappLinked,
+        country: formData.country,
         role: formData.role
       })
       
-      if (response.token) {
+      if (response.error) {
+        const errorMsg: string = response.error
+        const match = errorMsg.match(/Missing required fields:\s*(.+)/i)
+        if (match) {
+          const fields = match[1].split(',').map((f: string) => f.trim())
+          const fieldErrors: {[key: string]: string} = {}
+          const fieldLabels: Record<string, string> = {
+            email: t('auth.email'),
+            password: t('auth.password'),
+            firstName: t('auth.firstName'),
+            lastName: t('auth.lastName'),
+            phoneNumber: t('auth.phoneNumber'),
+            whatsappNumber: t('auth.whatsappNumber'),
+            country: t('auth.country'),
+            role: 'Role',
+            isWhatsappLinked: 'WhatsApp linked',
+          }
+          fields.forEach((field: string) => {
+            fieldErrors[field] = `${fieldLabels[field] || field} ${t('auth.isRequired') || 'is required'}`
+          })
+          setErrors(fieldErrors)
+          // Jump to the earliest step that has an error
+          if (fields.some((f: string) => ['firstName', 'lastName', 'email'].includes(f))) {
+            setStep(1)
+          } else if (fields.some((f: string) => ['password'].includes(f))) {
+            setStep(2)
+          } else {
+            setStep(3)
+          }
+          toast.error(t('auth.fixErrors') || 'Please fix the highlighted fields')
+        } else {
+          toast.error(errorMsg)
+        }
+      } else if (response.token) {
         toast.success('Registration successful! Please login.')
         window.location.href = '/panel/login'
       } else {
-        toast.error(response.error || 'Registration failed')
+        toast.error('Registration failed. Please try again.')
       }
     } catch (error) {
       logger.error('Registration error:', error, 'Auth')
@@ -265,18 +421,15 @@ export default function RegisterPage() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <div>
-              <Input
-                label={t('auth.phoneNumber')}
-                type="tel"
-                placeholder="+216 12 345 678"
-                icon={<PhoneIcon className="w-5 h-5" />}
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                required
-              />
-              {errors.phoneNumber && <p className="text-sm text-red-500 mt-1">{errors.phoneNumber}</p>}
-            </div>
+            <PhonePrefixInput
+              label={t('auth.phoneNumber')}
+              prefix={phonePrefix}
+              onPrefixChange={setPhonePrefix}
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+              error={errors.phoneNumber}
+              ariaLabel={t('auth.phonePrefix') || 'Phone prefix'}
+            />
             
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -295,18 +448,15 @@ export default function RegisterPage() {
                   </span>
                 </label>
               </div>
-              <div>
-                <Input
-                  type="tel"
-                  placeholder="+216 12 345 678"
-                  icon={<PhoneIcon className="w-5 h-5" />}
-                  value={formData.whatsappNumber}
-                  onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
-                  disabled={formData.isWhatsappLinked}
-                  required
-                />
-                {errors.whatsappNumber && <p className="text-sm text-red-500 mt-1">{errors.whatsappNumber}</p>}
-              </div>
+              <PhonePrefixInput
+                prefix={whatsappPrefix}
+                onPrefixChange={setWhatsappPrefix}
+                value={formData.whatsappNumber}
+                onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                disabled={formData.isWhatsappLinked}
+                error={errors.whatsappNumber}
+                ariaLabel={t('auth.whatsappPrefix') || 'WhatsApp prefix'}
+              />
             </div>
             
             <div className="space-y-2">
@@ -327,6 +477,7 @@ export default function RegisterPage() {
                   <option value="Libya">🇱🇾 Libya</option>
                 </select>
               </div>
+              {errors.country && <p className="text-sm text-red-500 mt-1">{errors.country}</p>}
             </div>
         
             <div className="flex items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700">

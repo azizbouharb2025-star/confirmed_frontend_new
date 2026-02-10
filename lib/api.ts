@@ -101,7 +101,17 @@ const api = {
       return response.json()
     },
     
-    register: async (userData: { name: string; email: string; password: string; role?: string }) => {
+    register: async (userData: {
+      firstName: string
+      lastName: string
+      email: string
+      password: string
+      phoneNumber: string
+      whatsappNumber: string
+      isWhatsappLinked: boolean
+      country: string
+      role: string
+    }) => {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
@@ -109,15 +119,11 @@ const api = {
         },
         body: JSON.stringify(userData)
       })
+      const data = await response.json().catch(() => null)
       if (!response.ok) {
-        const text = await response.text()
-        try {
-          return JSON.parse(text)
-        } catch {
-          throw new Error(`Server error (${response.status}): ${text || response.statusText}`)
-        }
+        return { error: data?.message || data?.error || `Registration failed (${response.status})`, ...data }
       }
-      return response.json()
+      return data
     },
     
     me: async (token: string) => {
