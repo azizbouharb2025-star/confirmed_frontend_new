@@ -214,7 +214,7 @@ export default function RegisterPage() {
           } else {
             setStep(3)
           }
-          toast.error(t('auth.fixErrors') || 'Please fix the highlighted fields')
+          toast.error('Please fix the highlighted fields')
         } else {
           toast.error(errorMsg)
         }
