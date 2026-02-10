@@ -11,6 +11,8 @@
 
 import { ServerIcon, CheckCircleIcon, ExclamationCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export type ServiceStatus = 'healthy' | 'degraded' | 'down';
 
@@ -120,14 +122,14 @@ function formatLastCheck(timestamp: string): string {
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ServerIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No system health data available
+        {t('widget.systemHealth.empty')}
       </p>
     </div>
   );
@@ -136,20 +138,20 @@ function EmptyState(): JSX.Element {
 /**
  * Overall system status summary
  */
-function SystemStatusSummary({ services }: { services: ServiceHealth[] }): JSX.Element {
+function SystemStatusSummary({ services, t }: { services: ServiceHealth[]; t: (key: TranslationKey) => string }): JSX.Element {
   const healthyCount = services.filter(s => s.status === 'healthy').length;
   const degradedCount = services.filter(s => s.status === 'degraded').length;
   const downCount = services.filter(s => s.status === 'down').length;
   
   let overallStatus: ServiceStatus = 'healthy';
-  let statusText = 'All Systems Operational';
+  let statusText = t('widget.systemHealth.allOperational');
   
   if (downCount > 0) {
     overallStatus = 'down';
-    statusText = `${downCount} Service${downCount > 1 ? 's' : ''} Down`;
+    statusText = `${downCount} ${t('widget.systemHealth.servicesDown')}`;
   } else if (degradedCount > 0) {
     overallStatus = 'degraded';
-    statusText = `${degradedCount} Service${degradedCount > 1 ? 's' : ''} Degraded`;
+    statusText = `${degradedCount} ${t('widget.systemHealth.servicesDegraded')}`;
   }
   
   return (
@@ -160,7 +162,7 @@ function SystemStatusSummary({ services }: { services: ServiceHealth[] }): JSX.E
           {statusText}
         </p>
         <p className="text-xs text-slate-400">
-          {healthyCount}/{services.length} services healthy
+          {healthyCount}/{services.length} {t('widget.systemHealth.servicesHealthy')}
         </p>
       </div>
     </div>
@@ -187,10 +189,11 @@ export function SystemHealthWidget({
   className = '',
 }: SystemHealthWidgetProps): JSX.Element {
   const hasData = services.length > 0;
+  const { t } = useLanguage();
 
   return (
     <WidgetContainer
-      title="System Health"
+      title={t('widget.systemHealth')}
       icon={<ServerIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -198,11 +201,11 @@ export function SystemHealthWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="system-health-content">
           {/* Overall status summary */}
-          <SystemStatusSummary services={services} />
+          <SystemStatusSummary services={services} t={t} />
           
           {/* Individual service status */}
           <div className="space-y-2" data-testid="service-list">
@@ -217,7 +220,7 @@ export function SystemHealthWidget({
                   <div>
                     <p className="text-sm font-medium">{service.name}</p>
                     <p className="text-xs text-slate-400">
-                      Last check: {formatLastCheck(service.lastCheck)}
+                      {t('widget.systemHealth.lastCheck')}: {formatLastCheck(service.lastCheck)}
                     </p>
                   </div>
                 </div>

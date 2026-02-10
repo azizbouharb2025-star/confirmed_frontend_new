@@ -87,7 +87,7 @@ export default function CallQueue() {
     
     // Validate rejection reason is provided
     if (!rejectionReason.trim()) {
-      setRejectionError('Rejection reason is required')
+      setRejectionError(t('queue.rejectionRequired'))
       return
     }
     
@@ -160,9 +160,9 @@ export default function CallQueue() {
                   /* Empty queue state - Requirements: 5.6 */
                   <div className="text-center py-8">
                     <CheckCircleIcon className="h-12 w-12 mx-auto mb-2 text-green-500" />
-                    <p className="text-lg font-medium mb-1">Queue is empty</p>
+                    <p className="text-lg font-medium mb-1">{t('queue.queueEmpty')}</p>
                     <p className="text-sm dark:text-slate-400 light:text-gray-600">
-                      No pending orders to process
+                      {t('queue.noPendingOrders')}
                     </p>
                   </div>
                 ) : (
@@ -289,49 +289,49 @@ export default function CallQueue() {
                     <div className="card p-4">
                       <h3 className="font-semibold mb-4 flex items-center gap-2">
                         <ClockIcon className="h-5 w-5" />
-                        Call Feedback
+                        {t('queue.callFeedback')}
                       </h3>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Customer Tone */}
                         <div>
-                          <label className="block text-sm font-medium mb-1">Customer Tone</label>
+                          <label className="block text-sm font-medium mb-1">{t('queue.customerTone')}</label>
                           <select
                             value={feedback.customerTone}
                             onChange={(e) => setFeedback({ ...feedback, customerTone: e.target.value as CallFeedback['customerTone'] })}
                             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300"
                           >
-                            <option value="positive">Positive</option>
-                            <option value="neutral">Neutral</option>
-                            <option value="negative">Negative</option>
+                            <option value="positive">{t('queue.tonePositive')}</option>
+                            <option value="neutral">{t('queue.toneNeutral')}</option>
+                            <option value="negative">{t('queue.toneNegative')}</option>
                           </select>
                         </div>
 
                         {/* Price Sensitivity */}
                         <div>
-                          <label className="block text-sm font-medium mb-1">Price Sensitivity</label>
+                          <label className="block text-sm font-medium mb-1">{t('queue.priceSensitivity')}</label>
                           <select
                             value={feedback.priceSensitivity}
                             onChange={(e) => setFeedback({ ...feedback, priceSensitivity: e.target.value as CallFeedback['priceSensitivity'] })}
                             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300"
                           >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
+                            <option value="low">{t('queue.sensitivityLow')}</option>
+                            <option value="medium">{t('queue.sensitivityMedium')}</option>
+                            <option value="high">{t('queue.sensitivityHigh')}</option>
                           </select>
                         </div>
 
                         {/* Confirmation Strength */}
                         <div>
-                          <label className="block text-sm font-medium mb-1">Confirmation Strength</label>
+                          <label className="block text-sm font-medium mb-1">{t('queue.confirmationStrength')}</label>
                           <select
                             value={feedback.confirmationStrength}
                             onChange={(e) => setFeedback({ ...feedback, confirmationStrength: e.target.value as CallFeedback['confirmationStrength'] })}
                             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300"
                           >
-                            <option value="strong">Strong</option>
-                            <option value="moderate">Moderate</option>
-                            <option value="weak">Weak</option>
+                            <option value="strong">{t('queue.strengthStrong')}</option>
+                            <option value="moderate">{t('queue.strengthModerate')}</option>
+                            <option value="weak">{t('queue.strengthWeak')}</option>
                           </select>
                         </div>
                       </div>
@@ -345,7 +345,7 @@ export default function CallQueue() {
                             onChange={(e) => setFeedback({ ...feedback, qualityConcerns: e.target.checked })}
                             className="rounded"
                           />
-                          <span className="text-sm">Quality Concerns</span>
+                          <span className="text-sm">{t('queue.qualityConcerns')}</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -354,7 +354,7 @@ export default function CallQueue() {
                             onChange={(e) => setFeedback({ ...feedback, deliveryIssues: e.target.checked })}
                             className="rounded"
                           />
-                          <span className="text-sm">Delivery Issues</span>
+                          <span className="text-sm">{t('queue.deliveryIssues')}</span>
                         </label>
                       </div>
 
@@ -404,12 +404,12 @@ export default function CallQueue() {
             <div className="card p-6 w-full max-w-md mx-4">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <ExclamationTriangleIcon className="h-6 w-6 text-red-500" />
-                Reject Order
+                {t('queue.rejectOrder')}
               </h3>
               
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2">
-                  Rejection Reason <span className="text-red-500">*</span>
+                  {t('queue.rejectionReason')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={rejectionReason}
@@ -417,7 +417,7 @@ export default function CallQueue() {
                     setRejectionReason(e.target.value)
                     setRejectionError('')
                   }}
-                  placeholder="Please provide a reason for rejection..."
+                  placeholder={t('queue.rejectionReasonPlaceholder')}
                   className={`w-full p-3 rounded-lg border dark:bg-slate-900 light:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 ${
                     rejectionError 
                       ? 'border-red-500' 
@@ -439,14 +439,14 @@ export default function CallQueue() {
                   }}
                   className="flex-1 px-4 py-2 border dark:border-slate-700 light:border-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
                 >
-                  Cancel
+                  {t('queue.cancel')}
                 </button>
                 <button
                   onClick={rejectOrder}
                   disabled={processing}
                   className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {processing ? 'Processing...' : 'Confirm Rejection'}
+                  {processing ? t('queue.processing') : t('queue.confirmReject')}
                 </button>
               </div>
             </div>

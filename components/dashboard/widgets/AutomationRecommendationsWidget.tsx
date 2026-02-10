@@ -8,6 +8,8 @@
 
 import { CpuChipIcon, ArrowRightIcon, BoltIcon, ExclamationTriangleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 export interface Recommendation {
   id: string;
@@ -95,10 +97,12 @@ function CategoryBadge({ category }: { category: string }): JSX.Element {
  */
 function RecommendationCard({ 
   recommendation, 
-  onActionClick 
+  onActionClick,
+  t 
 }: { 
   recommendation: Recommendation; 
   onActionClick?: (recommendation: Recommendation) => void;
+  t: (key: TranslationKey) => string;
 }): JSX.Element {
   return (
     <div 
@@ -122,7 +126,7 @@ function RecommendationCard({
           className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
           data-testid={`action-button-${recommendation.id}`}
         >
-          Apply
+          {t('widget.automationRecommendations.apply')}
           <ArrowRightIcon className="w-3 h-3" />
         </button>
       </div>
@@ -133,17 +137,17 @@ function RecommendationCard({
 /**
  * Empty state when no recommendations are available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <CpuChipIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No automation recommendations available
+        {t('widget.automationRecommendations.empty')}
       </p>
       <p className="text-xs text-slate-500 mt-1">
-        Check back later for AI-powered suggestions
+        {t('widget.automationRecommendations.emptyHint')}
       </p>
     </div>
   );
@@ -168,6 +172,7 @@ export function AutomationRecommendationsWidget({
   onActionClick,
   className = '',
 }: AutomationRecommendationsWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   // Ensure recommendations is always an array
   const recommendationsList = Array.isArray(recommendations) ? recommendations : [];
   const hasData = recommendationsList.length > 0;
@@ -189,7 +194,7 @@ export function AutomationRecommendationsWidget({
 
   return (
     <WidgetContainer
-      title="Automation Recommendations"
+      title={t('widget.automationRecommendations')}
       icon={<CpuChipIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -197,31 +202,31 @@ export function AutomationRecommendationsWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="automation-recommendations-content">
           {/* Impact summary */}
           <div className="flex items-center gap-4 pb-3 border-b border-slate-700 dark:border-slate-700 light:border-gray-200">
             <span className="text-xs text-slate-400">
-              {recommendations.length} recommendation{recommendations.length !== 1 ? 's' : ''}
+              {recommendations.length} {recommendations.length !== 1 ? t('widget.automationRecommendations.recommendations') : t('widget.automationRecommendations.recommendation')}
             </span>
             <div className="flex items-center gap-2">
               {impactCounts.high > 0 && (
                 <span className="inline-flex items-center gap-1 text-xs text-red-500">
                   <BoltIcon className="w-3 h-3" />
-                  {impactCounts.high} high
+                  {impactCounts.high} {t('widget.automationRecommendations.high')}
                 </span>
               )}
               {impactCounts.medium > 0 && (
                 <span className="inline-flex items-center gap-1 text-xs text-yellow-500">
                   <ExclamationTriangleIcon className="w-3 h-3" />
-                  {impactCounts.medium} medium
+                  {impactCounts.medium} {t('widget.automationRecommendations.medium')}
                 </span>
               )}
               {impactCounts.low > 0 && (
                 <span className="inline-flex items-center gap-1 text-xs text-blue-500">
                   <InformationCircleIcon className="w-3 h-3" />
-                  {impactCounts.low} low
+                  {impactCounts.low} {t('widget.automationRecommendations.low')}
                 </span>
               )}
             </div>
@@ -234,6 +239,7 @@ export function AutomationRecommendationsWidget({
                 key={recommendation.id}
                 recommendation={recommendation}
                 onActionClick={onActionClick}
+                t={t}
               />
             ))}
           </div>

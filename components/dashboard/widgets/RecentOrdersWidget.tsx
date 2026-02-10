@@ -11,6 +11,8 @@ import { ShoppingBagIcon } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
 import StatusBadge from '@/components/ui/StatusBadge';
 import api from '@/lib/api';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 import type { Order } from '@/types/order';
 
 export interface RecentOrdersWidgetProps {
@@ -55,14 +57,14 @@ function formatDate(dateString: string): string {
 /**
  * Get customer name from order
  */
-function getCustomerName(order: Order): string {
-  return order.clientInfo?.name || 'Unknown Customer';
+function getCustomerName(order: Order, fallback: string): string {
+  return order.clientInfo?.name || fallback;
 }
 
 /**
  * Empty state component
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div 
       className="flex flex-col items-center justify-center py-8 text-center"
@@ -72,7 +74,7 @@ function EmptyState(): JSX.Element {
         <ShoppingBagIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No recent orders found
+        {t('widget.recentOrders.empty')}
       </p>
     </div>
   );
@@ -104,6 +106,7 @@ export function RecentOrdersWidget({
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -138,7 +141,7 @@ export function RecentOrdersWidget({
 
   return (
     <WidgetContainer
-      title="Recent Orders"
+      title={t('widget.recentOrders')}
       icon={<ShoppingBagIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error ?? undefined}
@@ -146,23 +149,23 @@ export function RecentOrdersWidget({
       className={className}
     >
       {displayOrders.length === 0 ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="overflow-x-auto" data-testid="recent-orders-table">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-700 dark:border-slate-700 light:border-gray-200">
                 <th className="text-left py-2 px-2 font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                  Order ID
+                  {t('widget.recentOrders.orderId')}
                 </th>
                 <th className="text-left py-2 px-2 font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                  Customer
+                  {t('widget.recentOrders.customer')}
                 </th>
                 <th className="text-left py-2 px-2 font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                  Status
+                  {t('widget.recentOrders.status')}
                 </th>
                 <th className="text-right py-2 px-2 font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                  Amount
+                  {t('widget.recentOrders.amount')}
                 </th>
               </tr>
             </thead>
@@ -181,7 +184,7 @@ export function RecentOrdersWidget({
                   <td className="py-3 px-2">
                     <div className="flex flex-col">
                       <span className="font-medium truncate max-w-[150px]">
-                        {getCustomerName(order)}
+                        {getCustomerName(order, t('widget.unknownCustomer'))}
                       </span>
                       <span className="text-xs text-slate-500">
                         {formatDate(order.createdAt)}

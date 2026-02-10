@@ -115,8 +115,8 @@ export default function ProductsPage() {
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
-    if (!formData.name.trim()) errors.name = 'Product name is required'
-    if (!formData.price || parseFloat(formData.price) <= 0) errors.price = 'Valid price is required'
+    if (!formData.name.trim()) errors.name = t('products.nameRequired')
+    if (!formData.price || parseFloat(formData.price) <= 0) errors.price = t('products.priceRequired')
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -148,10 +148,10 @@ export default function ProductsPage() {
       if (response.data._id || response.data.id) {
         if (editingProduct) {
           setProducts(prev => prev.map(p => p._id === editingProduct._id ? response.data : p))
-          setSuccess('Product updated successfully!')
+          setSuccess(t('products.updateSuccess'))
         } else {
           setProducts(prev => [...prev, response.data])
-          setSuccess('Product created successfully!')
+          setSuccess(t('products.createSuccess'))
         }
         closeModal()
         setTimeout(() => setSuccess(null), 3000)
@@ -159,7 +159,7 @@ export default function ProductsPage() {
         setError(response.data.error || response.data.message)
       }
     } catch {
-      const errorMsg = 'Failed to save product'
+      const errorMsg = t('products.failedSave')
       setError(errorMsg)
     } finally {
       setSaving(false)
@@ -185,23 +185,23 @@ export default function ProductsPage() {
         setError(response.data.error)
       }
     } catch {
-      setError('Sync endpoint not available. Please ensure the backend API is running.')
+      setError(t('products.syncNotAvailable'))
     } finally {
       setSyncing(false)
     }
   }
 
   const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
+    if (!confirm(t('products.confirmDelete'))) return
     
     try {
       await api.post(`/api/products/${productId}`, { _method: 'DELETE' })
       setProducts(prev => prev.filter(p => p._id !== productId))
-      setSuccess('Product deleted')
+      setSuccess(t('products.deleteSuccess'))
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
       const error = err as { message?: string }
-      setError(error.message || 'Failed to delete product')
+      setError(error.message || t('products.failedDelete'))
     }
   }
 
@@ -290,7 +290,7 @@ export default function ProductsPage() {
                 className="flex items-center gap-2 px-4 py-2 dark:bg-slate-800 light:bg-white border dark:border-slate-700 light:border-gray-300 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
               >
                 <ArrowPathIcon className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing...' : t('products.syncNow')}
+                {syncing ? t('products.syncing') : t('products.syncNow')}
               </button>
 
               {/* Add Product Button */}
@@ -342,7 +342,7 @@ export default function ProductsPage() {
           {loading ? (
             <div className="card p-12 text-center">
               <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="dark:text-slate-400 light:text-gray-600">Loading products...</p>
+              <p className="dark:text-slate-400 light:text-gray-600">{t('common.loadingProducts')}</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="card p-12 text-center">
@@ -354,7 +354,7 @@ export default function ProductsPage() {
                   {t('products.addManual')}
                 </button>
                 <button onClick={handleSync} disabled={syncing} className="px-6 py-2 dark:bg-slate-800 light:bg-gray-100 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50">
-                  {syncing ? 'Syncing...' : t('products.syncNow')}
+                  {syncing ? t('products.syncing') : t('products.syncNow')}
                 </button>
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function ProductsPage() {
                   {/* Product Info */}
                   <div className="p-4">
                     <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || 'No description'}</p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || t('products.noDescription')}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-bold text-blue-500">${product.price.toFixed(2)}</span>
                       <span className={`text-xs px-2 py-1 rounded-full ${
@@ -399,7 +399,7 @@ export default function ProductsPage() {
                     </div>
                     {product.inventory && (
                       <div className="mt-2 text-xs dark:text-slate-400 light:text-gray-500">
-                        Stock: {product.inventory.quantity} {product.inventory.inStock ? '✓' : '✗'}
+                        {t('products.stock')}: {product.inventory.quantity} {product.inventory.inStock ? '✓' : '✗'}
                       </div>
                     )}
                   </div>
@@ -415,7 +415,7 @@ export default function ProductsPage() {
               <div className="dark:bg-slate-900 light:bg-white rounded-xl shadow-2xl border dark:border-slate-700 light:border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between p-6 border-b dark:border-slate-700 light:border-gray-200">
                   <h2 className="text-xl font-semibold dark:text-white light:text-gray-900">
-                    {editingProduct ? 'Edit Product' : t('products.addManual')}
+                    {editingProduct ? t('page.editProduct') : t('products.addManual')}
                   </h2>
                   <button onClick={closeModal} className="p-2 rounded-lg dark:hover:bg-slate-800 light:hover:bg-gray-100 transition-colors">
                     <XMarkIcon className="w-5 h-5" />
@@ -525,9 +525,9 @@ export default function ProductsPage() {
                     {saving ? (
                       <>
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        Saving...
+                        {t('products.saving')}
                       </>
-                    ) : editingProduct ? 'Update' : t('shops.save')}
+                    ) : editingProduct ? t('products.update') : t('shops.save')}
                   </button>
                 </div>
               </div>

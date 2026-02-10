@@ -7,6 +7,8 @@
 
 import { useConnectionStatus } from '@/stores/orderStore';
 import { ConnectionStatus } from '@/stores/orderStore';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 /**
  * Props for ConnectionStatusIndicator
@@ -34,14 +36,14 @@ interface StatusConfig {
 /**
  * Get status configuration based on connection state
  */
-function getStatusConfig(status: ConnectionStatus): StatusConfig {
+function getStatusConfig(status: ConnectionStatus): Omit<StatusConfig, 'label'> & { labelKey: string } {
   switch (status) {
     case 'connected':
       return {
         color: 'bg-green-500',
         bgColor: 'bg-green-500/20',
         pulseColor: 'bg-green-400',
-        label: 'Connected',
+        labelKey: 'connection.connected',
         animate: false,
       };
     case 'reconnecting':
@@ -49,7 +51,7 @@ function getStatusConfig(status: ConnectionStatus): StatusConfig {
         color: 'bg-yellow-500',
         bgColor: 'bg-yellow-500/20',
         pulseColor: 'bg-yellow-400',
-        label: 'Reconnecting...',
+        labelKey: 'connection.reconnecting',
         animate: true,
       };
     case 'disconnected':
@@ -58,7 +60,7 @@ function getStatusConfig(status: ConnectionStatus): StatusConfig {
         color: 'bg-red-500',
         bgColor: 'bg-red-500/20',
         pulseColor: 'bg-red-400',
-        label: 'Disconnected',
+        labelKey: 'connection.disconnected',
         animate: false,
       };
   }
@@ -90,15 +92,17 @@ export function ConnectionStatusIndicator({
   className = '',
 }: ConnectionStatusIndicatorProps) {
   const connectionStatus = useConnectionStatus();
+  const { t } = useLanguage();
   const config = getStatusConfig(connectionStatus);
+  const label = t(config.labelKey as TranslationKey);
   const sizeClasses = getSizeClasses(size);
 
   return (
     <div 
       className={`flex items-center ${sizeClasses.container} ${className}`}
-      title={config.label}
+      title={label}
       role="status"
-      aria-label={`Connection status: ${config.label}`}
+      aria-label={`Connection status: ${label}`}
     >
       <div className="relative flex items-center justify-center">
         {/* Pulse animation for reconnecting state */}
@@ -115,7 +119,7 @@ export function ConnectionStatusIndicator({
       
       {showLabel && (
         <span className={`${sizeClasses.text} text-slate-400 dark:text-slate-400 light:text-gray-600`}>
-          {config.label}
+          {label}
         </span>
       )}
     </div>
@@ -127,14 +131,16 @@ export function ConnectionStatusIndicator({
  */
 export function HeaderConnectionIndicator() {
   const connectionStatus = useConnectionStatus();
+  const { t } = useLanguage();
   const config = getStatusConfig(connectionStatus);
+  const label = t(config.labelKey as TranslationKey);
 
   // Only show indicator when not connected (to avoid clutter when everything is fine)
   if (connectionStatus === 'connected') {
     return (
       <div 
         className="flex items-center gap-2 px-2 py-1 rounded-md"
-        title="Real-time updates active"
+        title={t('connection.realtimeActive')}
       >
         <span className="w-2 h-2 bg-green-500 rounded-full" />
       </div>
@@ -145,7 +151,7 @@ export function HeaderConnectionIndicator() {
     <div 
       className={`flex items-center gap-2 px-3 py-1.5 rounded-md ${config.bgColor}`}
       role="status"
-      aria-label={`Connection status: ${config.label}`}
+      aria-label={`Connection status: ${label}`}
     >
       <div className="relative flex items-center justify-center">
         {config.animate && (
@@ -154,7 +160,7 @@ export function HeaderConnectionIndicator() {
         <span className={`relative w-2 h-2 ${config.color} rounded-full`} />
       </div>
       <span className="text-xs font-medium text-slate-300 dark:text-slate-300 light:text-gray-700">
-        {config.label}
+        {label}
       </span>
     </div>
   );

@@ -5,6 +5,7 @@ import { ClipboardDocumentListIcon, CheckCircleIcon, XCircleIcon, ClockIcon, Tru
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
+import type { TranslationKey } from '@/lib/i18n'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
 
@@ -85,7 +86,7 @@ export default function OrdersReception() {
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 dark:text-slate-400 light:text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search orders..."
+                  placeholder={t('orders.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -111,7 +112,7 @@ export default function OrdersReception() {
             <div className="p-4 border-b dark:border-slate-800 light:border-gray-200">
               <h2 className="font-semibold flex items-center gap-2">
                 <ClipboardDocumentListIcon className="h-5 w-5" />
-                Orders ({filteredOrders.length})
+                {t('orders.ordersCount')} ({filteredOrders.length})
               </h2>
             </div>
 
@@ -124,7 +125,7 @@ export default function OrdersReception() {
             ) : filteredOrders.length === 0 ? (
               <div className="text-center py-12">
                 <ClipboardDocumentListIcon className="h-12 w-12 mx-auto mb-2 dark:text-slate-600 light:text-gray-400" />
-                <p className="text-sm dark:text-slate-400 light:text-gray-600">No orders found</p>
+                <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('orders.noOrders')}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -157,11 +158,11 @@ export default function OrdersReception() {
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                             {getStatusIcon(order.status)}
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            {t(`status.${order.status}` as TranslationKey)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm">{order.assignedOperatorId?.name || 'Unassigned'}</span>
+                          <span className="text-sm">{order.assignedOperatorId?.name || t('orders.unassigned')}</span>
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-sm dark:text-slate-400 light:text-gray-600">

@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { TrophyIcon, ClockIcon, FireIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 /**
  * Mission type definition
@@ -112,11 +114,13 @@ function formatTimeRemaining(expiresAt: string): string {
 function MissionCard({ 
   mission, 
   onComplete,
-  showAnimation 
+  showAnimation,
+  t 
 }: { 
   mission: Mission; 
   onComplete?: () => void;
   showAnimation: boolean;
+  t: (key: TranslationKey) => string;
 }): JSX.Element {
   const progress = calculateMissionProgress(mission.current, mission.target);
   const isCompleted = mission.status === 'completed' || progress >= 100;
@@ -190,7 +194,7 @@ function MissionCard({
             onClick={onComplete}
             className="text-xs font-medium text-green-500 hover:text-green-400 transition-colors"
           >
-            Claim Reward
+            {t('widget.missions.claimReward')}
           </button>
         )}
       </div>
@@ -201,17 +205,17 @@ function MissionCard({
 /**
  * Empty state when no missions available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <TrophyIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No active missions available
+        {t('widget.missions.empty')}
       </p>
       <p className="text-xs text-slate-500 mt-1">
-        Check back later for new challenges
+        {t('widget.missions.emptyHint')}
       </p>
     </div>
   );
@@ -236,6 +240,7 @@ export function MissionsWidget({
   onRetry,
   className = '',
 }: MissionsWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   const [completedMissionId, setCompletedMissionId] = useState<string | null>(null);
 
   const handleMissionComplete = (missionId: string) => {
@@ -263,7 +268,7 @@ export function MissionsWidget({
 
   return (
     <WidgetContainer
-      title="Missions"
+      title={t('widget.missions')}
       icon={<TrophyIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -271,7 +276,7 @@ export function MissionsWidget({
       className={className}
     >
       {sortedMissions.length === 0 ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-3" data-testid="missions-list">
           {sortedMissions.map((mission) => (
@@ -280,6 +285,7 @@ export function MissionsWidget({
               mission={mission}
               onComplete={() => handleMissionComplete(mission.id)}
               showAnimation={completedMissionId === mission.id}
+              t={t}
             />
           ))}
         </div>

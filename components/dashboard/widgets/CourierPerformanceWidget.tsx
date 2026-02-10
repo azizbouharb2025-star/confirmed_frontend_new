@@ -9,6 +9,8 @@
 import { TruckIcon, StarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export interface CourierData {
   name: string;
@@ -81,14 +83,14 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <TruckIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No courier performance data available
+        {t('widget.courierPerformance.empty')}
       </p>
     </div>
   );
@@ -115,6 +117,7 @@ export function CourierPerformanceWidget({
   const courierList = Array.isArray(couriers) ? couriers : [];
   const hasData = courierList.length > 0;
   const bestCourier = findBestCourier(courierList);
+  const { t } = useLanguage();
 
   // Prepare chart data
   const chartData = courierList.map(courier => ({
@@ -125,7 +128,7 @@ export function CourierPerformanceWidget({
 
   return (
     <WidgetContainer
-      title="Courier Performance"
+      title={t('widget.courierPerformance')}
       icon={<TruckIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -133,7 +136,7 @@ export function CourierPerformanceWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="courier-performance-content">
           {/* Best performer highlight */}
@@ -143,12 +146,12 @@ export function CourierPerformanceWidget({
                 <StarIcon className="w-4 h-4 text-green-500" />
               </div>
               <div className="flex-1">
-                <p className="text-xs text-green-400 mb-0.5">Best Performer</p>
+                <p className="text-xs text-green-400 mb-0.5">{t('widget.courierPerformance.bestPerformer')}</p>
                 <p className="text-sm font-medium text-green-500">{bestCourier.name}</p>
               </div>
               <div className="text-right">
                 <p className="text-lg font-semibold text-green-500">{bestCourier.successRate.toFixed(1)}%</p>
-                <p className="text-xs text-slate-400">success rate</p>
+                <p className="text-xs text-slate-400">{t('widget.courierPerformance.successRate')}</p>
               </div>
             </div>
           )}
@@ -199,14 +202,14 @@ export function CourierPerformanceWidget({
                       <span className={`font-semibold ${getSuccessRateTextColor(courier.successRate)}`}>
                         {courier.successRate.toFixed(1)}%
                       </span>
-                      <span className="text-slate-500">success</span>
+                      <span className="text-slate-500">{t('widget.courierPerformance.success')}</span>
                     </div>
                     <div className="flex items-center gap-1 text-slate-400">
                       <ClockIcon className="w-3 h-3" />
                       <span>{courier.avgDeliveryTime}min</span>
                     </div>
                     <div className="text-slate-500">
-                      {courier.totalDeliveries.toLocaleString()} deliveries
+                      {courier.totalDeliveries.toLocaleString()} {t('widget.courierPerformance.deliveries')}
                     </div>
                   </div>
                 </div>

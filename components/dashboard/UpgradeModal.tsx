@@ -10,6 +10,8 @@ import { Fragment } from 'react';
 import { XMarkIcon, CheckIcon, StarIcon } from '@heroicons/react/24/outline';
 import { SubscriptionPlan, getPlanDisplayName, ALL_PLANS } from '@/types/subscription';
 import { subscriptionService } from '@/services/subscriptionService';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export interface UpgradeModalProps {
   /** Whether the modal is open */
@@ -23,7 +25,7 @@ export interface UpgradeModalProps {
 }
 
 interface PlanFeatureRow {
-  feature: string;
+  featureKey: string;
   starter: boolean | string;
   pro: boolean | string;
   business: boolean | string;
@@ -31,16 +33,16 @@ interface PlanFeatureRow {
 }
 
 const PLAN_FEATURES_COMPARISON: PlanFeatureRow[] = [
-  { feature: 'Basic KPI Cards', starter: true, pro: true, business: true, enterprise: true },
-  { feature: 'Recent Orders Table', starter: true, pro: true, business: true, enterprise: true },
-  { feature: 'AI Risk Score Widget', starter: false, pro: true, business: true, enterprise: true },
-  { feature: 'Operator Feedback Metrics', starter: false, pro: true, business: true, enterprise: true },
-  { feature: 'Complaints Analytics', starter: false, pro: false, business: true, enterprise: true },
-  { feature: 'Courier Performance', starter: false, pro: false, business: true, enterprise: true },
-  { feature: 'Predictive Analytics', starter: false, pro: false, business: false, enterprise: true },
-  { feature: 'Automation Recommendations', starter: false, pro: false, business: false, enterprise: true },
-  { feature: 'Max Operators', starter: '5', pro: '20', business: '100', enterprise: 'Unlimited' },
-  { feature: 'AI Calls/Month', starter: '100', pro: '500', business: '2,000', enterprise: 'Unlimited' },
+  { featureKey: 'upgrade.basicKpiCards', starter: true, pro: true, business: true, enterprise: true },
+  { featureKey: 'upgrade.recentOrdersTable', starter: true, pro: true, business: true, enterprise: true },
+  { featureKey: 'upgrade.aiRiskScoreWidget', starter: false, pro: true, business: true, enterprise: true },
+  { featureKey: 'upgrade.operatorFeedbackMetrics', starter: false, pro: true, business: true, enterprise: true },
+  { featureKey: 'upgrade.complaintsAnalytics', starter: false, pro: false, business: true, enterprise: true },
+  { featureKey: 'upgrade.courierPerformance', starter: false, pro: false, business: true, enterprise: true },
+  { featureKey: 'upgrade.predictiveAnalytics', starter: false, pro: false, business: false, enterprise: true },
+  { featureKey: 'upgrade.automationRecommendations', starter: false, pro: false, business: false, enterprise: true },
+  { featureKey: 'upgrade.maxOperators', starter: '5', pro: '20', business: '100', enterprise: 'Unlimited' },
+  { featureKey: 'upgrade.aiCallsMonth', starter: '100', pro: '500', business: '2,000', enterprise: 'Unlimited' },
 ];
 
 const PLAN_PRICES: Record<SubscriptionPlan, string> = {
@@ -63,6 +65,8 @@ export function UpgradeModal({
   recommendedPlan,
   onUpgrade,
 }: UpgradeModalProps): JSX.Element | null {
+  const { t } = useLanguage();
+
   if (!isOpen) return null;
 
   const handleUpgrade = (plan: SubscriptionPlan) => {
@@ -109,10 +113,10 @@ export function UpgradeModal({
                 id="upgrade-modal-title"
                 className="text-2xl font-bold dark:text-white light:text-gray-900"
               >
-                Upgrade Your Plan
+                {t('upgrade.title')}
               </h2>
               <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600 mt-1">
-                Unlock more features and grow your business
+                {t('upgrade.subtitle')}
               </p>
             </div>
             <button
@@ -130,7 +134,7 @@ export function UpgradeModal({
               <thead>
                 <tr>
                   <th className="text-left py-4 px-4 text-sm font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                    Features
+                    {t('upgrade.features')}
                   </th>
                   {ALL_PLANS.map((plan) => (
                     <th
@@ -145,7 +149,7 @@ export function UpgradeModal({
                         {plan === recommendedPlan && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 mb-2 text-xs font-medium bg-blue-500 text-white rounded-full">
                             <StarIcon className="w-3 h-3" />
-                            Recommended
+                            {t('upgrade.recommended')}
                           </span>
                         )}
                         <span className="text-lg font-semibold dark:text-white light:text-gray-900">
@@ -153,7 +157,7 @@ export function UpgradeModal({
                         </span>
                         <span className="text-2xl font-bold text-blue-500 mt-1">
                           {PLAN_PRICES[plan]}
-                          <span className="text-sm font-normal text-slate-400">/mo</span>
+                          <span className="text-sm font-normal text-slate-400">{t('upgrade.perMonth')}</span>
                         </span>
                       </div>
                     </th>
@@ -163,7 +167,7 @@ export function UpgradeModal({
               <tbody>
                 {PLAN_FEATURES_COMPARISON.map((row, index) => (
                   <tr
-                    key={row.feature}
+                    key={row.featureKey}
                     className={
                       index % 2 === 0
                         ? 'bg-slate-800/30 dark:bg-slate-800/30 light:bg-gray-50'
@@ -171,11 +175,11 @@ export function UpgradeModal({
                     }
                   >
                     <td className="py-3 px-4 text-sm dark:text-slate-300 light:text-gray-700">
-                      {row.feature}
+                      {t(row.featureKey as TranslationKey)}
                     </td>
                     {ALL_PLANS.map((plan) => (
                       <td
-                        key={`${row.feature}-${plan}`}
+                        key={`${row.featureKey}-${plan}`}
                         className={`py-3 px-4 text-center ${
                           plan === recommendedPlan
                             ? 'bg-blue-500/10'
@@ -204,7 +208,7 @@ export function UpgradeModal({
                       : 'bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 light:bg-gray-100 light:hover:bg-gray-200 dark:text-white light:text-gray-900'
                   }`}
                 >
-                  {plan === recommendedPlan ? 'Upgrade to ' : 'Select '}
+                  {plan === recommendedPlan ? `${t('upgrade.upgradeTo')} ` : `${t('upgrade.select')} `}
                   {getPlanDisplayName(plan)}
                 </button>
               ))}

@@ -3,6 +3,8 @@
 import React from 'react'
 import { clsx } from 'clsx'
 import type { OrderStatus } from '@/types/order'
+import { useLanguage } from '@/hooks/useLanguage'
+import type { TranslationKey } from '@/lib/i18n'
 
 /**
  * StatusBadge Component
@@ -110,6 +112,20 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
 }
 
 /**
+ * Get translated status labels
+ */
+export function getTranslatedStatusLabels(t: (key: TranslationKey) => string): Record<OrderStatus, string> {
+  return {
+    confirmed: t('status.confirmed'),
+    rejected: t('status.rejected'),
+    pending: t('status.pending'),
+    in_progress: t('status.inProgress'),
+    assigned: t('status.assigned'),
+    cancelled: t('status.cancelled'),
+  }
+}
+
+/**
  * Size variants for the badge
  */
 const SIZE_CLASSES = {
@@ -145,6 +161,8 @@ export function getStatusColorCategory(status: OrderStatus): 'green' | 'red' | '
 
 export default function StatusBadge({ status, size = 'md', className }: StatusBadgeProps) {
   const colors = STATUS_COLORS[status]
+  const { t } = useLanguage()
+  const translatedLabels = getTranslatedStatusLabels(t)
   
   return (
     <span
@@ -160,7 +178,7 @@ export default function StatusBadge({ status, size = 'md', className }: StatusBa
       data-color={getStatusColorCategory(status)}
     >
       {StatusIcons[status]}
-      {STATUS_LABELS[status]}
+      {translatedLabels[status]}
     </span>
   )
 }

@@ -10,24 +10,26 @@ import {
   PhoneIcon
 } from '@heroicons/react/24/outline'
 import { useTheme } from '@/hooks/useTheme'
+import { useLanguage } from '@/hooks/useLanguage'
 
 export default function OperatorNavbar() {
   const pathname = usePathname()
   const { theme } = useTheme()
+  const { t } = useLanguage()
 
   const navItems = [
     { 
-      name: 'Dashboard', 
+      name: t('nav.dashboard'), 
       href: '/panel/op', 
       icon: HomeIcon
     },
     { 
-      name: 'Call Queue', 
+      name: t('nav.callQueue'), 
       href: '/panel/op/queue', 
       icon: PhoneIcon
     },
     { 
-      name: 'Orders', 
+      name: t('nav.orders'), 
       href: '/panel/op/orders', 
       icon: ShoppingBagIcon
     }

@@ -74,27 +74,27 @@ export default function ShopsPage() {
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}
-    if (!formData.name.trim()) errors.name = 'Shop name is required'
-    if (!formData.domain.trim()) errors.domain = 'Domain is required'
-    if (!formData.platform) errors.platform = 'Please select a platform'
+    if (!formData.name.trim()) errors.name = t('shops.nameRequired')
+    if (!formData.domain.trim()) errors.domain = t('shops.domainRequired')
+    if (!formData.platform) errors.platform = t('shops.platformRequired')
 
     const creds = formData.apiCredentials
     if (formData.platform === 'converty') {
-      if (!creds.apiKey) errors.apiKey = 'API Key is required'
-      if (!creds.apiSecret) errors.apiSecret = 'API Secret is required'
-      if (!creds.accessToken) errors.accessToken = 'Access Token is required'
+      if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
+      if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
+      if (!creds.accessToken) errors.accessToken = t('shops.accessTokenRequired')
     } else if (formData.platform === 'meta') {
-      if (!creds.appId) errors.appId = 'App ID is required'
-      if (!creds.apiSecret) errors.apiSecret = 'App Secret is required'
-      if (!creds.pageId) errors.pageId = 'Page ID is required'
-      if (!creds.accessToken) errors.accessToken = 'Access Token is required'
+      if (!creds.appId) errors.appId = t('shops.appIdRequired')
+      if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
+      if (!creds.pageId) errors.pageId = t('shops.pageIdRequired')
+      if (!creds.accessToken) errors.accessToken = t('shops.accessTokenRequired')
     } else if (formData.platform === 'tiktakpro') {
-      if (!creds.consumerKey) errors.consumerKey = 'Consumer Key is required'
-      if (!creds.consumerSecret) errors.consumerSecret = 'Consumer Secret is required'
-      if (!creds.storeUrl) errors.storeUrl = 'Store URL is required'
+      if (!creds.consumerKey) errors.consumerKey = t('shops.consumerKeyRequired')
+      if (!creds.consumerSecret) errors.consumerSecret = t('shops.consumerSecretRequired')
+      if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
     } else if (formData.platform === 'custom') {
-      if (!creds.apiEndpoint) errors.apiEndpoint = 'API Endpoint is required'
-      if (!creds.apiKey) errors.apiKey = 'API Key is required'
+      if (!creds.apiEndpoint) errors.apiEndpoint = t('shops.apiEndpointRequired')
+      if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
     }
 
     setFormErrors(errors)
@@ -118,7 +118,7 @@ export default function ShopsPage() {
       
       if (response.data._id || response.data.id) {
         setShops(prev => [...prev, response.data])
-        setSuccess('Shop created successfully!')
+        setSuccess(t('shops.createSuccess'))
         setShowModal(false)
         setFormData(initialFormData)
         setFormErrors({})
@@ -128,7 +128,7 @@ export default function ShopsPage() {
       }
     } catch (err) {
       const error = err as { message?: string }
-      setError(error.message || 'Failed to create shop')
+      setError(error.message || t('shops.failedCreate'))
     } finally {
       setSaving(false)
     }
@@ -265,7 +265,7 @@ export default function ShopsPage() {
           {loading ? (
             <div className="card p-12 text-center">
               <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="dark:text-slate-400 light:text-gray-600">Loading shops...</p>
+              <p className="dark:text-slate-400 light:text-gray-600">{t('common.loadingShops')}</p>
             </div>
           ) : shops.length === 0 ? (
             <div className="card p-12 text-center">
@@ -294,7 +294,7 @@ export default function ShopsPage() {
                         </div>
                       </div>
                       <span className={`px-2 py-1 text-xs rounded-full ${shop.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                        {shop.isActive ? 'Active' : 'Inactive'}
+                        {shop.isActive ? t('shops.active') : t('shops.inactive')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -399,7 +399,7 @@ export default function ShopsPage() {
                     {saving ? (
                       <>
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        Saving...
+                        {t('shops.saving')}
                       </>
                     ) : t('shops.save')}
                   </button>

@@ -14,6 +14,8 @@ import {
   ClockIcon 
 } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export type ActivityType = 'user' | 'order' | 'system' | 'payment';
 
@@ -101,14 +103,14 @@ function formatTimestamp(timestamp: string): string {
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ClockIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No recent activity
+        {t('widget.activityFeed.empty')}
       </p>
     </div>
   );
@@ -134,10 +136,11 @@ export function ActivityFeedWidget({
 }: ActivityFeedWidgetProps): JSX.Element {
   const hasData = activities.length > 0;
   const displayedActivities = activities.slice(0, maxItems);
+  const { t } = useLanguage();
 
   return (
     <WidgetContainer
-      title="Recent Activity"
+      title={t('widget.activityFeed')}
       icon={<ClockIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -145,7 +148,7 @@ export function ActivityFeedWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-3" data-testid="activity-feed-content">
           {displayedActivities.map((activity) => (
@@ -176,7 +179,7 @@ export function ActivityFeedWidget({
           {activities.length > maxItems && (
             <div className="text-center pt-2 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <p className="text-xs text-slate-400">
-                +{activities.length - maxItems} more events
+                +{activities.length - maxItems} {t('widget.activityFeed.moreEvents')}
               </p>
             </div>
           )}

@@ -9,6 +9,8 @@
 import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 export interface ComplaintTrendData {
   date: string;
@@ -64,13 +66,13 @@ function getResolutionRateColor(rate: number): string {
 /**
  * Custom tooltip for the line chart
  */
-function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+function TrendTooltip({ active, payload, label, t }: { active?: boolean; payload?: Array<{ value: number }>; label?: string; t: (key: TranslationKey) => string }) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-slate-800 dark:bg-slate-800 light:bg-white border border-slate-700 dark:border-slate-700 light:border-gray-200 rounded-lg px-3 py-2 shadow-lg">
         <p className="text-xs text-slate-400 mb-1">{label}</p>
         <p className="text-sm font-medium text-slate-200 dark:text-slate-200 light:text-gray-800">
-          {payload[0].value} complaints
+          {payload[0].value} {t('widget.complaintsAnalytics.complaints')}
         </p>
       </div>
     );
@@ -81,7 +83,7 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
 /**
  * Custom tooltip for the pie chart
  */
-function CategoryTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+function CategoryTooltip({ active, payload, t }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }>; t: (key: TranslationKey) => string }) {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -90,7 +92,7 @@ function CategoryTooltip({ active, payload }: { active?: boolean; payload?: Arra
           {data.name}
         </p>
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-600">
-          {data.value} complaints
+          {data.value} {t('widget.complaintsAnalytics.complaints')}
         </p>
       </div>
     );
@@ -101,14 +103,14 @@ function CategoryTooltip({ active, payload }: { active?: boolean; payload?: Arra
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ExclamationCircleIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No complaints data available
+        {t('widget.complaintsAnalytics.empty')}
       </p>
     </div>
   );
@@ -135,6 +137,7 @@ export function ComplaintsAnalyticsWidget({
   onRetry,
   className = '',
 }: ComplaintsAnalyticsWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   const hasData = totalComplaints > 0 || trendData.length > 0 || categories.length > 0;
 
   // Prepare pie chart data with colors
@@ -146,7 +149,7 @@ export function ComplaintsAnalyticsWidget({
 
   return (
     <WidgetContainer
-      title="Complaints Analytics"
+      title={t('widget.complaintsAnalytics')}
       icon={<ExclamationCircleIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -154,20 +157,20 @@ export function ComplaintsAnalyticsWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="complaints-analytics-content">
           {/* Summary metrics */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-lg bg-slate-700/30 dark:bg-slate-700/30 light:bg-gray-100">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-1">
-                Total Complaints
+                {t('widget.complaintsAnalytics.totalComplaints')}
               </p>
               <p className="text-xl font-semibold">{totalComplaints.toLocaleString()}</p>
             </div>
             <div className="p-3 rounded-lg bg-slate-700/30 dark:bg-slate-700/30 light:bg-gray-100">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-1">
-                Resolution Rate
+                {t('widget.complaintsAnalytics.resolutionRate')}
               </p>
               <div className="flex items-center gap-2">
                 <CheckCircleIcon className={`w-5 h-5 ${getResolutionRateColor(resolutionRate)}`} />
@@ -182,7 +185,7 @@ export function ComplaintsAnalyticsWidget({
           {trendData.length > 0 && (
             <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-3">
-                Complaint Trend
+                {t('widget.complaintsAnalytics.complaintTrend')}
               </p>
               <div className="h-[120px]" data-testid="complaints-trend-chart">
                 <ResponsiveContainer width="100%" height="100%">
@@ -199,7 +202,7 @@ export function ComplaintsAnalyticsWidget({
                       tickLine={{ stroke: '#475569' }}
                       width={30}
                     />
-                    <Tooltip content={<TrendTooltip />} />
+                    <Tooltip content={<TrendTooltip t={t} />} />
                     <Line 
                       type="monotone" 
                       dataKey="count" 
@@ -218,7 +221,7 @@ export function ComplaintsAnalyticsWidget({
           {categories.length > 0 && (
             <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-3">
-                Categories
+                {t('widget.complaintsAnalytics.categories')}
               </p>
               <div className="flex items-center gap-4">
                 <div className="h-[100px] w-[100px]" data-testid="complaints-category-chart">
@@ -237,7 +240,7 @@ export function ComplaintsAnalyticsWidget({
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip content={<CategoryTooltip />} />
+                      <Tooltip content={<CategoryTooltip t={t} />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>

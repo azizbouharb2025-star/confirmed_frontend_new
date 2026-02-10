@@ -9,6 +9,7 @@
 import { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface WidgetContainerProps {
   /** Widget title displayed in the header */
@@ -53,6 +54,7 @@ function ErrorState({
   error: string; 
   onRetry?: () => void; 
 }): JSX.Element {
+  const { t } = useLanguage();
   return (
     <div 
       className="flex flex-col items-center justify-center py-8 text-center"
@@ -71,7 +73,7 @@ function ErrorState({
           data-testid="widget-retry-button"
         >
           <ArrowPathIcon className="w-4 h-4" />
-          Retry
+          {t('widget.retry')}
         </button>
       )}
     </div>

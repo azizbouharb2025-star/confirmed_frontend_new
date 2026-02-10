@@ -3,8 +3,10 @@
 import React, { useState, useCallback } from 'react'
 import { clsx } from 'clsx'
 import type { OrderStatus, BulkResult, Order } from '@/types/order'
-import { STATUS_LABELS } from '@/components/ui/StatusBadge'
+import { getTranslatedStatusLabels } from '@/components/ui/StatusBadge'
 import logger from '@/lib/logger'
+import { useLanguage } from '@/hooks/useLanguage'
+import type { TranslationKey } from '@/lib/i18n'
 
 /**
  * BulkActionsToolbar Component
@@ -229,10 +231,12 @@ function ProgressIndicator({
  */
 function ResultSummary({ 
   result, 
-  onDismiss 
+  onDismiss,
+  t,
 }: { 
   result: BulkResult
-  onDismiss: () => void 
+  onDismiss: () => void
+  t: (key: TranslationKey) => string
 }) {
   const hasErrors = result.failed > 0
 
@@ -255,13 +259,13 @@ function ResultSummary({
         </svg>
       )}
       <span>
-        {result.successful} successful
-        {hasErrors && `, ${result.failed} failed`}
+        {result.successful} {t('bulk.successful')}
+        {hasErrors && `, ${result.failed} ${t('bulk.failedCount')}`}
       </span>
       <button
         onClick={onDismiss}
         className="ml-auto p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
-        aria-label="Dismiss"
+        aria-label={t('bulk.dismiss')}
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -280,11 +284,13 @@ function StatusDropdown({
   onToggle,
   onSelect,
   disabled,
+  t,
 }: {
   isOpen: boolean
   onToggle: () => void
   onSelect: (status: OrderStatus) => void
   disabled: boolean
+  t: (key: TranslationKey) => string
 }) {
   return (
     <div className="relative">
@@ -305,7 +311,7 @@ function StatusDropdown({
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        Update Status
+        {t('bulk.updateStatus')}
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
@@ -333,7 +339,7 @@ function StatusDropdown({
               )}
               data-testid={`bulk-status-option-${status}`}
             >
-              {STATUS_LABELS[status]}
+              {getTranslatedStatusLabels(t)[status]}
             </button>
           ))}
         </div>
@@ -368,6 +374,7 @@ export default function BulkActionsToolbar({
   const [isExporting, setIsExporting] = useState(false)
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
   const [result, setResult] = useState<BulkResult | null>(null)
+  const { t } = useLanguage()
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -458,7 +465,7 @@ export default function BulkActionsToolbar({
           className="font-medium text-gray-900 dark:text-white"
           data-testid="selected-count"
         >
-          {displayCount} selected
+          {displayCount} {t('bulk.selected')}
         </span>
       </div>
 
@@ -471,7 +478,7 @@ export default function BulkActionsToolbar({
       )}
 
       {result && !isProcessing && (
-        <ResultSummary result={result} onDismiss={handleDismissResult} />
+        <ResultSummary result={result} onDismiss={handleDismissResult} t={t} />
       )}
 
       {/* Actions */}
@@ -483,6 +490,7 @@ export default function BulkActionsToolbar({
             onToggle={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
             onSelect={handleStatusUpdate}
             disabled={isProcessing || isExporting}
+            t={t}
           />
 
           {/* Export button */}
@@ -507,7 +515,7 @@ export default function BulkActionsToolbar({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
             )}
-            Export
+            {t('bulk.export')}
           </button>
         </>
       )}
@@ -528,7 +536,7 @@ export default function BulkActionsToolbar({
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
-        Clear
+        {t('bulk.clear')}
       </button>
     </div>
   )

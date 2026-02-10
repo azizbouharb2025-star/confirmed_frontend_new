@@ -9,6 +9,19 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
 import { getRiskChartData, hasThreeCategories, RiskScoreData } from '../RiskScoreWidget';
+import type { TranslationKey } from '@/lib/i18n';
+
+/**
+ * Mock translation function that returns English translations for widget keys
+ */
+const mockT = (key: TranslationKey): string => {
+  const translations: Record<string, string> = {
+    'widget.riskScore.highConfidence': 'High Confidence',
+    'widget.riskScore.mediumConfidence': 'Medium Confidence',
+    'widget.riskScore.lowConfidence': 'Low Confidence',
+  };
+  return translations[key] || key;
+};
 
 /**
  * Arbitrary for generating valid RiskScoreData
@@ -37,7 +50,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('Property 4: chart data always has exactly three categories', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         return chartData.length === 3;
       }),
       { numRuns: 100 }
@@ -50,7 +63,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('chart data categories are always in order: high, medium, low', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         return (
           chartData[0].name === 'High Confidence' &&
           chartData[1].name === 'Medium Confidence' &&
@@ -67,7 +80,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('chart data values match input data', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         return (
           chartData[0].value === data.high &&
           chartData[1].value === data.medium &&
@@ -84,7 +97,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('each category has a distinct color', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         const colors = chartData.map(d => d.color);
         const uniqueColors = new Set(colors);
         return uniqueColors.size === 3;
@@ -99,7 +112,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('high confidence category uses green color', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         const highCategory = chartData.find(d => d.name === 'High Confidence');
         return highCategory?.color === '#22c55e';
       }),
@@ -113,7 +126,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('medium confidence category uses orange color', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         const mediumCategory = chartData.find(d => d.name === 'Medium Confidence');
         return mediumCategory?.color === '#f97316';
       }),
@@ -127,7 +140,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('low confidence category uses red color', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         const lowCategory = chartData.find(d => d.name === 'Low Confidence');
         return lowCategory?.color === '#ef4444';
       }),
@@ -153,7 +166,7 @@ describe('RiskScoreWidget - Property Tests', () => {
   it('total of chart data values equals sum of input values', () => {
     fc.assert(
       fc.property(riskScoreDataArb, (data) => {
-        const chartData = getRiskChartData(data);
+        const chartData = getRiskChartData(data, mockT);
         const chartTotal = chartData.reduce((sum, d) => sum + d.value, 0);
         const inputTotal = data.high + data.medium + data.low;
         return chartTotal === inputTotal;
@@ -166,13 +179,13 @@ describe('RiskScoreWidget - Property Tests', () => {
 describe('RiskScoreWidget - Unit Tests', () => {
   it('returns three categories for zero data', () => {
     const data: RiskScoreData = { high: 0, medium: 0, low: 0 };
-    const chartData = getRiskChartData(data);
+    const chartData = getRiskChartData(data, mockT);
     expect(chartData.length).toBe(3);
   });
 
   it('returns correct values for sample data', () => {
     const data: RiskScoreData = { high: 50, medium: 30, low: 20 };
-    const chartData = getRiskChartData(data);
+    const chartData = getRiskChartData(data, mockT);
     
     expect(chartData[0]).toEqual({ name: 'High Confidence', value: 50, color: '#22c55e' });
     expect(chartData[1]).toEqual({ name: 'Medium Confidence', value: 30, color: '#f97316' });
@@ -186,7 +199,7 @@ describe('RiskScoreWidget - Unit Tests', () => {
 
   it('handles large numbers correctly', () => {
     const data: RiskScoreData = { high: 999999, medium: 888888, low: 777777 };
-    const chartData = getRiskChartData(data);
+    const chartData = getRiskChartData(data, mockT);
     
     expect(chartData[0].value).toBe(999999);
     expect(chartData[1].value).toBe(888888);

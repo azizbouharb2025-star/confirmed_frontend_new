@@ -8,6 +8,8 @@
 
 import { WalletIcon, ClockIcon, CheckCircleIcon, GiftIcon } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 /**
  * Recent reward entry
@@ -72,18 +74,20 @@ function formatDate(dateString: string): string {
 function BalanceDisplay({ 
   balance, 
   pendingRewards, 
-  currency 
+  currency,
+  t 
 }: { 
   balance: number; 
   pendingRewards: number; 
   currency: string;
+  t: (key: TranslationKey) => string;
 }): JSX.Element {
   return (
     <div className="mb-4">
       {/* Main balance */}
       <div className="text-center p-4 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
         <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500 mb-1">
-          Available Balance
+          {t('widget.rewardsWallet.availableBalance')}
         </p>
         <p className="text-3xl font-bold text-green-500" data-testid="wallet-balance">
           {formatCurrency(balance, currency)}
@@ -95,7 +99,7 @@ function BalanceDisplay({
         <div className="flex items-center justify-center gap-2 mt-3 text-sm">
           <ClockIcon className="w-4 h-4 text-amber-500" />
           <span className="text-slate-400 dark:text-slate-400 light:text-gray-500">
-            Pending:
+            {t('widget.rewardsWallet.pending')}:
           </span>
           <span className="font-medium text-amber-500" data-testid="pending-rewards">
             {formatCurrency(pendingRewards, currency)}
@@ -138,17 +142,17 @@ function RewardRow({ reward, currency }: { reward: RewardEntry; currency: string
 /**
  * Empty state when no rewards
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-6 text-center">
       <div className="mb-3 p-3 rounded-full bg-slate-500/10">
         <GiftIcon className="w-6 h-6 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No rewards yet
+        {t('widget.rewardsWallet.noRewards')}
       </p>
       <p className="text-xs text-slate-500 mt-1">
-        Complete missions to earn rewards
+        {t('widget.rewardsWallet.noRewardsHint')}
       </p>
     </div>
   );
@@ -174,9 +178,10 @@ export function RewardsWalletWidget({
   onRetry,
   className = '',
 }: RewardsWalletWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   return (
     <WidgetContainer
-      title="Rewards Wallet"
+      title={t('widget.rewardsWallet')}
       icon={<WalletIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -186,17 +191,18 @@ export function RewardsWalletWidget({
       <BalanceDisplay 
         balance={balance} 
         pendingRewards={pendingRewards} 
-        currency={currency} 
+        currency={currency}
+        t={t} 
       />
       
       {/* Recent rewards section */}
       <div>
         <h4 className="text-xs font-medium text-slate-400 dark:text-slate-400 light:text-gray-500 mb-2">
-          Recent Rewards
+          {t('widget.rewardsWallet.recentRewards')}
         </h4>
         
         {!recentRewards || recentRewards.length === 0 ? (
-          <EmptyState />
+          <EmptyState t={t} />
         ) : (
           <div className="space-y-1" data-testid="rewards-list">
             {recentRewards.slice(0, 5).map((reward) => (

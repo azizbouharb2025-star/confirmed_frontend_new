@@ -18,6 +18,7 @@
 
 import { ClockIcon, TagIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import type { CallFeedback } from '@/types/order'
+import { useLanguage } from '@/hooks/useLanguage'
 
 interface CallFeedbackFormProps {
   feedback: CallFeedback
@@ -38,6 +39,7 @@ const COMMON_RISK_TAGS = [
 ]
 
 export default function CallFeedbackForm({ feedback, onChange, disabled = false }: CallFeedbackFormProps) {
+  const { t } = useLanguage()
   const handleChange = <K extends keyof CallFeedback>(key: K, value: CallFeedback[K]) => {
     onChange({ ...feedback, [key]: value })
   }
@@ -59,53 +61,53 @@ export default function CallFeedbackForm({ feedback, onChange, disabled = false 
     <div className="card p-4">
       <h3 className="font-semibold mb-4 flex items-center gap-2">
         <ClockIcon className="h-5 w-5" />
-        Call Feedback
+        {t('feedback.callFeedback')}
       </h3>
       
       {/* Main feedback fields */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Customer Tone */}
         <div>
-          <label className="block text-sm font-medium mb-1">Customer Tone</label>
+          <label className="block text-sm font-medium mb-1">{t('feedback.customerTone')}</label>
           <select
             value={feedback.customerTone}
             onChange={(e) => handleChange('customerTone', e.target.value as CallFeedback['customerTone'])}
             disabled={disabled}
             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 disabled:opacity-50"
           >
-            <option value="positive">Positive</option>
-            <option value="neutral">Neutral</option>
-            <option value="negative">Negative</option>
+            <option value="positive">{t('feedback.positive')}</option>
+            <option value="neutral">{t('feedback.neutral')}</option>
+            <option value="negative">{t('feedback.negative')}</option>
           </select>
         </div>
 
         {/* Price Sensitivity */}
         <div>
-          <label className="block text-sm font-medium mb-1">Price Sensitivity</label>
+          <label className="block text-sm font-medium mb-1">{t('feedback.priceSensitivity')}</label>
           <select
             value={feedback.priceSensitivity}
             onChange={(e) => handleChange('priceSensitivity', e.target.value as CallFeedback['priceSensitivity'])}
             disabled={disabled}
             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 disabled:opacity-50"
           >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="low">{t('feedback.low')}</option>
+            <option value="medium">{t('feedback.medium')}</option>
+            <option value="high">{t('feedback.high')}</option>
           </select>
         </div>
 
         {/* Confirmation Strength */}
         <div>
-          <label className="block text-sm font-medium mb-1">Confirmation Strength</label>
+          <label className="block text-sm font-medium mb-1">{t('feedback.confirmationStrength')}</label>
           <select
             value={feedback.confirmationStrength}
             onChange={(e) => handleChange('confirmationStrength', e.target.value as CallFeedback['confirmationStrength'])}
             disabled={disabled}
             className="w-full p-2 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 disabled:opacity-50"
           >
-            <option value="strong">Strong</option>
-            <option value="moderate">Moderate</option>
-            <option value="weak">Weak</option>
+            <option value="strong">{t('feedback.strong')}</option>
+            <option value="moderate">{t('feedback.moderate')}</option>
+            <option value="weak">{t('feedback.weak')}</option>
           </select>
         </div>
       </div>
@@ -120,7 +122,7 @@ export default function CallFeedbackForm({ feedback, onChange, disabled = false 
             disabled={disabled}
             className="rounded"
           />
-          <span className="text-sm">Quality Concerns</span>
+          <span className="text-sm">{t('feedback.qualityConcerns')}</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -130,7 +132,7 @@ export default function CallFeedbackForm({ feedback, onChange, disabled = false 
             disabled={disabled}
             className="rounded"
           />
-          <span className="text-sm">Delivery Issues</span>
+          <span className="text-sm">{t('feedback.deliveryIssues')}</span>
         </label>
       </div>
 
@@ -138,7 +140,7 @@ export default function CallFeedbackForm({ feedback, onChange, disabled = false 
       <div className="mt-4">
         <label className="block text-sm font-medium mb-2 flex items-center gap-2">
           <TagIcon className="h-4 w-4" />
-          Risk Tags
+          {t('feedback.riskTags')}
         </label>
         
         {/* Selected tags */}
@@ -180,11 +182,11 @@ export default function CallFeedbackForm({ feedback, onChange, disabled = false 
 
       {/* Notes */}
       <div className="mt-4">
-        <label className="block text-sm font-medium mb-2">Call Notes</label>
+        <label className="block text-sm font-medium mb-2">{t('feedback.callNotes')}</label>
         <textarea
           value={feedback.notes}
           onChange={(e) => handleChange('notes', e.target.value)}
-          placeholder="Add any additional notes about the call..."
+          placeholder={t('feedback.callNotesPlaceholder')}
           disabled={disabled}
           className="w-full p-3 rounded-lg border dark:bg-slate-900 dark:border-slate-700 light:bg-white light:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           rows={2}

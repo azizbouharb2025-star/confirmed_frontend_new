@@ -8,6 +8,8 @@
 
 import { UserGroupIcon, TrophyIcon, StarIcon } from '@heroicons/react/24/outline';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 /**
  * Operator entry in the leaderboard
@@ -111,10 +113,12 @@ function getInitials(name: string): string {
  */
 function OperatorRow({ 
   operator, 
-  isCurrentUser 
+  isCurrentUser,
+  t,
 }: { 
   operator: LeaderboardEntry; 
   isCurrentUser: boolean;
+  t: (key: TranslationKey) => string;
 }): JSX.Element {
   const rankBadge = getRankBadge(operator.rank);
   
@@ -160,12 +164,12 @@ function OperatorRow({
           <span className="font-medium truncate">{operator.name}</span>
           {isCurrentUser && (
             <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
-              You
+              {t('widget.leaderboard.you')}
             </span>
           )}
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
-          <span>{operator.totalCalls} calls</span>
+          <span>{operator.totalCalls} {t('widget.leaderboard.calls')}</span>
         </div>
       </div>
       
@@ -175,7 +179,7 @@ function OperatorRow({
           {operator.confirmationRate.toFixed(1)}%
         </div>
         <div className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-500">
-          rate
+          {t('widget.leaderboard.rate')}
         </div>
       </div>
     </div>
@@ -185,17 +189,17 @@ function OperatorRow({
 /**
  * Empty state when no operators available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <UserGroupIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No leaderboard data available
+        {t('widget.leaderboard.empty')}
       </p>
       <p className="text-xs text-slate-500 mt-1">
-        Start making calls to appear on the leaderboard
+        {t('widget.leaderboard.emptyHint')}
       </p>
     </div>
   );
@@ -222,10 +226,11 @@ export function LeaderboardWidget({
 }: LeaderboardWidgetProps): JSX.Element {
   // Sort operators by rank (ascending order)
   const sortedOperators = sortByRank(operators);
+  const { t } = useLanguage();
 
   return (
     <WidgetContainer
-      title="Leaderboard"
+      title={t('widget.leaderboard')}
       icon={<TrophyIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -233,7 +238,7 @@ export function LeaderboardWidget({
       className={className}
     >
       {sortedOperators.length === 0 ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-2" data-testid="leaderboard-list">
           {sortedOperators.map((operator) => (
@@ -241,6 +246,7 @@ export function LeaderboardWidget({
               key={operator.id}
               operator={operator}
               isCurrentUser={operator.id === currentUserId}
+              t={t}
             />
           ))}
         </div>

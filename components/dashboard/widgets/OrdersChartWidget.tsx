@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { ShoppingCartIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export type TimePeriod = 'daily' | 'weekly' | 'monthly';
 
@@ -40,10 +42,10 @@ export interface OrdersChartWidgetProps {
   className?: string;
 }
 
-const PERIOD_OPTIONS: { value: TimePeriod; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'monthly', label: 'Monthly' },
+const PERIOD_OPTIONS: { value: TimePeriod; labelKey: TranslationKey }[] = [
+  { value: 'daily', labelKey: 'widget.ordersTrend.daily' },
+  { value: 'weekly', labelKey: 'widget.ordersTrend.weekly' },
+  { value: 'monthly', labelKey: 'widget.ordersTrend.monthly' },
 ];
 
 
@@ -77,14 +79,14 @@ function ChartTooltip({
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ShoppingCartIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No orders data available
+        {t('widget.ordersTrend.empty')}
       </p>
     </div>
   );
@@ -115,6 +117,7 @@ export function OrdersChartWidget({
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(period);
   const hasData = data.length > 0;
   const isPositiveChange = changePercent >= 0;
+  const { t } = useLanguage();
 
   const handlePeriodChange = (newPeriod: TimePeriod) => {
     setSelectedPeriod(newPeriod);
@@ -123,7 +126,7 @@ export function OrdersChartWidget({
 
   return (
     <WidgetContainer
-      title="Orders Trend"
+      title={t('widget.ordersTrend')}
       icon={<ShoppingCartIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -131,7 +134,7 @@ export function OrdersChartWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="orders-chart-content">
           {/* Header with total and period toggle */}
@@ -147,7 +150,7 @@ export function OrdersChartWidget({
                 <span className={isPositiveChange ? 'text-green-500' : 'text-red-500'}>
                   {isPositiveChange ? '+' : ''}{changePercent.toFixed(1)}%
                 </span>
-                <span className="text-slate-400">vs previous</span>
+                <span className="text-slate-400">{t('widget.ordersTrend.vsPrevious')}</span>
               </div>
             </div>
             
@@ -163,7 +166,7 @@ export function OrdersChartWidget({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               ))}
             </div>

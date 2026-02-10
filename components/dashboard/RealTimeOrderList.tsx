@@ -70,7 +70,7 @@ export default function RealTimeOrderList() {
 
         {orders.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            No orders found
+            {t('realtime.noOrders')}
           </div>
         )}
       </div>

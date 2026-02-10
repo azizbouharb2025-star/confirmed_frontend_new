@@ -12,6 +12,8 @@
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 /**
  * Risk score data structure with three categories
@@ -65,11 +67,11 @@ const _RISK_LABELS = {
  * Property 4: Risk score distribution has three categories
  * For any risk score data, the distribution chart SHALL display exactly three categories
  */
-export function getRiskChartData(data: RiskScoreData): Array<{ name: string; value: number; color: string }> {
+export function getRiskChartData(data: RiskScoreData, t: (key: TranslationKey) => string): Array<{ name: string; value: number; color: string }> {
   return [
-    { name: 'High Confidence', value: data.high, color: RISK_COLORS.high },
-    { name: 'Medium Confidence', value: data.medium, color: RISK_COLORS.medium },
-    { name: 'Low Confidence', value: data.low, color: RISK_COLORS.low },
+    { name: t('widget.riskScore.highConfidence'), value: data.high, color: RISK_COLORS.high },
+    { name: t('widget.riskScore.mediumConfidence'), value: data.medium, color: RISK_COLORS.medium },
+    { name: t('widget.riskScore.lowConfidence'), value: data.low, color: RISK_COLORS.low },
   ];
 }
 
@@ -95,7 +97,7 @@ function getTotalOrders(data: RiskScoreData): number {
 /**
  * Custom tooltip for the pie chart
  */
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+function CustomTooltip({ active, payload, t }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }>; t: (key: TranslationKey) => string }) {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -104,7 +106,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
           {data.name}
         </p>
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-600">
-          {data.value} orders
+          {data.value} {t('widget.riskScore.orders')}
         </p>
       </div>
     );
@@ -139,14 +141,14 @@ function renderLegend(props: { payload?: Array<{ value: string; color?: string }
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ShieldCheckIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No risk score data available
+        {t('widget.riskScore.empty')}
       </p>
     </div>
   );
@@ -169,13 +171,14 @@ export function RiskScoreWidget({
   onRetry,
   className = '',
 }: RiskScoreWidgetProps): JSX.Element {
-  const chartData = getRiskChartData(data);
+  const { t } = useLanguage();
+  const chartData = getRiskChartData(data, t);
   const totalOrders = getTotalOrders(data);
   const hasData = totalOrders > 0;
 
   return (
     <WidgetContainer
-      title="AI Risk Score Distribution"
+      title={t('widget.riskScore')}
       icon={<ShieldCheckIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -183,7 +186,7 @@ export function RiskScoreWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="flex flex-col items-center" data-testid="risk-score-chart">
           <div className="w-full h-[200px]">
@@ -202,7 +205,7 @@ export function RiskScoreWidget({
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip t={t} />} />
                 <Legend content={renderLegend} />
               </PieChart>
             </ResponsiveContainer>
@@ -212,15 +215,15 @@ export function RiskScoreWidget({
           <div className="grid grid-cols-3 gap-4 w-full mt-4 pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
             <div className="text-center">
               <p className="text-lg font-semibold text-green-500">{data.high}</p>
-              <p className="text-xs text-slate-400">High</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.high')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-orange-500">{data.medium}</p>
-              <p className="text-xs text-slate-400">Medium</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.medium')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-red-500">{data.low}</p>
-              <p className="text-xs text-slate-400">Low</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.low')}</p>
             </div>
           </div>
         </div>

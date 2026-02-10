@@ -9,6 +9,8 @@
 import { ChatBubbleLeftRightIcon, StarIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 export interface FeedbackTag {
   tag: string;
@@ -84,14 +86,14 @@ function getTagColorClass(count: number, maxCount: number): string {
 /**
  * Empty state when no feedback data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ChatBubbleLeftRightIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No feedback data available
+        {t('widget.operatorFeedback.empty')}
       </p>
     </div>
   );
@@ -117,12 +119,13 @@ export function OperatorFeedbackWidget({
   onRetry,
   className = '',
 }: OperatorFeedbackWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   const hasData = totalFeedback > 0;
   const maxTagCount = topTags.length > 0 ? Math.max(...topTags.map(t => t.count)) : 0;
 
   return (
     <WidgetContainer
-      title="Operator Feedback"
+      title={t('widget.operatorFeedback')}
       icon={<ChatBubbleLeftRightIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -130,7 +133,7 @@ export function OperatorFeedbackWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="operator-feedback-content">
           {/* Rating section */}
@@ -143,7 +146,7 @@ export function OperatorFeedbackWidget({
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-                Total Feedback
+                {t('widget.operatorFeedback.totalFeedback')}
               </p>
               <p className="text-lg font-semibold">{totalFeedback.toLocaleString()}</p>
             </div>
@@ -153,7 +156,7 @@ export function OperatorFeedbackWidget({
           {topTags.length > 0 && (
             <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-3">
-                Top Feedback Tags
+                {t('widget.operatorFeedback.topTags')}
               </p>
               <div className="flex flex-wrap gap-2" data-testid="feedback-tags">
                 {topTags.map((tagData, index) => (
@@ -172,10 +175,10 @@ export function OperatorFeedbackWidget({
           {/* Rating breakdown hint */}
           <div className="pt-3 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
             <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>Based on operator post-call assessments</span>
+              <span>{t('widget.operatorFeedback.basedOn')}</span>
               <span className="flex items-center gap-1">
                 <StarIconSolid className="w-3 h-3 text-yellow-400" />
-                5.0 max
+                5.0 {t('widget.operatorFeedback.max')}
               </span>
             </div>
           </div>

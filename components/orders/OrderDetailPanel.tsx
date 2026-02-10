@@ -4,7 +4,9 @@ import React, { Fragment } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { clsx } from 'clsx'
 import type { Order, OrderStatus, CallHistoryEntry } from '@/types/order'
-import StatusBadge, { STATUS_LABELS } from '@/components/ui/StatusBadge'
+import StatusBadge, { getTranslatedStatusLabels } from '@/components/ui/StatusBadge'
+import { useLanguage } from '@/hooks/useLanguage'
+import type { TranslationKey } from '@/lib/i18n'
 
 /**
  * OrderDetailPanel Component
@@ -131,24 +133,24 @@ function SectionHeader({ title }: { title: string }) {
  * Customer Information Section
  * Displays customer name, phone, email
  */
-function CustomerInfoSection({ order }: { order: Order }) {
+function CustomerInfoSection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
   const { clientInfo } = order
   
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="customer-info-section">
-      <SectionHeader title="Customer Information" />
+      <SectionHeader title={t('orderDetail.customerInfo')} />
       <dl className="space-y-2">
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Name</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('orderDetail.customerName')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{clientInfo.name}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Phone</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('orderDetail.customerPhone')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{clientInfo.phone}</dd>
         </div>
         {clientInfo.email && (
           <div className="flex justify-between">
-            <dt className="text-sm text-gray-500 dark:text-slate-400">Email</dt>
+            <dt className="text-sm text-gray-500 dark:text-slate-400">{t('orderDetail.customerEmail')}</dt>
             <dd className="text-sm font-medium text-gray-900 dark:text-white">{clientInfo.email}</dd>
           </div>
         )}
@@ -161,10 +163,10 @@ function CustomerInfoSection({ order }: { order: Order }) {
  * Order Items Section
  * Displays list of items with quantity and price
  */
-function OrderItemsSection({ order }: { order: Order }) {
+function OrderItemsSection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="order-items-section">
-      <SectionHeader title="Order Items" />
+      <SectionHeader title={t('orderDetail.orderItems')} />
       <ul className="space-y-3">
         {order.items.map((item, index) => (
           <li key={`${item.productId}-${index}`} className="flex justify-between items-start">
@@ -173,7 +175,7 @@ function OrderItemsSection({ order }: { order: Order }) {
               {item.variant && (
                 <p className="text-xs text-gray-500 dark:text-slate-400">{item.variant}</p>
               )}
-              <p className="text-xs text-gray-500 dark:text-slate-400">Qty: {item.quantity}</p>
+              <p className="text-xs text-gray-500 dark:text-slate-400">{t('orderDetail.qty')}: {item.quantity}</p>
             </div>
             <span className="text-sm font-medium text-gray-900 dark:text-white">
               {formatCurrency(item.price * item.quantity)}
@@ -182,7 +184,7 @@ function OrderItemsSection({ order }: { order: Order }) {
         ))}
       </ul>
       <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700 flex justify-between">
-        <span className="text-sm font-semibold text-gray-900 dark:text-white">Total</span>
+        <span className="text-sm font-semibold text-gray-900 dark:text-white">{t('orderDetail.total')}</span>
         <span className="text-sm font-semibold text-gray-900 dark:text-white">
           {formatCurrency(order.totalAmount)}
         </span>
@@ -196,7 +198,7 @@ function OrderItemsSection({ order }: { order: Order }) {
  * Delivery Address Section
  * Displays delivery address if available
  */
-function DeliveryAddressSection({ order }: { order: Order }) {
+function DeliveryAddressSection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
   const address = order.deliveryInfo?.address || order.clientInfo?.address
   
   if (!address) {
@@ -205,7 +207,7 @@ function DeliveryAddressSection({ order }: { order: Order }) {
   
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="delivery-address-section">
-      <SectionHeader title="Delivery Address" />
+      <SectionHeader title={t('orderDetail.deliveryAddress')} />
       <address className="text-sm text-gray-700 dark:text-slate-300 not-italic">
         <p>{address.street}</p>
         <p>{address.city}, {address.state} {address.zipCode}</p>
@@ -214,11 +216,11 @@ function DeliveryAddressSection({ order }: { order: Order }) {
       {order.deliveryInfo?.courier && (
         <div className="mt-3">
           <p className="text-xs text-gray-500 dark:text-slate-400">
-            Courier: <span className="font-medium">{order.deliveryInfo.courier}</span>
+            {t('orderDetail.courier')}: <span className="font-medium">{order.deliveryInfo.courier}</span>
           </p>
           {order.deliveryInfo.trackingNumber && (
             <p className="text-xs text-gray-500 dark:text-slate-400">
-              Tracking: <span className="font-medium">{order.deliveryInfo.trackingNumber}</span>
+              {t('orderDetail.tracking')}: <span className="font-medium">{order.deliveryInfo.trackingNumber}</span>
             </p>
           )}
         </div>
@@ -232,19 +234,19 @@ function DeliveryAddressSection({ order }: { order: Order }) {
  * Displays timeline of call attempts with operator, timestamp, outcome, notes
  * Property 11: Call history displays required fields
  */
-function CallHistorySection({ order }: { order: Order }) {
+function CallHistorySection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
   if (!order.callHistory || order.callHistory.length === 0) {
     return (
       <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="call-history-section">
-        <SectionHeader title="Call History" />
-        <p className="text-sm text-gray-500 dark:text-slate-400">No call history available</p>
+        <SectionHeader title={t('orderDetail.callHistory')} />
+        <p className="text-sm text-gray-500 dark:text-slate-400">{t('orderDetail.noCallHistory')}</p>
       </div>
     )
   }
   
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="call-history-section">
-      <SectionHeader title="Call History" />
+      <SectionHeader title={t('orderDetail.callHistory')} />
       <div className="space-y-4">
         {order.callHistory.map((entry, index) => {
           const resultDisplay = getCallResultDisplay(entry.result)
@@ -268,7 +270,7 @@ function CallHistorySection({ order }: { order: Order }) {
                 <p className="text-sm font-medium text-gray-900 dark:text-white" data-testid="call-operator">
                   {entry.operatorName || `Operator ${entry.operatorId}`}
                   <span className="ml-2 text-xs text-gray-500 dark:text-slate-400">
-                    ({entry.callType === 'ai' ? 'AI Call' : 'Human Call'})
+                    ({entry.callType === 'ai' ? t('orderDetail.aiCall') : t('orderDetail.humanCall')})
                   </span>
                 </p>
                 
@@ -304,13 +306,14 @@ function CallHistorySection({ order }: { order: Order }) {
  * Displays order status progression with current status highlighted
  * Requirements: 4.4
  */
-function StatusTimelineSection({ order }: { order: Order }) {
+function StatusTimelineSection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
   const currentStatusIndex = STATUS_PROGRESSION.indexOf(order.status)
   const isTerminalStatus = order.status === 'rejected' || order.status === 'cancelled'
+  const translatedLabels = getTranslatedStatusLabels(t)
   
   return (
     <div className="py-4" data-testid="status-timeline-section">
-      <SectionHeader title="Status Timeline" />
+      <SectionHeader title={t('orderDetail.statusTimeline')} />
       <div className="flex items-center justify-between">
         {STATUS_PROGRESSION.map((status, index) => {
           const isCompleted = !isTerminalStatus && currentStatusIndex >= index
@@ -352,7 +355,7 @@ function StatusTimelineSection({ order }: { order: Order }) {
                       : 'text-gray-400 dark:text-slate-500'
                   )}
                 >
-                  {STATUS_LABELS[status]}
+                  {translatedLabels[status]}
                 </span>
               </div>
               
@@ -403,6 +406,8 @@ export default function OrderDetailPanel({
   isOpen,
   onClose,
 }: OrderDetailPanelProps) {
+  const { t } = useLanguage()
+
   if (!order) {
     return null
   }
@@ -442,7 +447,7 @@ export default function OrderDetailPanel({
                       <div className="flex items-start justify-between">
                         <div>
                           <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-white">
-                            Order {order.orderId}
+                            {t('orderDetail.order')} {order.orderId}
                           </Dialog.Title>
                           <div className="mt-1 flex items-center gap-2">
                             <StatusBadge status={order.status} size="sm" />
@@ -457,7 +462,7 @@ export default function OrderDetailPanel({
                           onClick={onClose}
                           data-testid="close-panel-button"
                         >
-                          <span className="sr-only">Close panel</span>
+                          <span className="sr-only">{t('orderDetail.close')}</span>
                           <CloseIcon />
                         </button>
                       </div>
@@ -465,11 +470,11 @@ export default function OrderDetailPanel({
 
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto px-4 sm:px-6" data-testid="order-detail-content">
-                      <CustomerInfoSection order={order} />
-                      <OrderItemsSection order={order} />
-                      <DeliveryAddressSection order={order} />
-                      <CallHistorySection order={order} />
-                      <StatusTimelineSection order={order} />
+                      <CustomerInfoSection order={order} t={t} />
+                      <OrderItemsSection order={order} t={t} />
+                      <DeliveryAddressSection order={order} t={t} />
+                      <CallHistorySection order={order} t={t} />
+                      <StatusTimelineSection order={order} t={t} />
                     </div>
                   </div>
                 </Dialog.Panel>

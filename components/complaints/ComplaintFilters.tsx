@@ -18,6 +18,7 @@ import {
   getCategoryDisplayName,
   hasActiveFilters,
 } from '@/types/complaint';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface ComplaintFiltersProps {
   /** Current filter values */
@@ -81,6 +82,7 @@ export function ComplaintFilters({
   availableProducts = [],
   className,
 }: ComplaintFiltersProps): JSX.Element {
+  const { t } = useLanguage();
   // Local state for search input (before debounce)
   const [searchInput, setSearchInput] = useState(filters.search || '');
   
@@ -204,7 +206,7 @@ export function ComplaintFilters({
         {/* Search input */}
         <div className="flex-1 min-w-[200px]">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Search
+            {t('complaint.filters.search')}
           </label>
           <div className="relative">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-500">
@@ -214,7 +216,7 @@ export function ComplaintFilters({
               type="text"
               value={searchInput}
               onChange={handleSearchChange}
-              placeholder="Search by reference, customer..."
+              placeholder={t('complaint.filters.searchPlaceholder')}
               className={clsx(inputBaseStyles, 'pl-10')}
               data-testid="search-input"
             />
@@ -224,7 +226,7 @@ export function ComplaintFilters({
         {/* Status dropdown */}
         <div className="w-[160px]">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Status
+            {t('complaint.filters.status')}
           </label>
           <select
             value={filters.status || ''}
@@ -232,7 +234,7 @@ export function ComplaintFilters({
             className={selectBaseStyles}
             data-testid="status-filter"
           >
-            <option value="">All Statuses</option>
+            <option value="">{t('complaint.filters.allStatuses')}</option>
             {ALL_COMPLAINT_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {getStatusDisplayName(status)}
@@ -244,7 +246,7 @@ export function ComplaintFilters({
         {/* Category dropdown */}
         <div className="w-[180px]">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-            Category
+            {t('complaint.filters.category')}
           </label>
           <select
             value={filters.category || ''}
@@ -252,7 +254,7 @@ export function ComplaintFilters({
             className={selectBaseStyles}
             data-testid="category-filter"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('complaint.filters.allCategories')}</option>
             {ALL_COMPLAINT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {getCategoryDisplayName(category)}
@@ -273,7 +275,7 @@ export function ComplaintFilters({
             )}
             data-testid="clear-filters-button"
           >
-            Clear Filters
+            {t('complaint.filters.clearFilters')}
           </button>
         )}
       </div>
@@ -284,7 +286,7 @@ export function ComplaintFilters({
         <div className="flex gap-2 items-end">
           <div className="w-[150px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-              From Date
+              {t('complaint.filters.from')}
             </label>
             <input
               type="date"
@@ -296,7 +298,7 @@ export function ComplaintFilters({
           </div>
           <div className="w-[150px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-              To Date
+              {t('complaint.filters.to')}
             </label>
             <input
               type="date"
@@ -313,7 +315,7 @@ export function ComplaintFilters({
         {availableRegions.length > 0 && (
           <div className="w-[160px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-              Region
+              {t('complaint.filters.region')}
             </label>
             <select
               value={filters.region || ''}
@@ -321,7 +323,7 @@ export function ComplaintFilters({
               className={selectBaseStyles}
               data-testid="region-filter"
             >
-              <option value="">All Regions</option>
+              <option value="">{t('complaint.filters.allRegions')}</option>
               {availableRegions.map((region) => (
                 <option key={region} value={region}>
                   {region}
@@ -335,7 +337,7 @@ export function ComplaintFilters({
         {availableProducts.length > 0 && (
           <div className="w-[180px]">
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
-              Product
+              {t('complaint.filters.product')}
             </label>
             <select
               value={filters.productId || ''}
@@ -343,7 +345,7 @@ export function ComplaintFilters({
               className={selectBaseStyles}
               data-testid="product-filter"
             >
-              <option value="">All Products</option>
+              <option value="">{t('complaint.filters.allProducts')}</option>
               {availableProducts.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name}

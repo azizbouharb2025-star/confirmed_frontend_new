@@ -21,6 +21,8 @@ import {
 import MediaGallery from './MediaGallery';
 import AITagsDisplay from './AITagsDisplay';
 import ResolutionTimeline from './ResolutionTimeline';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export interface ComplaintDetailPanelProps {
   /** The complaint to display */
@@ -115,24 +117,24 @@ function SectionHeader({ title }: { title: string }) {
  * Displays customer name, phone, email
  * Requirements: 3.1
  */
-function CustomerInfoSection({ complaint }: { complaint: Complaint }) {
+function CustomerInfoSection({ complaint, t }: { complaint: Complaint; t: (key: TranslationKey) => string }) {
   const customerInfo = complaint.customerInfo || {};
 
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="customer-info-section">
-      <SectionHeader title="Customer Information" />
+      <SectionHeader title={t('complaint.detail.customerInfo')} />
       <dl className="space-y-2">
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Name</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.name')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{customerInfo.name || 'N/A'}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Phone</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.phone')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{customerInfo.phone || 'N/A'}</dd>
         </div>
         {customerInfo.email && (
           <div className="flex justify-between">
-            <dt className="text-sm text-gray-500 dark:text-slate-400">Email</dt>
+            <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.email')}</dt>
             <dd className="text-sm font-medium text-gray-900 dark:text-white">{customerInfo.email}</dd>
           </div>
         )}
@@ -146,28 +148,28 @@ function CustomerInfoSection({ complaint }: { complaint: Complaint }) {
  * Displays order ID and related information
  * Requirements: 3.1
  */
-function OrderContextSection({ complaint }: { complaint: Complaint }) {
+function OrderContextSection({ complaint, t }: { complaint: Complaint; t: (key: TranslationKey) => string }) {
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="order-context-section">
-      <SectionHeader title="Order Context" />
+      <SectionHeader title={t('complaint.detail.orderContext')} />
       <dl className="space-y-2">
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Order ID</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.orderId')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{complaint.orderId}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Shop ID</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.shopId')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{complaint.shopId}</dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-sm text-gray-500 dark:text-slate-400">Region</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.region')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">{complaint.region}</dd>
         </div>
         {complaint.productIds?.length > 0 && (
           <div className="flex justify-between">
-            <dt className="text-sm text-gray-500 dark:text-slate-400">Products</dt>
+            <dt className="text-sm text-gray-500 dark:text-slate-400">{t('complaint.detail.products')}</dt>
             <dd className="text-sm font-medium text-gray-900 dark:text-white">
-              {complaint.productIds.length} item(s)
+              {complaint.productIds.length} {t('complaint.detail.items')}
             </dd>
           </div>
         )}
@@ -182,19 +184,19 @@ function OrderContextSection({ complaint }: { complaint: Complaint }) {
  * Displays category and description
  * Requirements: 3.1
  */
-function ComplaintDetailsSection({ complaint }: { complaint: Complaint }) {
+function ComplaintDetailsSection({ complaint, t }: { complaint: Complaint; t: (key: TranslationKey) => string }) {
   return (
     <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="complaint-details-section">
-      <SectionHeader title="Complaint Details" />
+      <SectionHeader title={t('complaint.detail.complaintDetails')} />
       <dl className="space-y-3">
         <div>
-          <dt className="text-sm text-gray-500 dark:text-slate-400 mb-1">Category</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400 mb-1">{t('complaint.detail.category')}</dt>
           <dd className="text-sm font-medium text-gray-900 dark:text-white">
             {getCategoryDisplayName(complaint.category)}
           </dd>
         </div>
         <div>
-          <dt className="text-sm text-gray-500 dark:text-slate-400 mb-1">Description</dt>
+          <dt className="text-sm text-gray-500 dark:text-slate-400 mb-1">{t('complaint.detail.description')}</dt>
           <dd className="text-sm text-gray-700 dark:text-slate-300 whitespace-pre-wrap">
             {complaint.description}
           </dd>
@@ -212,10 +214,12 @@ function StatusUpdateForm({
   currentStatus,
   onStatusUpdate,
   isUpdating,
+  t,
 }: {
   currentStatus: ComplaintStatus;
   onStatusUpdate: (status: ComplaintStatus, note?: string) => Promise<void>;
   isUpdating: boolean;
+  t: (key: TranslationKey) => string;
 }) {
   const [selectedStatus, setSelectedStatus] = useState<ComplaintStatus>(currentStatus);
   const [statusNote, setStatusNote] = useState('');
@@ -238,7 +242,7 @@ function StatusUpdateForm({
           htmlFor="status-select"
           className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
         >
-          Update Status
+          {t('complaint.detail.updateStatus')}
         </label>
         <select
           id="status-select"
@@ -265,14 +269,14 @@ function StatusUpdateForm({
           htmlFor="status-note"
           className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
         >
-          Note (optional)
+          {t('complaint.detail.noteOptional')}
         </label>
         <textarea
           id="status-note"
           value={statusNote}
           onChange={(e) => setStatusNote(e.target.value)}
           rows={2}
-          placeholder="Add a note about this status change..."
+          placeholder={t('complaint.detail.statusNotePlaceholder')}
           className={clsx(
             'w-full px-3 py-2 rounded-lg text-sm',
             'border border-gray-300 dark:border-slate-600',
@@ -296,7 +300,7 @@ function StatusUpdateForm({
         )}
         data-testid="update-status-button"
       >
-        {isUpdating ? 'Updating...' : 'Update Status'}
+        {isUpdating ? t('complaint.detail.updating') : t('complaint.detail.updateStatus')}
       </button>
     </form>
   );
@@ -310,9 +314,11 @@ function StatusUpdateForm({
 function AddNoteForm({
   onAddNote,
   isAdding,
+  t,
 }: {
   onAddNote: (content: string) => Promise<void>;
   isAdding: boolean;
+  t: (key: TranslationKey) => string;
 }) {
   const [noteContent, setNoteContent] = useState('');
 
@@ -334,14 +340,14 @@ function AddNoteForm({
           htmlFor="note-content"
           className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1"
         >
-          Add Resolution Note
+          {t('complaint.detail.addResolutionNote')}
         </label>
         <textarea
           id="note-content"
           value={noteContent}
           onChange={(e) => setNoteContent(e.target.value)}
           rows={3}
-          placeholder="Enter your note..."
+          placeholder={t('complaint.detail.enterNotePlaceholder')}
           className={clsx(
             'w-full px-3 py-2 rounded-lg text-sm',
             'border border-gray-300 dark:border-slate-600',
@@ -368,7 +374,7 @@ function AddNoteForm({
         )}
         data-testid="add-note-button"
       >
-        {isAdding ? 'Adding...' : 'Add Note'}
+        {isAdding ? t('complaint.detail.adding') : t('complaint.detail.addNoteBtn')}
       </button>
     </form>
   );
@@ -398,6 +404,8 @@ export default function ComplaintDetailPanel({
   isUpdatingStatus = false,
   isAddingNote = false,
 }: ComplaintDetailPanelProps) {
+  const { t } = useLanguage();
+
   if (!complaint) {
     return null;
   }
@@ -454,7 +462,7 @@ export default function ComplaintDetailPanel({
                           onClick={onClose}
                           data-testid="close-panel-button"
                         >
-                          <span className="sr-only">Close panel</span>
+                          <span className="sr-only">{t('complaint.detail.closePanel')}</span>
                           <CloseIcon />
                         </button>
                       </div>
@@ -462,21 +470,21 @@ export default function ComplaintDetailPanel({
 
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto px-4 sm:px-6" data-testid="complaint-detail-content">
-                      <CustomerInfoSection complaint={complaint} />
-                      <OrderContextSection complaint={complaint} />
-                      <ComplaintDetailsSection complaint={complaint} />
+                      <CustomerInfoSection complaint={complaint} t={t} />
+                      <OrderContextSection complaint={complaint} t={t} />
+                      <ComplaintDetailsSection complaint={complaint} t={t} />
 
                       {/* Media Gallery - Requirements: 3.2 */}
                       {complaint.mediaAttachments && complaint.mediaAttachments.length > 0 && (
                         <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="media-section">
-                          <SectionHeader title="Media Attachments" />
+                          <SectionHeader title={t('complaint.detail.mediaAttachments')} />
                           <MediaGallery attachments={complaint.mediaAttachments} />
                         </div>
                       )}
 
                       {/* AI Tags - Requirements: 3.3 */}
                       <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="ai-tags-section">
-                        <SectionHeader title="AI Analysis" />
+                        <SectionHeader title={t('complaint.detail.aiAnalysis')} />
                         <AITagsDisplay
                           tags={complaint.aiTags || []}
                           primaryCategory={complaint.aiPrimaryCategory || ''}
@@ -486,7 +494,7 @@ export default function ComplaintDetailPanel({
 
                       {/* Resolution History - Requirements: 3.4 */}
                       <div className="py-4 border-b border-gray-200 dark:border-slate-700" data-testid="resolution-history-section">
-                        <SectionHeader title="Resolution History" />
+                        <SectionHeader title={t('complaint.detail.resolutionHistory')} />
                         <ResolutionTimeline history={complaint.resolutionHistory || []} />
                       </div>
 
@@ -497,6 +505,7 @@ export default function ComplaintDetailPanel({
                             currentStatus={complaint.status}
                             onStatusUpdate={onStatusUpdate}
                             isUpdating={isUpdatingStatus}
+                            t={t}
                           />
                         </div>
                       )}
@@ -504,7 +513,7 @@ export default function ComplaintDetailPanel({
                       {/* Add Note Form - Requirements: 3.6 */}
                       {onAddNote && (
                         <div className="py-4" data-testid="add-note-section">
-                          <AddNoteForm onAddNote={onAddNote} isAdding={isAddingNote} />
+                          <AddNoteForm onAddNote={onAddNote} isAdding={isAddingNote} t={t} />
                         </div>
                       )}
                     </div>

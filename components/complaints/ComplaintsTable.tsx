@@ -14,6 +14,8 @@ import {
   getStatusDisplayName,
   getCategoryDisplayName,
 } from '@/types/complaint';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export interface ComplaintsTableProps {
   /** List of complaints to display */
@@ -105,9 +107,11 @@ function SkeletonRow() {
 function ErrorState({
   error,
   onRetry,
+  t,
 }: {
   error: string;
   onRetry?: () => void;
+  t: (key: TranslationKey) => string;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
@@ -135,7 +139,7 @@ function ErrorState({
           )}
           data-testid="retry-button"
         >
-          Retry
+          {t('complaint.table.retry')}
         </button>
       )}
     </div>
@@ -145,7 +149,7 @@ function ErrorState({
 /**
  * Empty state component
  */
-function EmptyState() {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
       <svg
@@ -162,7 +166,7 @@ function EmptyState() {
         />
       </svg>
       <p className="text-gray-600 dark:text-slate-400 text-center">
-        No complaints found
+        {t('complaint.table.noComplaints')}
       </p>
     </div>
   );
@@ -177,12 +181,14 @@ function Pagination({
   totalComplaints,
   pageSize,
   onPageChange,
+  t,
 }: {
   currentPage: number;
   totalPages: number;
   totalComplaints: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  t: (key: TranslationKey) => string;
 }) {
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalComplaints);
@@ -190,7 +196,7 @@ function Pagination({
   return (
     <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-slate-700">
       <div className="text-sm text-gray-600 dark:text-slate-400">
-        Showing {startItem} to {endItem} of {totalComplaints}
+        {t('complaint.table.showing')} {startItem} {t('complaint.table.of')} {endItem} / {totalComplaints}
       </div>
       <div className="flex items-center gap-2">
         <button
@@ -207,10 +213,10 @@ function Pagination({
           )}
           data-testid="prev-page-button"
         >
-          Previous
+          {t('complaint.table.previous')}
         </button>
         <span className="text-sm text-gray-600 dark:text-slate-400">
-          Page {currentPage} of {totalPages}
+          {t('complaint.table.page')} {currentPage} {t('complaint.table.of')} {totalPages}
         </span>
         <button
           onClick={() => onPageChange(currentPage + 1)}
@@ -226,7 +232,7 @@ function Pagination({
           )}
           data-testid="next-page-button"
         >
-          Next
+          {t('complaint.table.next')}
         </button>
       </div>
     </div>
@@ -255,6 +261,8 @@ export function ComplaintsTable({
   onRetry,
   className,
 }: ComplaintsTableProps): JSX.Element {
+  const { t } = useLanguage();
+
   /**
    * Handle row click
    */
@@ -271,7 +279,7 @@ export function ComplaintsTable({
   if (error && !isLoading) {
     return (
       <div className={clsx('bg-white dark:bg-slate-800 rounded-lg shadow', className)}>
-        <ErrorState error={error} onRetry={onRetry} />
+        <ErrorState error={error} onRetry={onRetry} t={t} />
       </div>
     );
   }
@@ -280,7 +288,7 @@ export function ComplaintsTable({
   if (!isLoading && complaints.length === 0) {
     return (
       <div className={clsx('bg-white dark:bg-slate-800 rounded-lg shadow', className)}>
-        <EmptyState />
+        <EmptyState t={t} />
       </div>
     );
   }
@@ -292,19 +300,19 @@ export function ComplaintsTable({
           <thead className="bg-gray-50 dark:bg-slate-900/50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Reference
+                {t('complaint.table.reference')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Category
+                {t('complaint.table.category')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Status
+                {t('complaint.table.status')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Customer
+                {t('complaint.table.customer')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-                Created
+                {t('complaint.table.date')}
               </th>
             </tr>
           </thead>
@@ -367,6 +375,7 @@ export function ComplaintsTable({
           totalComplaints={totalComplaints}
           pageSize={pageSize}
           onPageChange={onPageChange}
+          t={t}
         />
       )}
     </div>

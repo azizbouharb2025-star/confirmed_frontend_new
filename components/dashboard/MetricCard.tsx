@@ -10,6 +10,7 @@ import CountUp from 'react-countup';
 import { ReactNode, useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon, MinusIcon } from '@heroicons/react/24/solid';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface MetricCardProps {
   /** Card title/label */
@@ -130,6 +131,7 @@ export default function MetricCard({
   // Track value changes for animation - hooks must be called before any early returns
   const previousValueRef = useRef(value);
   const [hasValueChanged, setHasValueChanged] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (previousValueRef.current !== value) {
@@ -226,7 +228,7 @@ export default function MetricCard({
             >
               <TrendIndicator trend={determinedTrend} value={displayTrendValue} />
               <span className="text-xs text-slate-500 dark:text-slate-500 light:text-gray-500">
-                from last period
+                {t('widget.fromLastPeriod')}
               </span>
             </motion.div>
           )}

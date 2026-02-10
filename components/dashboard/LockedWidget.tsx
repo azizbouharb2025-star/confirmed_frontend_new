@@ -11,6 +11,7 @@ import { LockClosedIcon, ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 import { SubscriptionPlan, getPlanDisplayName } from '@/types/subscription';
 import { subscriptionService } from '@/services/subscriptionService';
 import UpgradeModal from './UpgradeModal';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface LockedWidgetProps {
   /** Display name of the locked feature */
@@ -41,6 +42,7 @@ export function LockedWidget({
 }: LockedWidgetProps): JSX.Element {
   const [showModal, setShowModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useLanguage();
 
   const planDisplayName = getPlanDisplayName(requiredPlan);
   const upgradeUrl = subscriptionService.getUpgradeUrl(requiredPlan);
@@ -106,7 +108,7 @@ export function LockedWidget({
               className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 dark:bg-blue-500/20 dark:text-blue-400 light:bg-blue-100 light:text-blue-700"
               data-testid="required-plan-badge"
             >
-              Requires {planDisplayName} Plan
+              {t('widget.locked.requires')} {planDisplayName} {t('widget.locked.plan')}
             </span>
           </div>
 
@@ -119,14 +121,14 @@ export function LockedWidget({
             }}
           >
             <ArrowUpCircleIcon className="w-4 h-4" />
-            Upgrade Now
+            {t('widget.locked.upgradeNow')}
           </button>
         </div>
 
         {/* Hover tooltip with more details */}
         {isHovered && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 px-3 py-2 bg-slate-800 dark:bg-slate-800 light:bg-gray-800 rounded-lg shadow-lg text-xs text-white max-w-[200px] text-center animate-fade-in">
-            Click to see plan comparison and upgrade options
+            {t('widget.locked.tooltip')}
           </div>
         )}
       </div>

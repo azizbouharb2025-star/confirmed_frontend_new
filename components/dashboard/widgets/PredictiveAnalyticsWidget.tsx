@@ -9,6 +9,8 @@
 import { ChartBarIcon, ArrowTrendingUpIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Area, ComposedChart, Legend } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import { TranslationKey } from '@/lib/i18n';
 
 export interface ForecastDataPoint {
   date: string;
@@ -97,14 +99,14 @@ function ForecastTooltip({
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ChartBarIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No forecast data available
+        {t('widget.predictiveAnalytics.empty')}
       </p>
     </div>
   );
@@ -130,6 +132,7 @@ export function PredictiveAnalyticsWidget({
   onRetry,
   className = '',
 }: PredictiveAnalyticsWidgetProps): JSX.Element {
+  const { t } = useLanguage();
   const hasData = forecastedOrders.length > 0;
 
   // Prepare chart data with confidence bands
@@ -141,7 +144,7 @@ export function PredictiveAnalyticsWidget({
 
   return (
     <WidgetContainer
-      title="Predictive Analytics"
+      title={t('widget.predictiveAnalytics')}
       icon={<SparklesIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -149,14 +152,14 @@ export function PredictiveAnalyticsWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="predictive-analytics-content">
           {/* Summary metrics */}
           <div className="grid grid-cols-2 gap-4">
             <div className={`p-3 rounded-lg ${getConfidenceBgColor(confidence)}`}>
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-1">
-                AI Confidence
+                {t('widget.predictiveAnalytics.aiConfidence')}
               </p>
               <div className="flex items-center gap-2">
                 <SparklesIcon className={`w-5 h-5 ${getConfidenceColor(confidence)}`} />
@@ -167,7 +170,7 @@ export function PredictiveAnalyticsWidget({
             </div>
             <div className="p-3 rounded-lg bg-slate-700/30 dark:bg-slate-700/30 light:bg-gray-100">
               <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-1">
-                Forecasted Confirmation
+                {t('widget.predictiveAnalytics.forecastedConfirmation')}
               </p>
               <div className="flex items-center gap-2">
                 <ArrowTrendingUpIcon className="w-5 h-5 text-blue-500" />
@@ -181,7 +184,7 @@ export function PredictiveAnalyticsWidget({
           {/* Forecast chart with confidence bands */}
           <div className="pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
             <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-3">
-              Order Volume Forecast
+              {t('widget.predictiveAnalytics.orderVolumeForecast')}
             </p>
             <div className="h-[160px]" data-testid="predictive-forecast-chart">
               <ResponsiveContainer width="100%" height="100%">
@@ -255,15 +258,15 @@ export function PredictiveAnalyticsWidget({
           <div className="flex items-center justify-center gap-6 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 bg-purple-500" style={{ borderStyle: 'dashed' }} />
-              <span>Predicted</span>
+              <span>{t('widget.predictiveAnalytics.predicted')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 bg-blue-500" />
-              <span>Actual</span>
+              <span>{t('widget.predictiveAnalytics.actual')}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-2 bg-purple-500/20 rounded" />
-              <span>Confidence</span>
+              <span>{t('widget.predictiveAnalytics.confidence')}</span>
             </div>
           </div>
         </div>

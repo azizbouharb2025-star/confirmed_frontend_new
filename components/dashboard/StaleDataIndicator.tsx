@@ -8,6 +8,7 @@
 
 import { ArrowPathIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export interface StaleDataIndicatorProps {
   /** Whether data is currently stale */
@@ -68,6 +69,7 @@ export default function StaleDataIndicator({
   isRefreshing = false,
 }: StaleDataIndicatorProps): JSX.Element | null {
   const [timeAgo, setTimeAgo] = useState<string>('');
+  const { t } = useLanguage();
 
   // Update time ago display every 30 seconds
   useEffect(() => {
@@ -103,10 +105,10 @@ export default function StaleDataIndicator({
           className={`w-4 h-4 ${isStale ? 'text-yellow-500' : 'text-slate-400'}`}
         />
         <span className={isStale ? 'text-yellow-500' : 'text-slate-400'}>
-          Updated {timeAgo}
+          {t('widget.updated')} {timeAgo}
         </span>
         {isStale && (
-          <span className="text-yellow-500 font-medium">(stale)</span>
+          <span className="text-yellow-500 font-medium">({t('widget.stale')})</span>
         )}
       </div>
 
@@ -115,7 +117,7 @@ export default function StaleDataIndicator({
 
       {/* Auto-refresh toggle */}
       <label className="flex items-center gap-2 cursor-pointer">
-        <span className="text-sm text-slate-400">Auto-refresh</span>
+        <span className="text-sm text-slate-400">{t('widget.autoRefresh')}</span>
         <button
           type="button"
           role="switch"
@@ -149,7 +151,7 @@ export default function StaleDataIndicator({
         <ArrowPathIcon
           className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
         />
-        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        {isRefreshing ? t('widget.refreshing') : t('widget.refresh')}
       </button>
     </div>
   );

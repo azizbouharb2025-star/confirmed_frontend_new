@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { CurrencyDollarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
+import { useLanguage } from '@/hooks/useLanguage';
+import type { TranslationKey } from '@/lib/i18n';
 
 export type ViewMode = 'cumulative' | 'daily';
 
@@ -42,9 +44,9 @@ export interface RevenueChartWidgetProps {
   className?: string;
 }
 
-const VIEW_OPTIONS: { value: ViewMode; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'cumulative', label: 'Cumulative' },
+const VIEW_OPTIONS: { value: ViewMode; labelKey: TranslationKey }[] = [
+  { value: 'daily', labelKey: 'widget.revenueTrend.daily' },
+  { value: 'cumulative', labelKey: 'widget.revenueTrend.cumulative' },
 ];
 
 
@@ -87,14 +89,14 @@ function ChartTooltip({
 /**
  * Empty state when no data is available
  */
-function EmptyState(): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <CurrencyDollarIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No revenue data available
+        {t('widget.revenueTrend.empty')}
       </p>
     </div>
   );
@@ -126,6 +128,7 @@ export function RevenueChartWidget({
   const hasData = data.length > 0;
   const isPositiveGrowth = growthPercent >= 0;
   const dataKey = selectedView === 'cumulative' ? 'cumulative' : 'revenue';
+  const { t } = useLanguage();
 
   const handleViewChange = (newView: ViewMode) => {
     setSelectedView(newView);
@@ -134,7 +137,7 @@ export function RevenueChartWidget({
 
   return (
     <WidgetContainer
-      title="Revenue Trend"
+      title={t('widget.revenueTrend')}
       icon={<CurrencyDollarIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
@@ -142,7 +145,7 @@ export function RevenueChartWidget({
       className={className}
     >
       {!hasData ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <div className="space-y-4" data-testid="revenue-chart-content">
           {/* Header with total and view toggle */}
@@ -160,7 +163,7 @@ export function RevenueChartWidget({
                 <span className={isPositiveGrowth ? 'text-green-500' : 'text-red-500'}>
                   {isPositiveGrowth ? '+' : ''}{growthPercent.toFixed(1)}%
                 </span>
-                <span className="text-slate-400">growth</span>
+                <span className="text-slate-400">{t('widget.revenueTrend.growth')}</span>
               </div>
             </div>
             
@@ -176,7 +179,7 @@ export function RevenueChartWidget({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               ))}
             </div>

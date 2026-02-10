@@ -4,7 +4,6 @@ import ThemeProvider from '@/components/providers/ThemeProvider'
 import { WebSocketProvider } from '@/components/providers/WebSocketProvider'
 import CookieConsent from '@/components/ui/CookieConsent'
 import { Toaster } from 'react-hot-toast'
-import ErrorBoundary from '@/components/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,15 +25,13 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <ErrorBoundary>
-          <ThemeProvider>
-            <WebSocketProvider>
-              {children}
-            </WebSocketProvider>
-          </ThemeProvider>
-          <CookieConsent />
-          <Toaster />
-        </ErrorBoundary>
+        <ThemeProvider>
+          <WebSocketProvider>
+            {children}
+          </WebSocketProvider>
+        </ThemeProvider>
+        <CookieConsent />
+        <Toaster />
       </body>
     </html>
   )
