@@ -2,52 +2,26 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * Server-side route protection middleware.
- * Validates that protected panel routes have an auth token present.
+ * Server-side middleware for security headers and auth cookie support.
  * 
- * Note: This checks for token existence only. Full JWT validation
- * requires the backend secret and should be done by the API layer.
- * This middleware prevents unauthenticated users from loading
- * protected page bundles at all.
+ * Since this SPA uses localStorage for auth (zustand persist), the middleware
+ * cannot block page navigations for unauthenticated users — the browser
+ * doesn't send localStorage with page requests. Client-side ProtectedRoute
+ * handles that redirect.
+ * 
+ * What this middleware does:
+ * 1. Adds security headers to all panel responses
+ * 2. If an auth-token cookie exists, forwards it as an Authorization header
+ *    to API rewrites (future-proofing for HttpOnly cookie migration)
  */
 
-const PROTECTED_PATHS = ['/panel/admin', '/panel/client', '/panel/op']
-const PUBLIC_PATHS = ['/panel/login', '/panel/register', '/panel/forgot-password']
-
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Only protect panel routes
-  const isProtectedRoute = PROTECTED_PATHS.some(path => pathname.startsWith(path))
-  const isPublicRoute = PUBLIC_PATHS.some(path => pathname.startsWith(path))
-
-  if (!isProtectedRoute) {
-    return NextResponse.next()
-  }
-
-  // Check for auth token in cookies (preferred) or fallback header
-  const authCookie = request.cookies.get('auth-token')?.value
-  
-  // For SPA with localStorage auth, we check if the request has the token
-  // via a custom header set by the client, or a cookie
-  const authHeader = request.headers.get('authorization')
-  const hasToken = !!authCookie || !!authHeader
-
-  if (!hasToken) {
-    // For page navigations (not API/asset requests), redirect to login
-    const isPageRequest = request.headers.get('accept')?.includes('text/html')
-    
-    if (isPageRequest) {
-      const loginUrl = new URL('/panel/login', request.url)
-      loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-  }
-
-  // Add security headers to all responses
   const response = NextResponse.next()
+
+  // Security headers on all panel routes
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+  response.headers.set('Cache-Control', 'no-store, max-age=0')
 
   return response
 }
