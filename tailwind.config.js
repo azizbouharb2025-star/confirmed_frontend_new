@@ -94,5 +94,9 @@ module.exports = {
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
     require('@tailwindcss/aspect-ratio'),
+    // Custom 'light' variant that matches when the 'light' class is on an ancestor
+    function({ addVariant }) {
+      addVariant('light', '.light &')
+    },
   ],
 }

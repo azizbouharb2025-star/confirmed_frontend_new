@@ -107,7 +107,7 @@ export default function RealTimeNotifications() {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+    <div className="fixed top-20 right-2 sm:right-4 z-50 space-y-2 max-w-[calc(100vw-1rem)] sm:max-w-sm">
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div

@@ -193,7 +193,7 @@ export function UpgradeModal({
 
           {/* Upgrade buttons - Requirements 5.4 */}
           <div className="p-6 border-t border-slate-800 dark:border-slate-800 light:border-gray-200">
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {ALL_PLANS.map((plan) => (
                 <button
                   key={plan}

@@ -12,7 +12,10 @@ export default function ThemeToggle() {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={toggleTheme}
-      className="relative p-2 rounded-xl hover:bg-white/10 transition-colors overflow-hidden"
+      className={`relative p-2 rounded-xl transition-colors overflow-hidden ${
+        theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+      }`}
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <motion.div
         initial={false}

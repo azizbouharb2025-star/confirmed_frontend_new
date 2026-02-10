@@ -45,14 +45,18 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   const { theme } = useTheme()
   const navigationItems = getNavigationItems(t)
   const navigation = navigationItems[userRole] || navigationItems.shop_owner
+  const isDark = theme === 'dark'
 
   return (
     <>
+      {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r dark:bg-slate-900 dark:border-slate-800 light:bg-white light:border-gray-200 px-6">
+        <div className={`flex grow flex-col gap-y-5 overflow-y-auto border-r px-6 ${
+          isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
+        }`}>
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/">
-              <Image src={theme === 'dark' ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} className="object-contain" />
+              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} className="object-contain" />
             </Link>
           </div>
           
@@ -65,7 +69,9 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
                     <Link href={item.href} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       isActive 
                         ? 'bg-blue-500 text-white' 
-                        : 'dark:text-slate-300 dark:hover:bg-slate-800 light:text-gray-700 light:hover:bg-gray-100'
+                        : isDark
+                          ? 'text-slate-300 hover:bg-slate-800'
+                          : 'text-gray-700 hover:bg-gray-100'
                     }`}>
                       <item.icon className="h-5 w-5" />
                       {item.name}
@@ -78,12 +84,23 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
         </div>
       </div>
 
+      {/* Mobile sidebar */}
       {isOpen && (
-        <div className="fixed inset-y-0 z-50 flex w-64 flex-col lg:hidden">
-          <div className="flex grow flex-col gap-y-5 overflow-y-auto dark:bg-slate-900 light:bg-white px-6 border-r dark:border-slate-800 light:border-gray-200">
+        <div className="fixed inset-y-0 z-50 flex w-72 max-w-[85vw] flex-col lg:hidden">
+          <div className={`flex grow flex-col gap-y-5 overflow-y-auto px-6 border-r shadow-2xl ${
+            isDark
+              ? 'bg-slate-900 border-slate-800'
+              : 'bg-white border-gray-200'
+          }`}>
             <div className="flex h-16 shrink-0 items-center justify-between">
-              <Image src={theme === 'dark' ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} />
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-800 light:hover:bg-gray-100">
+              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} />
+              <button
+                onClick={onClose}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                aria-label="Close sidebar"
+              >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
@@ -94,10 +111,12 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
                   const isActive = pathname === item.href
                   return (
                     <li key={item.name}>
-                      <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      <Link href={item.href} onClick={onClose} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                         isActive 
                           ? 'bg-blue-500 text-white' 
-                          : 'dark:text-slate-300 dark:hover:bg-slate-800 light:text-gray-700 light:hover:bg-gray-100'
+                          : isDark
+                            ? 'text-slate-300 hover:bg-slate-800'
+                            : 'text-gray-700 hover:bg-gray-100'
                       }`}>
                         <item.icon className="h-5 w-5" />
                         {item.name}

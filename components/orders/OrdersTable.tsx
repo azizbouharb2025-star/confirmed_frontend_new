@@ -236,7 +236,7 @@ function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalOrders)
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-slate-700">
+    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-2 border-t border-gray-200 dark:border-slate-700">
       <div className="text-sm text-gray-600 dark:text-slate-400">
         {labels.showing} {startItem} {labels.to} {endItem} {labels.of} {totalOrders}
       </div>

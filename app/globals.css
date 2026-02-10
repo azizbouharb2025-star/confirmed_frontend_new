@@ -30,6 +30,7 @@
   
   .light {
     @apply text-gray-800;
+    background-color: #fefefe;
   }
   
   .light body {
@@ -45,6 +46,20 @@
 }
 
 @layer components {
+  /* Base card class used across dashboard */
+  .card {
+    @apply rounded-2xl border backdrop-blur-sm;
+  }
+  
+  .dark .card {
+    @apply bg-slate-900/80 border-slate-800 text-white;
+  }
+  
+  .light .card {
+    @apply bg-white/90 border-gray-200 text-gray-900;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
   .glass-card {
     @apply backdrop-blur-xl rounded-2xl shadow-glass;
   }
