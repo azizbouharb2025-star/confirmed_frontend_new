@@ -103,7 +103,7 @@ export interface WebSocketConfig {
  * Default configuration
  */
 const DEFAULT_CONFIG: Required<WebSocketConfig> = {
-  url: process.env.NEXT_PUBLIC_WS_URL || 'ws://51.255.201.244:8000/ws',
+  url: process.env.NEXT_PUBLIC_WS_URL || 'wss://confirmed.tn/ws',
   reconnectAttempts: 10,
   initialReconnectDelay: 1000,
   maxReconnectDelay: 30000,

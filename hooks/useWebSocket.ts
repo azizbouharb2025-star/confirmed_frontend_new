@@ -44,7 +44,7 @@ export const useWebSocket = (): UseWebSocketReturn => {
       return
     }
 
-    const newSocket = io('ws://51.255.201.244:8000', {
+    const newSocket = io(process.env.NEXT_PUBLIC_WS_URL || 'wss://confirmed.tn/ws', {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
