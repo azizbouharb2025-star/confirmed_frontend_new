@@ -25,7 +25,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.confirmed.tn",
-              "connect-src 'self' https://api.confirmed.tn wss://confirmed.tn https://cloudflareinsights.com",
+              "connect-src 'self' https://api.confirmed.tn wss://confirmed.tn wss://api.confirmed.tn https://cloudflareinsights.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
