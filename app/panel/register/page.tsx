@@ -428,7 +428,7 @@ export default function RegisterPage() {
               value={formData.phoneNumber}
               onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
               error={errors.phoneNumber}
-              ariaLabel={t('auth.phonePrefix') || 'Phone prefix'}
+              ariaLabel={'Phone prefix'}
             />
             
             <div className="space-y-3">
@@ -455,7 +455,7 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
                 disabled={formData.isWhatsappLinked}
                 error={errors.whatsappNumber}
-                ariaLabel={t('auth.whatsappPrefix') || 'WhatsApp prefix'}
+                ariaLabel={'WhatsApp prefix'}
               />
             </div>
             
