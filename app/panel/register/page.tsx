@@ -203,7 +203,7 @@ export default function RegisterPage() {
             isWhatsappLinked: 'WhatsApp linked',
           }
           fields.forEach((field: string) => {
-            fieldErrors[field] = `${fieldLabels[field] || field} ${t('auth.isRequired') || 'is required'}`
+            fieldErrors[field] = `${fieldLabels[field] || field} is required`
           })
           setErrors(fieldErrors)
           // Jump to the earliest step that has an error
