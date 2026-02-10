@@ -3,12 +3,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: '51.255.201.244',
-      },
-      {
         protocol: 'https',
-        hostname: '51.255.201.244',
+        hostname: '*.confirmed.tn',
       },
     ],
   },
@@ -25,11 +21,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://51.255.201.244 https://*.confirmed.tn",
-              "connect-src 'self' https://api.confirmed.tn wss://confirmed.tn https://51.255.201.244:*",
+              "img-src 'self' data: blob: https://*.confirmed.tn",
+              "connect-src 'self' https://api.confirmed.tn wss://confirmed.tn",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
@@ -56,7 +52,7 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://51.255.201.244:8000'
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
     return [
       {
         source: '/api/:path*',

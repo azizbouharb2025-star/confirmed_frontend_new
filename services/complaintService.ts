@@ -16,8 +16,23 @@ import {
   ComplaintCategory,
 } from '@/types/complaint';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://51.255.201.244:3000';
-const FILE_SERVER_URL = process.env.NEXT_PUBLIC_FILE_SERVER_URL || 'http://51.255.201.244:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn';
+const FILE_SERVER_URL = process.env.NEXT_PUBLIC_FILE_SERVER_URL || 'https://api.confirmed.tn';
+
+/**
+ * Typed error class for complaint service errors
+ */
+export class ComplaintServiceError extends Error {
+  status: number;
+  code?: string;
+
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ComplaintServiceError';
+    this.status = status;
+    this.code = code;
+  }
+}
 
 /**
  * Build query string from complaint filters and pagination
@@ -170,12 +185,8 @@ function transformComplaint(complaint: RawComplaint): Complaint {
       // Get the raw URL/path value
       let url = attachment.url || attachment.path || attachment.filename || '';
 
-      // Replace port 3000 with port 8000 for file attachments if already absolute
-      if (url && url.includes('51.255.201.244:3000/uploads/')) {
-        url = url.replace('51.255.201.244:3000', '51.255.201.244:8000');
-      }
       // If URL is not absolute, build the full URL
-      else if (url && !url.startsWith('http')) {
+      if (url && !url.startsWith('http')) {
         // Remove any leading slashes for consistent handling
         const cleanPath = url.replace(/^\/+/, '');
 
@@ -274,10 +285,11 @@ export const complaintService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const error = new Error(errorData.error || 'Token validation failed');
-      (error as any).status = response.status;
-      (error as any).code = errorData.code;
-      throw error;
+      throw new ComplaintServiceError(
+        errorData.error || 'Token validation failed',
+        response.status,
+        errorData.code
+      );
     }
 
     const result = await response.json();
@@ -332,10 +344,11 @@ export const complaintService = {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const error = new Error(errorData.error || errorData.message || 'Complaint submission failed');
-      (error as any).status = response.status;
-      (error as any).code = errorData.code;
-      throw error;
+      throw new ComplaintServiceError(
+        errorData.error || errorData.message || 'Complaint submission failed',
+        response.status,
+        errorData.code
+      );
     }
 
     const result = await response.json();

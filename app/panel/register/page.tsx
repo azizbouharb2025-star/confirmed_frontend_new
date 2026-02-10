@@ -28,15 +28,6 @@ const COUNTRY_PREFIXES = [
   { code: '+974', label: 'QA', country: 'Qatar' },
 ]
 
-const COUNTRY_CODE_MAP: Record<string, string> = {
-  TN: '+216', DZ: '+213', MA: '+212', EG: '+20', LY: '+218',
-  FR: '+33', US: '+1', GB: '+44', SA: '+966', AE: '+971', QA: '+974',
-}
-
-const COUNTRY_NAME_MAP: Record<string, string> = {
-  TN: 'Tunisia', DZ: 'Algeria', MA: 'Morocco', EG: 'Egypt', LY: 'Libya',
-}
-
 function PhonePrefixInput({
   label,
   prefix,
@@ -130,26 +121,8 @@ export default function RegisterPage() {
     }
   }, [formData.phoneNumber, formData.isWhatsappLinked, phonePrefix])
 
-  useEffect(() => {
-    const detectCountry = async () => {
-      try {
-        const res = await fetch('https://ipapi.co/json/')
-        if (!res.ok) return
-        const data = await res.json()
-        const cc = data.country_code?.toUpperCase()
-        if (cc && COUNTRY_CODE_MAP[cc]) {
-          setPhonePrefix(COUNTRY_CODE_MAP[cc])
-          setWhatsappPrefix(COUNTRY_CODE_MAP[cc])
-        }
-        if (cc && COUNTRY_NAME_MAP[cc]) {
-          setFormData(prev => ({ ...prev, country: COUNTRY_NAME_MAP[cc] }))
-        }
-      } catch {
-        // silently fallback to default (+216 Tunisia)
-      }
-    }
-    detectCountry()
-  }, [])
+  // Country detection removed - defaults to Tunisia (+216)
+  // Previously called https://ipapi.co/json/ which leaked user IP to a third party
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

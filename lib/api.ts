@@ -95,7 +95,7 @@ const api = {
         try {
           return JSON.parse(text)
         } catch {
-          throw new Error(`Server error (${response.status}): ${text || response.statusText}`)
+          throw new Error('Authentication failed. Please try again.')
         }
       }
       return response.json()
@@ -137,7 +137,7 @@ const api = {
         try {
           return JSON.parse(text)
         } catch {
-          throw new Error(`Server error (${response.status}): ${text || response.statusText}`)
+          throw new Error('Failed to fetch user profile. Please login again.')
         }
       }
       return response.json()
