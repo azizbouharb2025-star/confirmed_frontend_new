@@ -883,6 +883,8 @@ export const translations = {
     'shops.consumerSecretRequired': 'Consumer Secret is required',
     'shops.storeUrlRequired': 'Store URL is required',
     'shops.apiEndpointRequired': 'API Endpoint is required',
+    'shops.appSecretRequired': 'App Secret is required',
+    'shops.shopIdRequired': 'Shop ID is required',
     // Products validation & messages
     'products.createSuccess': 'Product created successfully!',
     'products.updateSuccess': 'Product updated successfully!',
@@ -1766,6 +1768,8 @@ export const translations = {
     'shops.consumerSecretRequired': 'Le secret consommateur est requis',
     'shops.storeUrlRequired': 'L\'URL du magasin est requise',
     'shops.apiEndpointRequired': 'Le point d\'accès API est requis',
+    'shops.appSecretRequired': 'Le secret de l\'application est requis',
+    'shops.shopIdRequired': 'L\'ID de la boutique est requis',
     // Products validation & messages
     'products.createSuccess': 'Produit créé avec succès !',
     'products.updateSuccess': 'Produit mis à jour avec succès !',
@@ -2530,6 +2534,8 @@ export const translations = {
     'shops.consumerSecretRequired': 'سر المستهلك مطلوب',
     'shops.storeUrlRequired': 'رابط المتجر مطلوب',
     'shops.apiEndpointRequired': 'نقطة نهاية API مطلوبة',
+    'shops.appSecretRequired': 'سر التطبيق مطلوب',
+    'shops.shopIdRequired': 'معرف المتجر مطلوب',
     // Products validation & messages
     'products.createSuccess': 'تم إنشاء المنتج بنجاح!',
     'products.updateSuccess': 'تم تحديث المنتج بنجاح!',
