@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bars3Icon, BellIcon, UserCircleIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import Sidebar from './Sidebar'
 import LanguageSelector from '@/components/ui/LanguageSelector'
@@ -22,6 +23,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const { logout } = useAuth()
   const { t } = useLanguage()
   const { theme } = useTheme()
+  const router = useRouter()
   const profileRef = useRef<HTMLDivElement>(null)
 
   const isDark = theme === 'dark'
@@ -115,12 +117,12 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
                       ? 'bg-slate-800 border-slate-700'
                       : 'bg-white border-gray-200'
                   }`}>
-                    <button className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+                    <button onClick={() => { setProfileOpen(false); router.push('/panel/profile') }} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
                       isDark
                         ? 'text-slate-200 hover:bg-slate-700'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}>{t('common.profile')}</button>
-                    <button className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+                    <button onClick={() => { setProfileOpen(false); router.push(userRole === 'admin' ? '/panel/admin/settings' : '/panel/settings') }} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
                       isDark
                         ? 'text-slate-200 hover:bg-slate-700'
                         : 'text-gray-700 hover:bg-gray-100'
