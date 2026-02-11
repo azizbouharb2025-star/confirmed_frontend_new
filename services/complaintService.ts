@@ -386,11 +386,12 @@ export const complaintService = {
    */
   async getSummary(): Promise<ComplaintSummary> {
     const response = await api.get('/api/complaints/summary');
-    // Handle various wrapper shapes: { data: { data: ... } }, { data: { success, data } }, { data: { open, ... } }
     const outer = response.data;
+    
+    console.log('[ComplaintService] getSummary raw response:', JSON.stringify(outer));
+    
     const inner = outer?.data || outer;
     
-    // If the summary is nested one more level (e.g. { success: true, data: { summary: {...} } })
     if (inner?.summary && typeof inner.summary === 'object') {
       return inner.summary;
     }
