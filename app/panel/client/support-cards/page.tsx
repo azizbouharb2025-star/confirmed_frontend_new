@@ -10,6 +10,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { WidgetGate } from '@/components/dashboard/WidgetGate';
 import QRCodeDisplay from '@/components/complaints/QRCodeDisplay';
+import DeliverySlip from '@/components/complaints/DeliverySlip';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supportCardService } from '@/services/supportCardService';
@@ -22,6 +23,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   XMarkIcon,
+  PrinterIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import logger from '@/lib/logger';
@@ -67,6 +69,11 @@ export default function SupportCardsPage() {
 
   // Error state - Requirements: 4.4
   const [error, setError] = useState<GenerationError | null>(null);
+
+  // Delivery slip state
+  const [slipSupportCard, setSlipSupportCard] = useState<SupportCard | null>(null);
+  const [slipOrder, setSlipOrder] = useState<Order | null>(null);
+  const [slipGeneratingOrderId, setSlipGeneratingOrderId] = useState<string | null>(null);
 
   /**
    * Fetch orders for bulk selection
@@ -194,6 +201,40 @@ export default function SupportCardsPage() {
     setError(null);
   }, []);
 
+  /**
+   * Open delivery slip preview for a support card (from already-generated cards)
+   */
+  const openDeliverySlip = useCallback((card: SupportCard) => {
+    const matchedOrder = orders.find(
+      (o) => o.orderId === card.orderId || o.orderId === card.orderNumber
+    );
+    setSlipOrder(matchedOrder || null);
+    setSlipSupportCard(card);
+  }, [orders]);
+
+  /**
+   * Generate support card for an order from the table, then open delivery slip
+   */
+  const handlePrintSlipForOrder = useCallback(async (order: Order) => {
+    setSlipGeneratingOrderId(order.orderId);
+    try {
+      const supportCard = await supportCardService.generateSingle(order.orderId);
+      setSlipOrder(order);
+      setSlipSupportCard(supportCard);
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to generate support card';
+      toast.error(errorMessage);
+    } finally {
+      setSlipGeneratingOrderId(null);
+    }
+  }, []);
+
+  const closeDeliverySlip = useCallback(() => {
+    setSlipSupportCard(null);
+    setSlipOrder(null);
+  }, []);
+
   return (
     <DashboardLayout userRole="shop_owner">
       <WidgetGate
@@ -278,6 +319,15 @@ export default function SupportCardsPage() {
             {singleSupportCard && (
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
                 <QRCodeDisplay supportCard={singleSupportCard} />
+                <div className="flex justify-center mt-4">
+                  <button
+                    onClick={() => openDeliverySlip(singleSupportCard)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <PrinterIcon className="w-4 h-4" />
+                    {_t('deliverySlip.printSlip')}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -350,6 +400,9 @@ export default function SupportCardsPage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                           Date
                         </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                          {_t('table.actions')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
@@ -390,6 +443,24 @@ export default function SupportCardsPage() {
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400">
                             {new Date(order.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePrintSlipForOrder(order);
+                              }}
+                              disabled={slipGeneratingOrderId === order.orderId}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs font-medium rounded-lg transition-colors"
+                              title={_t('deliverySlip.printSlip')}
+                            >
+                              {slipGeneratingOrderId === order.orderId ? (
+                                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <PrinterIcon className="w-3.5 h-3.5" />
+                              )}
+                              {_t('deliverySlip.printSlip')}
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -435,10 +506,31 @@ export default function SupportCardsPage() {
                   </span>
                 </div>
                 <QRCodeDisplay supportCards={bulkSupportCards} />
+                <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                  {bulkSupportCards.map((card) => (
+                    <button
+                      key={card.orderId}
+                      onClick={() => openDeliverySlip(card)}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      <PrinterIcon className="w-3.5 h-3.5" />
+                      {_t('deliverySlip.printSlip')} - {card.orderNumber || card.orderId}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Delivery Slip Modal */}
+        {slipSupportCard && (
+          <DeliverySlip
+            supportCard={slipSupportCard}
+            order={slipOrder}
+            onClose={closeDeliverySlip}
+          />
+        )}
       </WidgetGate>
     </DashboardLayout>
   );
