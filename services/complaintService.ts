@@ -386,8 +386,16 @@ export const complaintService = {
    */
   async getSummary(): Promise<ComplaintSummary> {
     const response = await api.get('/api/complaints/summary');
-    // Handle { success, data } wrapper
-    return response.data.data || response.data;
+    // Handle various wrapper shapes: { data: { data: ... } }, { data: { success, data } }, { data: { open, ... } }
+    const outer = response.data;
+    const inner = outer?.data || outer;
+    
+    // If the summary is nested one more level (e.g. { success: true, data: { summary: {...} } })
+    if (inner?.summary && typeof inner.summary === 'object') {
+      return inner.summary;
+    }
+    
+    return inner;
   },
 
   /**

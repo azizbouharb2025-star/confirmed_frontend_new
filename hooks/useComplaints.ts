@@ -162,7 +162,7 @@ export function useComplaints(initialFilters?: ComplaintFilters): UseComplaintsR
   }, []);
 
   /**
-   * Fetch summary counts
+   * Fetch complaint summary counts
    * Requirements: 2.1
    */
   const fetchSummary = useCallback(async () => {
@@ -175,11 +175,34 @@ export function useComplaints(initialFilters?: ComplaintFilters): UseComplaintsR
 
       if (!isMountedRef.current) return;
 
-      setSummary(summaryData);
+      // Validate that we got real data, not an empty/malformed response
+      if (summaryData && typeof summaryData.total === 'number') {
+        setSummary(summaryData);
+      } else {
+        // API returned unexpected shape — try to extract from nested structure
+        const raw = summaryData as Record<string, unknown>;
+        const extracted: ComplaintSummary = {
+          open: Number(raw.open) || 0,
+          in_progress: Number(raw.in_progress) || 0,
+          resolved: Number(raw.resolved) || 0,
+          closed: Number(raw.closed) || 0,
+          escalated: Number(raw.escalated) || 0,
+          total: Number(raw.total) || 0,
+        };
+        // Compute total from parts if total is 0 but parts aren't
+        if (extracted.total === 0) {
+          extracted.total =
+            extracted.open +
+            extracted.in_progress +
+            extracted.resolved +
+            extracted.closed +
+            extracted.escalated;
+        }
+        setSummary(extracted);
+      }
     } catch (err) {
       if (!isMountedRef.current) return;
 
-      // Don't set error for summary - complaints list is primary
       logger.error('Failed to fetch summary:', err, 'Complaints');
       setSummary(DEFAULT_SUMMARY);
     } finally {
@@ -263,11 +286,10 @@ export function useComplaints(initialFilters?: ComplaintFilters): UseComplaintsR
     fetchComplaints();
   }, [pagination.page, pagination.limit, filters, fetchComplaints]);
 
-  // Fetch summary on mount only
+  // Refetch summary when filters change (not just on mount)
   useEffect(() => {
     fetchSummary();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filters, fetchSummary]);
 
   // Cleanup on unmount
   useEffect(() => {
