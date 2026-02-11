@@ -177,10 +177,8 @@ export function useComplaints(initialFilters?: ComplaintFilters): UseComplaintsR
 
       // Validate that we got real data, not an empty/malformed response
       if (summaryData && typeof summaryData.total === 'number') {
-        console.log('[useComplaints] Summary data received (valid):', JSON.stringify(summaryData));
         setSummary(summaryData);
       } else {
-        console.log('[useComplaints] Summary data unexpected shape:', JSON.stringify(summaryData));
         // API returned unexpected shape — try to extract from nested structure
         const raw = summaryData as unknown as Record<string, unknown>;
         const extracted: ComplaintSummary = {

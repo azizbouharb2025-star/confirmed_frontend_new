@@ -387,15 +387,28 @@ export const complaintService = {
   async getSummary(): Promise<ComplaintSummary> {
     const response = await api.get('/api/complaints/summary');
     const outer = response.data;
-    
-    console.log('[ComplaintService] getSummary raw response:', JSON.stringify(outer));
-    
     const inner = outer?.data || outer;
-    
+
+    // Backend returns { byStatus: { open: 1, ... }, byCategory: { ... } }
+    if (inner?.byStatus && typeof inner.byStatus === 'object') {
+      const s = inner.byStatus as Record<string, number>;
+      const summary: ComplaintSummary = {
+        open: s.open || 0,
+        in_progress: s.in_progress || 0,
+        resolved: s.resolved || 0,
+        closed: s.closed || 0,
+        escalated: s.escalated || 0,
+        total: 0,
+      };
+      summary.total = summary.open + summary.in_progress + summary.resolved + summary.closed + summary.escalated;
+      return summary;
+    }
+
+    // Flat shape fallback: { open: 1, in_progress: 0, total: 1 }
     if (inner?.summary && typeof inner.summary === 'object') {
       return inner.summary;
     }
-    
+
     return inner;
   },
 
