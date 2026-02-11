@@ -1,6 +1,6 @@
 /**
  * Complaint Service - API methods for complaint management
- * Requirements: 1.1, 1.8, 2.1, 2.3, 3.5, 3.6, 5.1, 5.4
+
  */
 
 import api from '@/lib/api';
