@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon, QrCodeIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { TranslationKey } from '@/lib/i18n'
@@ -35,6 +35,7 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
     { name: t('nav.orders'), href: '/panel/client/orders', icon: ShoppingBagIcon },
     { name: t('nav.products'), href: '/panel/client/products', icon: DocumentTextIcon },
     { name: t('nav.complaints'), href: '/panel/client/complaints', icon: ExclamationCircleIcon },
+    { name: t('nav.supportCards'), href: '/panel/client/support-cards', icon: QrCodeIcon },
     { name: t('nav.api'), href: '/panel/client/api', icon: CogIcon },
   ]
 })
