@@ -30,6 +30,8 @@ const platforms = [
   { id: 'converty', name: 'Converty', Icon: ShoppingBagIcon },
   { id: 'meta', name: 'Meta (Facebook/Instagram)', Icon: DevicePhoneMobileIcon },
   { id: 'tiktakpro', name: 'TikTakPro', Icon: ShoppingCartIcon },
+  { id: 'shopify', name: 'Shopify', Icon: ShoppingBagIcon },
+  { id: 'woocommerce', name: 'WooCommerce', Icon: ShoppingCartIcon },
   { id: 'custom', name: 'Custom Website', Icon: GlobeAltIcon }
 ]
 
@@ -82,16 +84,23 @@ export default function ShopsPage() {
     if (formData.platform === 'converty') {
       if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
       if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
-      if (!creds.accessToken) errors.accessToken = t('shops.accessTokenRequired')
-    } else if (formData.platform === 'meta') {
-      if (!creds.appId) errors.appId = t('shops.appIdRequired')
+      if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
+    } else if (formData.platform === 'shopify') {
+      if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
       if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
-      if (!creds.pageId) errors.pageId = t('shops.pageIdRequired')
-      if (!creds.accessToken) errors.accessToken = t('shops.accessTokenRequired')
-    } else if (formData.platform === 'tiktakpro') {
+      if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
+    } else if (formData.platform === 'woocommerce') {
       if (!creds.consumerKey) errors.consumerKey = t('shops.consumerKeyRequired')
       if (!creds.consumerSecret) errors.consumerSecret = t('shops.consumerSecretRequired')
       if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
+    } else if (formData.platform === 'meta') {
+      if (!creds.appId) errors.appId = t('shops.appIdRequired')
+      if (!creds.appSecret) errors.appSecret = t('shops.appSecretRequired')
+      if (!creds.pageId) errors.pageId = t('shops.pageIdRequired')
+    } else if (formData.platform === 'tiktakpro') {
+      if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
+      if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
+      if (!creds.shopId) errors.shopId = t('shops.shopIdRequired')
     } else if (formData.platform === 'custom') {
       if (!creds.apiEndpoint) errors.apiEndpoint = t('shops.apiEndpointRequired')
       if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
@@ -107,11 +116,12 @@ export default function ShopsPage() {
     setError(null)
 
     try {
+      const credentialsKey = `${formData.platform}Credentials`
       const payload = {
         name: formData.name,
         domain: formData.domain,
         platform: formData.platform,
-        apiCredentials: formData.apiCredentials
+        [credentialsKey]: formData.apiCredentials
       }
 
       const response = await api.post('/api/shops', payload)
@@ -167,34 +177,29 @@ export default function ShopsPage() {
               {formErrors.apiSecret && <p className="text-red-500 text-xs mt-1">{formErrors.apiSecret}</p>}
             </div>
             <div>
-              <input type="text" placeholder="Access Token *" value={formData.apiCredentials.accessToken || ''} onChange={(e) => updateCredential('accessToken', e.target.value)} className={inputClass('accessToken')} />
-              {formErrors.accessToken && <p className="text-red-500 text-xs mt-1">{formErrors.accessToken}</p>}
+              <input type="url" placeholder="Store URL *" value={formData.apiCredentials.storeUrl || ''} onChange={(e) => updateCredential('storeUrl', e.target.value)} className={inputClass('storeUrl')} />
+              {formErrors.storeUrl && <p className="text-red-500 text-xs mt-1">{formErrors.storeUrl}</p>}
             </div>
-            <input type="text" placeholder="Webhook Secret (optional)" value={formData.apiCredentials.webhookSecret || ''} onChange={(e) => updateCredential('webhookSecret', e.target.value)} className={inputClass('webhookSecret')} />
           </div>
         )
-      case 'meta':
+      case 'shopify':
         return (
           <div className="space-y-3">
             <div>
-              <input type="text" placeholder="App ID *" value={formData.apiCredentials.appId || ''} onChange={(e) => updateCredential('appId', e.target.value)} className={inputClass('appId')} />
-              {formErrors.appId && <p className="text-red-500 text-xs mt-1">{formErrors.appId}</p>}
+              <input type="text" placeholder="API Key *" value={formData.apiCredentials.apiKey || ''} onChange={(e) => updateCredential('apiKey', e.target.value)} className={inputClass('apiKey')} />
+              {formErrors.apiKey && <p className="text-red-500 text-xs mt-1">{formErrors.apiKey}</p>}
             </div>
             <div>
-              <input type="password" placeholder="App Secret *" value={formData.apiCredentials.apiSecret || ''} onChange={(e) => updateCredential('apiSecret', e.target.value)} className={inputClass('apiSecret')} />
+              <input type="password" placeholder="API Secret *" value={formData.apiCredentials.apiSecret || ''} onChange={(e) => updateCredential('apiSecret', e.target.value)} className={inputClass('apiSecret')} />
               {formErrors.apiSecret && <p className="text-red-500 text-xs mt-1">{formErrors.apiSecret}</p>}
             </div>
             <div>
-              <input type="text" placeholder="Page ID *" value={formData.apiCredentials.pageId || ''} onChange={(e) => updateCredential('pageId', e.target.value)} className={inputClass('pageId')} />
-              {formErrors.pageId && <p className="text-red-500 text-xs mt-1">{formErrors.pageId}</p>}
-            </div>
-            <div>
-              <input type="text" placeholder="Access Token *" value={formData.apiCredentials.accessToken || ''} onChange={(e) => updateCredential('accessToken', e.target.value)} className={inputClass('accessToken')} />
-              {formErrors.accessToken && <p className="text-red-500 text-xs mt-1">{formErrors.accessToken}</p>}
+              <input type="url" placeholder="Store URL *" value={formData.apiCredentials.storeUrl || ''} onChange={(e) => updateCredential('storeUrl', e.target.value)} className={inputClass('storeUrl')} />
+              {formErrors.storeUrl && <p className="text-red-500 text-xs mt-1">{formErrors.storeUrl}</p>}
             </div>
           </div>
         )
-      case 'tiktakpro':
+      case 'woocommerce':
         return (
           <div className="space-y-3">
             <div>
@@ -208,6 +213,40 @@ export default function ShopsPage() {
             <div>
               <input type="url" placeholder="Store URL *" value={formData.apiCredentials.storeUrl || ''} onChange={(e) => updateCredential('storeUrl', e.target.value)} className={inputClass('storeUrl')} />
               {formErrors.storeUrl && <p className="text-red-500 text-xs mt-1">{formErrors.storeUrl}</p>}
+            </div>
+          </div>
+        )
+      case 'meta':
+        return (
+          <div className="space-y-3">
+            <div>
+              <input type="text" placeholder="App ID *" value={formData.apiCredentials.appId || ''} onChange={(e) => updateCredential('appId', e.target.value)} className={inputClass('appId')} />
+              {formErrors.appId && <p className="text-red-500 text-xs mt-1">{formErrors.appId}</p>}
+            </div>
+            <div>
+              <input type="password" placeholder="App Secret *" value={formData.apiCredentials.appSecret || ''} onChange={(e) => updateCredential('appSecret', e.target.value)} className={inputClass('appSecret')} />
+              {formErrors.appSecret && <p className="text-red-500 text-xs mt-1">{formErrors.appSecret}</p>}
+            </div>
+            <div>
+              <input type="text" placeholder="Page ID *" value={formData.apiCredentials.pageId || ''} onChange={(e) => updateCredential('pageId', e.target.value)} className={inputClass('pageId')} />
+              {formErrors.pageId && <p className="text-red-500 text-xs mt-1">{formErrors.pageId}</p>}
+            </div>
+          </div>
+        )
+      case 'tiktakpro':
+        return (
+          <div className="space-y-3">
+            <div>
+              <input type="text" placeholder="API Key *" value={formData.apiCredentials.apiKey || ''} onChange={(e) => updateCredential('apiKey', e.target.value)} className={inputClass('apiKey')} />
+              {formErrors.apiKey && <p className="text-red-500 text-xs mt-1">{formErrors.apiKey}</p>}
+            </div>
+            <div>
+              <input type="password" placeholder="API Secret *" value={formData.apiCredentials.apiSecret || ''} onChange={(e) => updateCredential('apiSecret', e.target.value)} className={inputClass('apiSecret')} />
+              {formErrors.apiSecret && <p className="text-red-500 text-xs mt-1">{formErrors.apiSecret}</p>}
+            </div>
+            <div>
+              <input type="text" placeholder="Shop ID *" value={formData.apiCredentials.shopId || ''} onChange={(e) => updateCredential('shopId', e.target.value)} className={inputClass('shopId')} />
+              {formErrors.shopId && <p className="text-red-500 text-xs mt-1">{formErrors.shopId}</p>}
             </div>
           </div>
         )
