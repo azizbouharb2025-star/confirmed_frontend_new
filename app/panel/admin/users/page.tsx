@@ -93,28 +93,17 @@ export default function UsersManagement() {
   }
 
   const updateUserSubscription = async (userId: string, plan: SubscriptionPlan) => {
-    // Optimistic update — show the change immediately
-    setUsers(prev => prev.map(u => 
-      u._id === userId 
-        ? { ...u, subscription: { ...u.subscription, plan } }
-        : u
-    ))
     try {
-      console.warn('[SUB-DEBUG] PATCH request:', `/api/admin/users/${userId}/subscription`, { plan })
-      const patchRes = await api.patch(`/api/admin/users/${userId}/subscription`, { plan })
-      console.warn('[SUB-DEBUG] PATCH response:', patchRes.data)
+      await api.patch(`/api/admin/users/${userId}/subscription`, { plan })
       toast.success(`Subscription updated to ${plan}`)
-      // Re-fetch to confirm persisted state
-      const response = await api.get(`/api/admin/users?page=1&limit=50&role=${roleFilter !== 'all' ? roleFilter : ''}`)
-      console.warn('[SUB-DEBUG] GET users response - first shop_owner subscription:', 
-        response.data?.users?.find((u: User) => u._id === userId)?.subscription)
-      if (response.data?.users) {
-        setUsers(response.data.users)
-      }
+      // Update locally from the confirmed plan — GET doesn't return subscription yet
+      setUsers(prev => prev.map(u => 
+        u._id === userId 
+          ? { ...u, subscription: { ...u.subscription, plan } }
+          : u
+      ))
     } catch (error) {
-      console.warn('[SUB-DEBUG] Error:', error)
-      // Revert on failure — re-fetch original data
-      fetchUsers()
+      logger.error('Failed to update subscription:', error, 'Admin')
       const err = error as { message?: string }
       toast.error(err.message || 'Failed to update subscription')
     }
