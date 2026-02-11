@@ -11,17 +11,59 @@ import logger from '@/lib/logger'
 
 interface User {
   _id: string
-  name: string
+  name?: string
+  firstName?: string
+  lastName?: string
   email: string
   role: string
   isActive: boolean
   lastLogin: string
-  shopId?: { name: string }
+  shop?: { name: string; _id: string }
+  shopId?: { name: string; subscriptionId?: { plan: string } } | string
   stats?: { totalOrders?: number; totalCalls?: number; confirmationRate?: number }
-  subscription?: { plan: string }
+  subscription?: { plan: string; status?: string; features?: Record<string, unknown> }
+  subscriptionId?: { plan: string } | string
 }
 
 type SubscriptionPlan = 'starter' | 'pro' | 'business' | 'enterprise'
+
+/**
+ * Resolve subscription plan from user object.
+ * Backend may return it as user.subscription.plan, user.subscriptionId.plan,
+ * or nested through user.shopId.subscriptionId.plan
+ */
+function getUserPlan(user: User): string {
+  // Direct subscription field
+  if (user.subscription?.plan) return user.subscription.plan
+  // Populated subscriptionId on user
+  if (user.subscriptionId && typeof user.subscriptionId === 'object' && user.subscriptionId.plan) {
+    return user.subscriptionId.plan
+  }
+  // Populated through shop
+  if (user.shopId && typeof user.shopId === 'object' && 'subscriptionId' in user.shopId) {
+    const sub = user.shopId.subscriptionId
+    if (sub && typeof sub === 'object' && sub.plan) return sub.plan
+  }
+  return 'starter'
+}
+
+/**
+ * Get display name from user object (handles both name and firstName/lastName)
+ */
+function getUserName(user: User): string {
+  if (user.name) return user.name
+  if (user.firstName || user.lastName) return `${user.firstName || ''} ${user.lastName || ''}`.trim()
+  return user.email
+}
+
+/**
+ * Get shop name from user object (handles both shop and shopId as object)
+ */
+function getShopName(user: User): string {
+  if (user.shop?.name) return user.shop.name
+  if (user.shopId && typeof user.shopId === 'object' && 'name' in user.shopId) return user.shopId.name
+  return '-'
+}
 
 export default function UsersManagement() {
   const { t } = useLanguage()
@@ -53,15 +95,10 @@ export default function UsersManagement() {
   const updateUserSubscription = async (userId: string, plan: SubscriptionPlan) => {
     try {
       logger.debug('Updating subscription for user:', { userId, plan }, 'Admin')
-      const response = await api.patch(`/api/admin/users/${userId}/subscription`, { plan })
-      logger.debug('Subscription update response:', response.data, 'Admin')
+      await api.patch(`/api/admin/users/${userId}/subscription`, { plan })
       toast.success(`Subscription updated to ${plan}`)
-      // Update user locally since backend may not return subscription in users list
-      setUsers(prev => prev.map(user => 
-        user._id === userId 
-          ? { ...user, subscription: { plan } }
-          : user
-      ))
+      // Re-fetch users from server to get the actual persisted state
+      fetchUsers()
     } catch (error) {
       logger.error('Failed to update subscription:', error, 'Admin')
       const err = error as { response?: { data?: { message?: string } }; message?: string }
@@ -75,10 +112,11 @@ export default function UsersManagement() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleFilter])
 
-  const filteredUsers = users.filter(user =>
-    (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredUsers = users.filter(user => {
+    const name = getUserName(user).toLowerCase()
+    const search = searchTerm.toLowerCase()
+    return name.includes(search) || (user.email || '').toLowerCase().includes(search)
+  })
 
   return (
     <ProtectedRoute allowedRoles={['admin']}>
@@ -147,7 +185,7 @@ export default function UsersManagement() {
                   <tbody className="divide-y dark:divide-slate-800 light:divide-gray-200">
                     {filteredUsers.map((user) => (
                       <tr key={user._id} className="dark:hover:bg-slate-800/50 light:hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-sm">{user.name}</td>
+                        <td className="px-4 py-3 font-medium text-sm">{getUserName(user)}</td>
                         <td className="px-4 py-3 text-sm dark:text-slate-400 light:text-gray-600">{user.email}</td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500">
@@ -157,7 +195,7 @@ export default function UsersManagement() {
                         <td className="px-4 py-3">
                           {user.role === 'shop_owner' ? (
                             <select
-                              value={user.subscription?.plan || 'starter'}
+                              value={getUserPlan(user)}
                               onChange={(e) => {
                                 e.stopPropagation()
                                 updateUserSubscription(user._id, e.target.value as SubscriptionPlan)
@@ -174,7 +212,7 @@ export default function UsersManagement() {
                             <span className="text-xs dark:text-slate-400 light:text-gray-500">-</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-sm">{user.shopId?.name || '-'}</td>
+                        <td className="px-4 py-3 text-sm">{getShopName(user)}</td>
                         <td className="px-4 py-3 text-xs">
                           {user.stats?.totalOrders && <div>Orders: {user.stats.totalOrders}</div>}
                           {user.stats?.totalCalls && <div>Calls: {user.stats.totalCalls}</div>}
