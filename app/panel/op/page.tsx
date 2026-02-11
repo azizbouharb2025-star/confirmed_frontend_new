@@ -96,7 +96,7 @@ function getOperatorKPIMetrics(kpis: OperatorKPIs) {
  * Check if KPIs contain required fields
  * Property 6: Operator dashboard shows required KPIs
  */
-function hasRequiredKPIs(kpis: OperatorKPIs): boolean {
+function _hasRequiredKPIs(kpis: OperatorKPIs): boolean {
   return (
     typeof kpis.confirmationRate === 'number' &&
     typeof kpis.callsToday === 'number' &&

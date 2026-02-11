@@ -58,7 +58,7 @@ export default function AdminDashboard() {
       const [healthRes, activityRes, ordersRes, revenueRes] = await Promise.allSettled([
         api.get('/api/admin/system-health'),
         api.get('/api/admin/activity-feed'),
-        api.get('/api/admin/charts/orders', { params: { period: ordersPeriod } }),
+        api.get(`/api/admin/charts/orders?period=${ordersPeriod}`),
         api.get('/api/admin/charts/revenue'),
       ]);
 
@@ -106,6 +106,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchAdminData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersPeriod]);
 
   const handleOrdersPeriodChange = (period: TimePeriod) => {
