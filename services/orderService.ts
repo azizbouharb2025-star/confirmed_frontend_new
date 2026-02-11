@@ -98,6 +98,20 @@ function transformPaginatedResponse(response: ApiPaginatedResponse): PaginatedOr
  */
 export const orderService = {
   /**
+   * Create a new order manually
+   */
+  async createOrder(data: {
+    orderId: string
+    clientInfo: { name: string; phone: string; email?: string; address?: { street: string; city: string; state: string; zipCode: string; country: string } }
+    items: { name: string; quantity: number; price: number; sku?: string }[]
+    totalAmount: number
+    deliveryInfo?: { estimatedDate?: string; trackingNumber?: string; carrier?: string }
+  }): Promise<Order> {
+    const response = await api.post('/api/orders', data)
+    return response.data
+  },
+
+  /**
    * Get paginated orders with filtering and sorting
    * Requirements: 1.1, 6.1
    */
