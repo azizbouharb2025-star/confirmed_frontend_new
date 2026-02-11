@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BellIcon, SunIcon, MoonIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
+import api from '@/lib/api'
+import logger from '@/lib/logger'
 import toast from 'react-hot-toast'
 
 export default function SettingsPage() {
@@ -18,6 +20,51 @@ export default function SettingsPage() {
 
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [pushNotifications, setPushNotifications] = useState(true)
+  const [loadingPrefs, setLoadingPrefs] = useState(true)
+  const [savingPrefs, setSavingPrefs] = useState(false)
+
+  // Load preferences from API on mount
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const res = await api.get('/api/users/preferences')
+        if (res.data) {
+          setEmailNotifications(res.data.emailNotifications ?? true)
+          setPushNotifications(res.data.pushNotifications ?? true)
+        }
+      } catch (err) {
+        logger.error('Failed to load preferences:', err, 'Settings')
+      } finally {
+        setLoadingPrefs(false)
+      }
+    }
+    loadPreferences()
+  }, [])
+
+  // Save notification preferences to API
+  const saveNotificationPref = async (key: 'emailNotifications' | 'pushNotifications', value: boolean) => {
+    const prev = { emailNotifications, pushNotifications }
+    // Optimistic update
+    if (key === 'emailNotifications') setEmailNotifications(value)
+    else setPushNotifications(value)
+
+    setSavingPrefs(true)
+    try {
+      await api.patch('/api/users/preferences', {
+        ...prev,
+        [key]: value,
+      })
+      toast.success(t('common.saved'))
+    } catch (err) {
+      logger.error('Failed to save preferences:', err, 'Settings')
+      // Revert on failure
+      if (key === 'emailNotifications') setEmailNotifications(prev.emailNotifications)
+      else setPushNotifications(prev.pushNotifications)
+      toast.error('Failed to save preference')
+    } finally {
+      setSavingPrefs(false)
+    }
+  }
 
   const handleLanguageChange = (lang: 'en' | 'fr' | 'ar') => {
     setLanguage(lang)
@@ -56,10 +103,11 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setEmailNotifications(!emailNotifications)}
+                  onClick={() => saveNotificationPref('emailNotifications', !emailNotifications)}
+                  disabled={savingPrefs || loadingPrefs}
                   className={`relative w-11 h-6 rounded-full transition-colors ${
                     emailNotifications ? 'bg-[#32CD32]' : isDark ? 'bg-slate-600' : 'bg-gray-300'
-                  }`}
+                  } ${(savingPrefs || loadingPrefs) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   role="switch"
                   aria-checked={emailNotifications}
                 >
@@ -79,10 +127,11 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setPushNotifications(!pushNotifications)}
+                  onClick={() => saveNotificationPref('pushNotifications', !pushNotifications)}
+                  disabled={savingPrefs || loadingPrefs}
                   className={`relative w-11 h-6 rounded-full transition-colors ${
                     pushNotifications ? 'bg-[#32CD32]' : isDark ? 'bg-slate-600' : 'bg-gray-300'
-                  }`}
+                  } ${(savingPrefs || loadingPrefs) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   role="switch"
                   aria-checked={pushNotifications}
                 >

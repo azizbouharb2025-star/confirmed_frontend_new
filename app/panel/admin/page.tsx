@@ -26,120 +26,101 @@ import type { Activity } from '@/components/dashboard/widgets/ActivityFeedWidget
 import type { ServiceHealth } from '@/components/dashboard/widgets/SystemHealthWidget'
 import type { AdminKPIs } from '@/lib/adminUtils'
 
-// Mock data - in production, this would come from the analytics API
-const mockKPIs: AdminKPIs = {
-  totalUsers: 1247,
-  totalUsersChange: 12.5,
-  totalOrders: 8934,
-  totalOrdersChange: 8.2,
-  revenue: 245750,
-  revenueChange: 15.3,
-  activeShops: 156,
-  activeShopsChange: 5.7,
+/** Default empty KPIs */
+const defaultKPIs: AdminKPIs = {
+  totalUsers: 0,
+  totalUsersChange: 0,
+  totalOrders: 0,
+  totalOrdersChange: 0,
+  revenue: 0,
+  revenueChange: 0,
+  activeShops: 0,
+  activeShopsChange: 0,
 };
-
-const mockOrdersData: OrdersTrendData[] = [
-  { date: 'Mon', orders: 120, previousPeriod: 100 },
-  { date: 'Tue', orders: 145, previousPeriod: 115 },
-  { date: 'Wed', orders: 132, previousPeriod: 125 },
-  { date: 'Thu', orders: 168, previousPeriod: 140 },
-  { date: 'Fri', orders: 195, previousPeriod: 160 },
-  { date: 'Sat', orders: 210, previousPeriod: 180 },
-  { date: 'Sun', orders: 185, previousPeriod: 165 },
-];
-
-const mockRevenueData: RevenueTrendData[] = [
-  { date: 'Mon', revenue: 12500, cumulative: 12500 },
-  { date: 'Tue', revenue: 18200, cumulative: 30700 },
-  { date: 'Wed', revenue: 15800, cumulative: 46500 },
-  { date: 'Thu', revenue: 22100, cumulative: 68600 },
-  { date: 'Fri', revenue: 28500, cumulative: 97100 },
-  { date: 'Sat', revenue: 35200, cumulative: 132300 },
-  { date: 'Sun', revenue: 29800, cumulative: 162100 },
-];
-
-const mockActivities: Activity[] = [
-  { id: '1', type: 'user', action: 'New user registered', detail: 'john@example.com', timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString() },
-  { id: '2', type: 'order', action: 'Order confirmed', detail: '#ORD-001', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
-  { id: '3', type: 'system', action: 'Shop connected', detail: 'TechStore', timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString() },
-  { id: '4', type: 'payment', action: 'Payment processed', detail: '299.99 TND', timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
-  { id: '5', type: 'order', action: 'Order shipped', detail: '#ORD-002', timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString() },
-  { id: '6', type: 'user', action: 'User upgraded plan', detail: 'sarah@example.com', timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString() },
-];
-
-const mockSystemHealth: ServiceHealth[] = [
-  { name: 'API', status: 'healthy', latency: 45, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
-  { name: 'Database', status: 'healthy', latency: 12, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
-  { name: 'Queue', status: 'healthy', latency: 8, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
-  { name: 'Cache', status: 'degraded', latency: 250, lastCheck: new Date(Date.now() - 30 * 1000).toISOString() },
-];
 
 
 export default function AdminDashboard() {
-  const [kpis, setKpis] = useState<AdminKPIs>(mockKPIs);
-  const [ordersData, setOrdersData] = useState<OrdersTrendData[]>(mockOrdersData);
-  const [revenueData, setRevenueData] = useState<RevenueTrendData[]>(mockRevenueData);
-  const [activities, setActivities] = useState<Activity[]>(mockActivities);
-  const [systemHealth, setSystemHealth] = useState<ServiceHealth[]>(mockSystemHealth);
+  const [kpis, setKpis] = useState<AdminKPIs>(defaultKPIs);
+  const [ordersData, setOrdersData] = useState<OrdersTrendData[]>([]);
+  const [revenueData, setRevenueData] = useState<RevenueTrendData[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [systemHealth, setSystemHealth] = useState<ServiceHealth[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [ordersPeriod, setOrdersPeriod] = useState<TimePeriod>('daily');
   const [revenueViewMode, setRevenueViewMode] = useState<ViewMode>('daily');
 
-  // Fetch data from analytics API
-  useEffect(() => {
-    const fetchAdminData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch system health
-        const healthResponse = await api.get('/api/admin/system-health');
-        if (healthResponse.data?.services) {
-          setSystemHealth(healthResponse.data.services);
-        }
+  // Fetch all admin dashboard data from API
+  const fetchAdminData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [healthRes, activityRes, ordersRes, revenueRes] = await Promise.allSettled([
+        api.get('/api/admin/system-health'),
+        api.get('/api/admin/activity-feed'),
+        api.get('/api/admin/charts/orders', { params: { period: ordersPeriod } }),
+        api.get('/api/admin/charts/revenue'),
+      ]);
 
-        // Fetch activity feed
-        const activityResponse = await api.get('/api/admin/activity-feed');
-        if (activityResponse.data?.activities) {
-          setActivities(activityResponse.data.activities);
-        }
-
-        // Fetch orders chart data
-        const ordersResponse = await api.get('/api/admin/charts/orders');
-        if (ordersResponse.data) {
-          if (ordersResponse.data.data) setOrdersData(ordersResponse.data.data);
-          if (ordersResponse.data.totalOrders) setKpis(prev => ({ ...prev, totalOrders: ordersResponse.data.totalOrders }));
-        }
-
-        // Fetch revenue chart data
-        const revenueResponse = await api.get('/api/admin/charts/revenue');
-        if (revenueResponse.data) {
-          if (revenueResponse.data.data) setRevenueData(revenueResponse.data.data);
-          if (revenueResponse.data.totalRevenue) setKpis(prev => ({ ...prev, revenue: revenueResponse.data.totalRevenue }));
-        }
-      } catch (err) {
-        logger.error('Failed to fetch admin dashboard data:', err, 'Admin');
-        // Keep mock data on error
-      } finally {
-        setIsLoading(false);
+      if (healthRes.status === 'fulfilled' && healthRes.value.data?.services) {
+        setSystemHealth(healthRes.value.data.services);
       }
-    };
 
+      if (activityRes.status === 'fulfilled' && activityRes.value.data?.activities) {
+        setActivities(activityRes.value.data.activities);
+      }
+
+      if (ordersRes.status === 'fulfilled' && ordersRes.value.data) {
+        const d = ordersRes.value.data;
+        if (d.data) setOrdersData(d.data);
+        if (d.totalOrders != null) setKpis(prev => ({ ...prev, totalOrders: d.totalOrders, totalOrdersChange: d.changePercent ?? prev.totalOrdersChange }));
+      }
+
+      if (revenueRes.status === 'fulfilled' && revenueRes.value.data) {
+        const d = revenueRes.value.data;
+        if (d.data) setRevenueData(d.data);
+        if (d.totalRevenue != null) setKpis(prev => ({ ...prev, revenue: d.totalRevenue, revenueChange: d.growthPercent ?? prev.revenueChange }));
+      }
+
+      // Fetch KPIs separately (users + shops counts)
+      try {
+        const kpiRes = await api.get('/api/admin/kpis');
+        if (kpiRes.data) {
+          setKpis(prev => ({ ...prev, ...kpiRes.data }));
+        }
+      } catch {
+        // KPIs endpoint optional — totals from charts are enough
+      }
+
+      const allFailed = [healthRes, activityRes, ordersRes, revenueRes].every(r => r.status === 'rejected');
+      if (allFailed) {
+        setError('Failed to load dashboard data. Please try again.');
+      }
+    } catch (err) {
+      logger.error('Failed to fetch admin dashboard data:', err, 'Admin');
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAdminData();
-  }, []);
+  }, [ordersPeriod]);
 
   const handleOrdersPeriodChange = (period: TimePeriod) => {
     setOrdersPeriod(period);
-    // In production, refetch data for the new period
   };
 
   const handleRevenueViewModeChange = (mode: ViewMode) => {
     setRevenueViewMode(mode);
   };
 
-  // Calculate totals for charts
+  // Calculate totals from real data
   const totalOrders = ordersData.reduce((sum, d) => sum + d.orders, 0);
-  const ordersChangePercent = 8.2; // In production, calculate from data
-  const totalRevenue = revenueData[revenueData.length - 1]?.cumulative || 0;
-  const revenueGrowthPercent = 15.3; // In production, calculate from data
+  const ordersChangePercent = kpis.totalOrdersChange;
+  const totalRevenue = revenueData.length > 0 ? (revenueData[revenueData.length - 1]?.cumulative || revenueData.reduce((sum, d) => sum + d.revenue, 0)) : 0;
+  const revenueGrowthPercent = kpis.revenueChange;
 
   return (
     <ProtectedRoute allowedRoles={['admin']}>
@@ -151,6 +132,19 @@ export default function AdminDashboard() {
               Complete system overview and management
             </p>
           </div>
+
+          {/* Error Banner */}
+          {error && (
+            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-between">
+              <p className="text-sm text-red-400">{error}</p>
+              <button
+                onClick={fetchAdminData}
+                className="text-sm text-red-400 hover:text-red-300 underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
           {/* KPI Cards - Property 9: Admin dashboard shows system-wide KPIs */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-kpi-cards">

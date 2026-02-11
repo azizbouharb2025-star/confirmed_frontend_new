@@ -7,6 +7,7 @@ import { EnvelopeIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 import AuthCard from '@/components/ui/AuthCard'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import api from '@/lib/api'
 
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
@@ -17,11 +18,15 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    setSent(true)
-    setLoading(false)
+    try {
+      await api.post('/api/auth/forgot-password', { email })
+      setSent(true)
+    } catch {
+      // Still show success to avoid email enumeration
+      setSent(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (sent) {

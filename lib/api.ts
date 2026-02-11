@@ -80,7 +80,38 @@ const api = {
     }
     return { data: await response.json() }
   },
-  
+
+  put: async <T = unknown>(url: string, data: T) => {
+    const token = getAuthToken()
+    const response = await fetchWithRetry(`${API_BASE_URL}${url}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+      body: JSON.stringify(data)
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    return { data: await response.json() }
+  },
+
+  delete: async (url: string) => {
+    const token = getAuthToken()
+    const response = await fetchWithRetry(`${API_BASE_URL}${url}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
+      },
+    })
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    return { data: await response.json() }
+  },
+
   auth: {
     login: async (email: string, password: string) => {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {

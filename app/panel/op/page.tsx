@@ -42,20 +42,6 @@ interface OperatorKPIs {
 }
 
 /**
- * Operator dashboard data
- */
-interface _OperatorDashboardData {
-  kpis: OperatorKPIs;
-  missions: Mission[];
-  leaderboard: LeaderboardEntry[];
-  wallet: {
-    balance: number;
-    pendingRewards: number;
-    recentRewards: RewardEntry[];
-  };
-}
-
-/**
  * Default KPI values
  */
 const defaultKPIs: OperatorKPIs = {
@@ -63,66 +49,6 @@ const defaultKPIs: OperatorKPIs = {
   callsToday: 0,
   queueLength: 0,
   performanceRank: 0,
-};
-
-/**
- * Mock data for development - will be replaced with API calls
- */
-const mockMissions: Mission[] = [
-  {
-    id: '1',
-    title: 'Daily Confirmation Goal',
-    description: 'Confirm 20 orders today',
-    target: 20,
-    current: 15,
-    reward: 10,
-    rewardType: 'cash',
-    type: 'daily',
-    status: 'active',
-    expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Weekly Champion',
-    description: 'Achieve 90% confirmation rate this week',
-    target: 90,
-    current: 87,
-    reward: 50,
-    rewardType: 'cash',
-    type: 'weekly',
-    status: 'active',
-    expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Speed Demon',
-    description: 'Complete 50 calls in one day',
-    target: 50,
-    current: 42,
-    reward: 25,
-    rewardType: 'points',
-    type: 'daily',
-    status: 'active',
-    expiresAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const mockLeaderboard: LeaderboardEntry[] = [
-  { id: '1', name: 'Sarah Johnson', confirmationRate: 95.2, totalCalls: 156, rank: 1 },
-  { id: '2', name: 'Mike Chen', confirmationRate: 93.8, totalCalls: 142, rank: 2 },
-  { id: '3', name: 'Emily Davis', confirmationRate: 91.5, totalCalls: 138, rank: 3 },
-  { id: 'current', name: 'You', confirmationRate: 87.5, totalCalls: 120, rank: 4 },
-  { id: '5', name: 'Alex Wilson', confirmationRate: 85.3, totalCalls: 115, rank: 5 },
-];
-
-const mockWallet = {
-  balance: 245.50,
-  pendingRewards: 35.00,
-  recentRewards: [
-    { id: '1', amount: 10, reason: 'Daily goal completed', date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-    { id: '2', amount: 25, reason: 'Weekly bonus', date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
-    { id: '3', amount: 15, reason: 'Perfect streak', date: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString() },
-  ],
 };
 
 /**
@@ -170,7 +96,7 @@ function getOperatorKPIMetrics(kpis: OperatorKPIs) {
  * Check if KPIs contain required fields
  * Property 6: Operator dashboard shows required KPIs
  */
-function _hasRequiredKPIs(kpis: OperatorKPIs): boolean {
+function hasRequiredKPIs(kpis: OperatorKPIs): boolean {
   return (
     typeof kpis.confirmationRate === 'number' &&
     typeof kpis.callsToday === 'number' &&
@@ -195,7 +121,7 @@ export default function OperatorDashboard() {
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   
   // Error states
-  const [_kpisError, setKpisError] = useState<string | null>(null);
+  const [kpisError, setKpisError] = useState<string | null>(null);
   const [missionsError, setMissionsError] = useState<string | null>(null);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
@@ -212,15 +138,7 @@ export default function OperatorDashboard() {
         setKpis(response.data);
       }
     } catch {
-      // Use mock data on error for development
-      setKpis({
-        confirmationRate: 87.5,
-        confirmationRateChange: 2.1,
-        callsToday: 42,
-        callsTodayChange: 12.5,
-        queueLength: 15,
-        performanceRank: 4,
-      });
+      setKpisError('Failed to load KPIs');
     } finally {
       setIsLoadingKpis(false);
     }
@@ -234,11 +152,9 @@ export default function OperatorDashboard() {
       const response = await api.get('/api/operators/missions');
       if (response.data?.missions) {
         setMissions(response.data.missions);
-      } else {
-        setMissions(mockMissions);
       }
     } catch {
-      setMissions(mockMissions);
+      setMissionsError('Failed to load missions');
     } finally {
       setIsLoadingMissions(false);
     }
@@ -252,11 +168,9 @@ export default function OperatorDashboard() {
       const response = await api.get('/api/operators/leaderboard');
       if (response.data?.operators) {
         setLeaderboard(response.data.operators);
-      } else {
-        setLeaderboard(mockLeaderboard);
       }
     } catch {
-      setLeaderboard(mockLeaderboard);
+      setLeaderboardError('Failed to load leaderboard');
     } finally {
       setIsLoadingLeaderboard(false);
     }
@@ -274,11 +188,9 @@ export default function OperatorDashboard() {
           pendingRewards: response.data.pendingRewards ?? 0,
           recentRewards: response.data.recentRewards ?? [],
         });
-      } else {
-        setWallet(mockWallet);
       }
     } catch {
-      setWallet(mockWallet);
+      setWalletError('Failed to load rewards');
     } finally {
       setIsLoadingWallet(false);
     }
@@ -317,6 +229,14 @@ export default function OperatorDashboard() {
               Manage your calls and track performance
             </p>
           </div>
+
+          {/* KPI Error */}
+          {kpisError && (
+            <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-between">
+              <p className="text-sm text-red-400">{kpisError}</p>
+              <button onClick={fetchKpis} className="text-sm text-red-400 hover:text-red-300 underline">Retry</button>
+            </div>
+          )}
 
           {/* KPI Cards - Property 6: Shows confirmation rate, calls today, queue length */}
           <div 
