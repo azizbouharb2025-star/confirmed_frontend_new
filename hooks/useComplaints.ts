@@ -180,7 +180,7 @@ export function useComplaints(initialFilters?: ComplaintFilters): UseComplaintsR
         setSummary(summaryData);
       } else {
         // API returned unexpected shape — try to extract from nested structure
-        const raw = summaryData as Record<string, unknown>;
+        const raw = summaryData as unknown as Record<string, unknown>;
         const extracted: ComplaintSummary = {
           open: Number(raw.open) || 0,
           in_progress: Number(raw.in_progress) || 0,
