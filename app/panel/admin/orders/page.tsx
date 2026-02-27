@@ -64,6 +64,9 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
         confirmed: 0,
         rejected: 0,
         cancelled: 0,
+        shipped: 0,
+        delivered: 0,
+        failed_delivery: 0,
       },
       totalOrders: 0,
     }
@@ -77,6 +80,9 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
     confirmed: 0,
     rejected: 0,
     cancelled: 0,
+    shipped: 0,
+    delivered: 0,
+    failed_delivery: 0,
   }
   
   orders.forEach((order) => {

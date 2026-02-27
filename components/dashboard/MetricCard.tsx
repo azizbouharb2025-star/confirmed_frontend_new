@@ -181,7 +181,7 @@ export default function MetricCard({
         <h3 className="text-sm font-medium dark:text-slate-400 light:text-gray-600">
           {title}
         </h3>
-        <div className="dark:text-slate-400 light:text-gray-400">
+        <div className="dark:text-slate-400 light:text-gray-400 [&>svg]:w-6 [&>svg]:h-6">
           {icon}
         </div>
       </div>

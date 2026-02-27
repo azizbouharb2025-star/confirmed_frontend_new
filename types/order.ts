@@ -4,8 +4,22 @@
  */
 
 // Order Status Types
-export type OrderStatus = 'pending' | 'assigned' | 'in_progress' | 'confirmed' | 'rejected' | 'cancelled';
+export type OrderStatus = 'pending' | 'assigned' | 'in_progress' | 'confirmed' | 'rejected' | 'cancelled' | 'shipped' | 'delivered' | 'failed_delivery';
 export type OrderPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+// NEW: Cancellation reason types
+export type CancellationReason = 
+  | 'customer_refused'
+  | 'price_too_high'
+  | 'quality_doubts'
+  | 'duplicate_order'
+  | 'fake_number'
+  | 'not_available'
+  | 'courier_failed'
+  | 'customer_rejected_at_door';
+
+// NEW: Risk level types
+export type RiskLevel = 'high' | 'medium' | 'low';
 
 // Call-related Types
 export type CallResult = 'confirmed' | 'rejected' | 'no_answer' | 'busy' | 'voicemail';
@@ -101,6 +115,33 @@ export interface OperatorRef {
 }
 
 /**
+ * NEW: Courier reference
+ */
+export interface CourierRef {
+  _id: string;
+  name: string;
+}
+
+/**
+ * NEW: Delivery attempt record
+ */
+export interface DeliveryAttempt {
+  attemptNumber: number;
+  attemptDate: string;
+  status: 'failed' | 'customer_not_home' | 'refused' | 'successful';
+  notes?: string;
+}
+
+/**
+ * NEW: Operator feedback on order
+ */
+export interface OperatorFeedbackData {
+  confidence: 'strong' | 'doubtful' | 'neutral';
+  notes?: string;
+  operatorId: string;
+}
+
+/**
  * Main Order interface
  * Contains all order data with tier-specific optional fields
  */
@@ -114,13 +155,32 @@ export interface Order {
   status: OrderStatus;
   priority: OrderPriority;
   
-  // Pro+ tier fields
-  aiRiskScore?: number;
-  operatorFeedback?: string;
+  // NEW: AI and Risk Assessment
+  aiScore?: number;                              // AI confidence score (0-100%)
+  riskLevel?: RiskLevel;                         // Risk level: high/medium/low
+  deliverySuccessProbability?: number;           // Probability of successful delivery (0-100%)
   
-  // Business+ tier fields
-  courierAssignment?: string;
+  // NEW: Cancellation tracking
+  cancellationReason?: CancellationReason;
+  cancellationReasonDetails?: string;
+  cancelledBy?: 'customer' | 'operator' | 'system' | 'courier';
+  
+  // NEW: Delivery tracking
+  deliveryAttempts?: DeliveryAttempt[];
+  courier?: string | CourierRef;
   region?: string;
+  
+  // NEW: Complaint tracking
+  hasComplaint?: boolean;
+  
+  // NEW: Operator feedback
+  operatorFeedback?: OperatorFeedbackData;
+  
+  // Pro+ tier fields (legacy - kept for compatibility)
+  aiRiskScore?: number;
+  
+  // Business+ tier fields (legacy - kept for compatibility)
+  courierAssignment?: string;
   complaintFlags?: string[];
   
   // Enterprise tier fields
@@ -135,6 +195,8 @@ export interface Order {
   // Timestamps
   createdAt: string;
   updatedAt: string;
+  shippedAt?: string;
+  deliveredAt?: string;
 }
 
 /**
@@ -147,6 +209,8 @@ export interface OrderFilters {
   aiScoreRange?: { min: number; max: number };  // Pro+
   region?: string;                               // Business+
   courier?: string;                              // Business+
+  hasComplaint?: boolean;                        // Business+ - NEW
+  riskLevel?: RiskLevel | 'all';                 // Pro+ - NEW
   shopId?: string;                               // Admin only
 }
 

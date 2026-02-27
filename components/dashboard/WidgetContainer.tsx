@@ -118,11 +118,11 @@ export function WidgetContainer({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {icon && (
-            <div className="text-slate-400 dark:text-slate-400 light:text-gray-500">
+            <div className="text-slate-400 dark:text-slate-400 light:text-gray-500 [&>svg]:w-6 [&>svg]:h-6">
               {icon}
             </div>
           )}
-          <h3 className="text-sm font-medium dark:text-slate-300 light:text-gray-700">
+          <h3 className="text-base font-medium dark:text-slate-300 light:text-gray-700">
             {title}
           </h3>
         </div>

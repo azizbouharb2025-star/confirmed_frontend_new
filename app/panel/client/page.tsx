@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, CurrencyDollarIcon, TruckIcon } from '@heroicons/react/24/outline'
+import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, TruckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import MetricCard from '@/components/dashboard/MetricCard'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
@@ -212,6 +212,12 @@ export default function ClientDashboard() {
     }
   }, [])
 
+  // Handle "Show me risky orders" click
+  const handleShowRiskyOrders = useCallback(() => {
+    // Navigate to orders page with filter for risky orders
+    window.location.href = '/panel/client/orders?filter=risky'
+  }, [])
+
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
       <DashboardLayout userRole="shop_owner">
@@ -248,37 +254,93 @@ export default function ClientDashboard() {
             </div>
           )}
 
-          {/* KPI Cards - Requirements: 1.1 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* KPI Cards - Plan-specific Requirements */}
+          {/* Starter Plan: 3 cards - Orders Received, Confirmed, Pending */}
+          {/* Pro Plan: 4 cards - Orders Received Today, Confirmed Today, Shipped Today, Delivery Success Rate (7 days) */}
+          {/* Business Plan: 5 cards - Orders Received, Confirmed, Shipped, Delivery Success Rate, Complaint Rate */}
+          {/* Enterprise Plan: 6 cards - Same as Business + Avg Resolution Time */}
+          <div className={`grid grid-cols-1 gap-4 ${
+            plan === 'starter' ? 'md:grid-cols-3' :
+            plan === 'pro' ? 'md:grid-cols-4' :
+            plan === 'business' ? 'md:grid-cols-5' :
+            'md:grid-cols-3 lg:grid-cols-6'
+          }`}>
+            {/* Orders Received - All Plans */}
             <MetricCard
-              title="Orders Received"
+              title={plan === 'pro' ? "Orders Received Today" : "Orders Received"}
               value={metrics?.ordersReceived ?? 0}
-              icon={<ShoppingBagIcon className="w-5 h-5" />}
+              icon={<ShoppingBagIcon className="w-6 h-6" />}
               isLoading={isLoading}
             />
+            
+            {/* Orders Confirmed - All Plans */}
             <MetricCard
-              title="Orders Confirmed"
+              title={plan === 'pro' ? "Orders Confirmed Today" : "Orders Confirmed"}
               value={metrics?.ordersConfirmed ?? 0}
               change={metrics?.confirmationRate}
-              icon={<CheckCircleIcon className="w-5 h-5" />}
+              icon={<CheckCircleIcon className="w-6 h-6" />}
               trend={metrics?.confirmationRate && metrics.confirmationRate > 0 ? 'up' : 'neutral'}
               isLoading={isLoading}
             />
-            <MetricCard
-              title="Orders Pending"
-              value={metrics?.ordersPending ?? 0}
-              icon={<ClockIcon className="w-5 h-5" />}
-              isLoading={isLoading}
-            />
-            <MetricCard
-              title="Revenue"
-              value={metrics?.revenue ?? 0}
-              change={metrics?.revenueChange}
-              icon={<CurrencyDollarIcon className="w-5 h-5" />}
-              suffix=" TND"
-              trend={metrics?.revenueChange && metrics.revenueChange > 0 ? 'up' : metrics?.revenueChange && metrics.revenueChange < 0 ? 'down' : 'neutral'}
-              isLoading={isLoading}
-            />
+            
+            {/* Starter: Orders Pending */}
+            {plan === 'starter' && (
+              <MetricCard
+                title="Orders Pending"
+                value={metrics?.ordersPending ?? 0}
+                icon={<ClockIcon className="w-6 h-6" />}
+                isLoading={isLoading}
+              />
+            )}
+            
+            {/* Pro+: Orders Shipped Today */}
+            {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
+              <MetricCard
+                title={plan === 'pro' ? "Orders Shipped Today" : "Orders Shipped"}
+                value={metrics?.ordersShipped ?? 0}
+                icon={<TruckIcon className="w-6 h-6" />}
+                isLoading={isLoading}
+              />
+            )}
+            
+            {/* Pro+: Delivery Success Rate (last 7 days) */}
+            {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
+              <MetricCard
+                title={plan === 'pro' ? "Delivery Success Rate (7d)" : "Delivery Success Rate"}
+                value={metrics?.deliverySuccessRate ?? 0}
+                suffix="%"
+                decimals={1}
+                icon={<CheckCircleIcon className="w-6 h-6" />}
+                trend={metrics?.deliverySuccessRate && metrics.deliverySuccessRate >= 80 ? 'up' : metrics?.deliverySuccessRate && metrics.deliverySuccessRate < 60 ? 'down' : 'neutral'}
+                isLoading={isLoading}
+              />
+            )}
+            
+            {/* Business+: Complaint Rate */}
+            {(plan === 'business' || plan === 'enterprise') && (
+              <MetricCard
+                title="Complaint Rate"
+                value={metrics?.complaintRate ?? 0}
+                suffix="%"
+                decimals={1}
+                icon={<ExclamationCircleIcon className="w-6 h-6" />}
+                trend={metrics?.complaintRate && metrics.complaintRate > 5 ? 'down' : 'up'}
+                isLoading={isLoading}
+              />
+            )}
+            
+            {/* Enterprise: Avg Resolution Time */}
+            {plan === 'enterprise' && (
+              <MetricCard
+                title="Avg Resolution Time"
+                value={metrics?.avgResolutionTime ?? 0}
+                suffix="h"
+                decimals={1}
+                icon={<ClockIcon className="w-6 h-6" />}
+                trend={metrics?.avgResolutionTime && metrics.avgResolutionTime < 24 ? 'up' : 'down'}
+                isLoading={isLoading}
+              />
+            )}
           </div>
 
           {/* Recent Orders Widget - Requirements: 1.2 */}
@@ -296,6 +358,7 @@ export default function ClientDashboard() {
               <RiskScoreWidget
                 data={riskScoreData}
                 isLoading={riskScoreLoading}
+                onShowRiskyOrders={handleShowRiskyOrders}
               />
             </WidgetGate>
 

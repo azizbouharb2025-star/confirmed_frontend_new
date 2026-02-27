@@ -17,7 +17,11 @@ export interface DashboardMetrics {
   ordersConfirmed: number;
   ordersPending: number;
   ordersRejected: number;
+  ordersShipped: number;                    // NEW
   confirmationRate: number;
+  deliverySuccessRate: number;              // NEW
+  complaintRate: number;                    // NEW
+  avgResolutionTime: number;                // NEW
   revenue: number;
   revenueChange: number;
   averageOrderValue: number;
@@ -119,7 +123,11 @@ export function useDashboardData(initialAutoRefresh = false): UseDashboardDataRe
           ordersConfirmed: response.data.ordersConfirmed ?? 0,
           ordersPending: response.data.ordersPending ?? 0,
           ordersRejected: response.data.ordersRejected ?? 0,
+          ordersShipped: response.data.ordersShipped ?? 0,
           confirmationRate: response.data.confirmationRate ?? 0,
+          deliverySuccessRate: response.data.deliverySuccessRate ?? 0,
+          complaintRate: response.data.complaintRate ?? 0,
+          avgResolutionTime: response.data.avgResolutionTime ?? 0,
           revenue: response.data.revenue ?? 0,
           revenueChange: response.data.revenueChange ?? 0,
           averageOrderValue: response.data.averageOrderValue ?? 0,

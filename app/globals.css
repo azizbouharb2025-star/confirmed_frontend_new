@@ -11,6 +11,10 @@
     box-sizing: border-box;
   }
   
+  html {
+    zoom: 90%;
+  }
+  
   body {
     @apply font-sans antialiased;
     min-height: 100vh;

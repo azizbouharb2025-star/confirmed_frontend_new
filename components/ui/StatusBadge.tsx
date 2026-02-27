@@ -60,6 +60,21 @@ export const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; bord
     text: 'text-gray-800 dark:text-gray-300',
     border: 'border-gray-200 dark:border-gray-800',
   },
+  shipped: {
+    bg: 'bg-indigo-100 dark:bg-indigo-900/30',
+    text: 'text-indigo-800 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-800',
+  },
+  delivered: {
+    bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+    text: 'text-emerald-800 dark:text-emerald-300',
+    border: 'border-emerald-200 dark:border-emerald-800',
+  },
+  failed_delivery: {
+    bg: 'bg-orange-100 dark:bg-orange-900/30',
+    text: 'text-orange-800 dark:text-orange-300',
+    border: 'border-orange-200 dark:border-orange-800',
+  },
 }
 
 
@@ -97,6 +112,21 @@ const StatusIcons: Record<OrderStatus, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
     </svg>
   ),
+  shipped: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+    </svg>
+  ),
+  delivered: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  failed_delivery: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
 }
 
 /**
@@ -109,6 +139,9 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   in_progress: 'In Progress',
   assigned: 'Assigned',
   cancelled: 'Cancelled',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  failed_delivery: 'Failed Delivery',
 }
 
 /**
@@ -122,6 +155,9 @@ export function getTranslatedStatusLabels(t: (key: TranslationKey) => string): R
     in_progress: t('status.inProgress'),
     assigned: t('status.assigned'),
     cancelled: t('status.cancelled'),
+    shipped: 'Shipped',
+    delivered: 'Delivered',
+    failed_delivery: 'Failed Delivery',
   }
 }
 
@@ -147,14 +183,17 @@ export function getStatusColor(status: OrderStatus): string {
  * Get the expected color category for a status
  * Used for property testing validation
  */
-export function getStatusColorCategory(status: OrderStatus): 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'gray' {
-  const colorMap: Record<OrderStatus, 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'gray'> = {
+export function getStatusColorCategory(status: OrderStatus): 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'gray' | 'indigo' | 'emerald' | 'orange' {
+  const colorMap: Record<OrderStatus, 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'gray' | 'indigo' | 'emerald' | 'orange'> = {
     confirmed: 'green',
     rejected: 'red',
     pending: 'yellow',
     in_progress: 'blue',
     assigned: 'purple',
     cancelled: 'gray',
+    shipped: 'indigo',
+    delivered: 'emerald',
+    failed_delivery: 'orange',
   }
   return colorMap[status]
 }

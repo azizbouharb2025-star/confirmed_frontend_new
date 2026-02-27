@@ -57,7 +57,7 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
         }`}>
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/">
-              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} className="object-contain" />
+              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={160} height={50} className="object-contain" />
             </Link>
           </div>
           
@@ -74,7 +74,7 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
                           ? 'text-slate-300 hover:bg-slate-800'
                           : 'text-gray-700 hover:bg-gray-100'
                     }`}>
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-6 w-6" />
                       {item.name}
                     </Link>
                   </li>

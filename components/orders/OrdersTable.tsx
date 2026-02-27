@@ -374,7 +374,9 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       minPlan: 'pro',
       render: (order) => (
         <span className="text-gray-600 dark:text-slate-400 truncate max-w-[150px] block">
-          {order.operatorFeedback || '-'}
+          {typeof order.operatorFeedback === 'string' 
+            ? order.operatorFeedback 
+            : order.operatorFeedback?.confidence || '-'}
         </span>
       ),
     },
