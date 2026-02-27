@@ -179,7 +179,7 @@ Creates a shipment for a specific order using the configured delivery service.
   "estimatedDelivery": "2024-01-05T00:00:00.000Z",
   "cost": {
     "amount": 15.50,
-    "currency": "USD"
+    "currency": "TND"
   },
   "labels": [
     {

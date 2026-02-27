@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { 
   ClockIcon, 
   ShieldCheckIcon, 
-  CurrencyDollarIcon, 
+  BanknotesIcon, 
   ChartBarSquareIcon 
 } from '@heroicons/react/24/outline'
 
@@ -26,7 +26,7 @@ export default function BenefitsSection() {
       description: t('benefits.security.description')
     },
     {
-      icon: CurrencyDollarIcon,
+      icon: BanknotesIcon,
       title: t('benefits.cost.title'),
       description: t('benefits.cost.description')
     },

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
-import { ShoppingBagIcon, ShoppingCartIcon, CreditCardIcon, TruckIcon, CurrencyDollarIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { ShoppingBagIcon, ShoppingCartIcon, CreditCardIcon, TruckIcon, BanknotesIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 export default function TrustSection() {
   const { t } = useLanguage()
@@ -14,7 +14,7 @@ export default function TrustSection() {
     { name: 'WooCommerce', icon: ShoppingCartIcon },
     { name: 'Stripe', icon: CreditCardIcon },
     { name: 'Aramex', icon: TruckIcon },
-    { name: 'PayPal', icon: CurrencyDollarIcon },
+    { name: 'PayPal', icon: BanknotesIcon },
     { name: 'Amazon', icon: ClipboardDocumentListIcon }
   ]
 

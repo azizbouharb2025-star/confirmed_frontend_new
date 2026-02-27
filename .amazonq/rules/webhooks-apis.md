@@ -41,7 +41,7 @@ X-Shopify-Hmac-Sha256: webhook_signature
   "total_weight": 0,
   "total_tax": "0.00",
   "taxes_included": false,
-  "currency": "USD",
+  "currency": "TND",
   "financial_status": "paid",
   "confirmed": true,
   "total_discounts": "0.00",
@@ -125,13 +125,13 @@ X-Shopify-Hmac-Sha256: webhook_signature
       "price_set": {
         "shop_money": {
           "amount": "199.98",
-          "currency_code": "USD"
+          "currency_code": "TND"
         }
       },
       "total_discount_set": {
         "shop_money": {
           "amount": "0.00",
-          "currency_code": "USD"
+          "currency_code": "TND"
         }
       }
     }

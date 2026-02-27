@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import { CurrencyDollarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
+import { BanknotesIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from 'recharts';
 import WidgetContainer from '../WidgetContainer';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -32,7 +32,7 @@ export interface RevenueChartWidgetProps {
   totalRevenue?: number;
   /** Growth percentage from previous period */
   growthPercent?: number;
-  /** Currency symbol */
+  /** Currency code (default: TND) */
   currency?: string;
   /** Whether the widget is loading */
   isLoading?: boolean;
@@ -54,7 +54,10 @@ const VIEW_OPTIONS: { value: ViewMode; labelKey: TranslationKey }[] = [
  * Format currency value
  */
 function formatCurrency(value: number, currency: string): string {
-  return `${currency}${value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return new Intl.NumberFormat('fr-TN', {
+    style: 'currency',
+    currency: 'TND',
+  }).format(value);
 }
 
 /**
@@ -64,7 +67,7 @@ function ChartTooltip({
   active, 
   payload, 
   label,
-  currency = 'TND ',
+  currency = 'TND',
 }: { 
   active?: boolean; 
   payload?: Array<{ value: number; dataKey: string }>; 
@@ -93,7 +96,7 @@ function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element 
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
-        <CurrencyDollarIcon className="w-8 h-8 text-slate-400" />
+        <BanknotesIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
         {t('widget.revenueTrend.empty')}
@@ -118,7 +121,7 @@ export function RevenueChartWidget({
   onViewModeChange,
   totalRevenue = 0,
   growthPercent = 0,
-  currency = 'TND ',
+  currency = 'TND',
   isLoading = false,
   error,
   onRetry,
@@ -138,7 +141,7 @@ export function RevenueChartWidget({
   return (
     <WidgetContainer
       title={t('widget.revenueTrend')}
-      icon={<CurrencyDollarIcon className="w-5 h-5" />}
+      icon={<BanknotesIcon className="w-5 h-5" />}
       isLoading={isLoading}
       error={error}
       onRetry={onRetry}
@@ -206,7 +209,7 @@ export function RevenueChartWidget({
                   tick={{ fontSize: 10, fill: '#94a3b8' }}
                   axisLine={{ stroke: '#475569' }}
                   tickLine={{ stroke: '#475569' }}
-                  tickFormatter={(value) => `${currency}${(value / 1000).toFixed(0)}k`}
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k TND`}
                 />
                 <Tooltip content={<ChartTooltip currency={currency} />} />
                 <Area 

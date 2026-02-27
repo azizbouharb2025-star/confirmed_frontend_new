@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { UsersIcon, ShoppingBagIcon, CurrencyDollarIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
+import { UsersIcon, ShoppingBagIcon, BanknotesIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
               title="Revenue"
               value={kpis.revenue}
               change={kpis.revenueChange}
-              icon={<CurrencyDollarIcon className="w-5 h-5" />}
+              icon={<BanknotesIcon className="w-5 h-5" />}
               suffix=" TND"
               isLoading={isLoading}
             />

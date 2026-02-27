@@ -227,7 +227,7 @@ export default function ClientDashboard() {
             <div>
               <h1 className="text-2xl font-semibold">{t('dashboard.client')}</h1>
               <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">
-                Monitor your store performance and orders
+                {t('dashboard.monitorPerformance')}
               </p>
             </div>
             {/* Stale data indicator with refresh controls - Requirements: 6.3 */}
@@ -249,7 +249,7 @@ export default function ClientDashboard() {
                 onClick={refetch}
                 className="mt-2 text-sm underline hover:no-underline"
               >
-                Try again
+                {t('dashboard.tryAgain')}
               </button>
             </div>
           )}
@@ -267,7 +267,7 @@ export default function ClientDashboard() {
           }`}>
             {/* Orders Received - All Plans */}
             <MetricCard
-              title={plan === 'pro' ? "Orders Received Today" : "Orders Received"}
+              title={plan === 'pro' ? t('dashboard.ordersReceivedToday') : t('dashboard.ordersReceived')}
               value={metrics?.ordersReceived ?? 0}
               icon={<ShoppingBagIcon className="w-6 h-6" />}
               isLoading={isLoading}
@@ -275,7 +275,7 @@ export default function ClientDashboard() {
             
             {/* Orders Confirmed - All Plans */}
             <MetricCard
-              title={plan === 'pro' ? "Orders Confirmed Today" : "Orders Confirmed"}
+              title={plan === 'pro' ? t('dashboard.ordersConfirmedToday') : t('dashboard.ordersConfirmed')}
               value={metrics?.ordersConfirmed ?? 0}
               change={metrics?.confirmationRate}
               icon={<CheckCircleIcon className="w-6 h-6" />}
@@ -286,7 +286,7 @@ export default function ClientDashboard() {
             {/* Starter: Orders Pending */}
             {plan === 'starter' && (
               <MetricCard
-                title="Orders Pending"
+                title={t('dashboard.ordersPending')}
                 value={metrics?.ordersPending ?? 0}
                 icon={<ClockIcon className="w-6 h-6" />}
                 isLoading={isLoading}
@@ -296,7 +296,7 @@ export default function ClientDashboard() {
             {/* Pro+: Orders Shipped Today */}
             {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
               <MetricCard
-                title={plan === 'pro' ? "Orders Shipped Today" : "Orders Shipped"}
+                title={plan === 'pro' ? t('dashboard.ordersShippedToday') : t('dashboard.ordersShipped')}
                 value={metrics?.ordersShipped ?? 0}
                 icon={<TruckIcon className="w-6 h-6" />}
                 isLoading={isLoading}
@@ -306,7 +306,7 @@ export default function ClientDashboard() {
             {/* Pro+: Delivery Success Rate (last 7 days) */}
             {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
               <MetricCard
-                title={plan === 'pro' ? "Delivery Success Rate (7d)" : "Delivery Success Rate"}
+                title={plan === 'pro' ? t('dashboard.deliverySuccessRate7d') : t('dashboard.deliverySuccessRate')}
                 value={metrics?.deliverySuccessRate ?? 0}
                 suffix="%"
                 decimals={1}
@@ -319,7 +319,7 @@ export default function ClientDashboard() {
             {/* Business+: Complaint Rate */}
             {(plan === 'business' || plan === 'enterprise') && (
               <MetricCard
-                title="Complaint Rate"
+                title={t('dashboard.complaintRate')}
                 value={metrics?.complaintRate ?? 0}
                 suffix="%"
                 decimals={1}
@@ -332,7 +332,7 @@ export default function ClientDashboard() {
             {/* Enterprise: Avg Resolution Time */}
             {plan === 'enterprise' && (
               <MetricCard
-                title="Avg Resolution Time"
+                title={t('dashboard.avgResolutionTime')}
                 value={metrics?.avgResolutionTime ?? 0}
                 suffix="h"
                 decimals={1}
@@ -451,7 +451,7 @@ export default function ClientDashboard() {
                 </div>
                 <div>
                   <h3 className="font-semibold">{t('nav.orders')}</h3>
-                  <p className="text-sm dark:text-slate-400 light:text-gray-600">Manage your orders</p>
+                  <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('dashboard.manageOrders')}</p>
                 </div>
               </div>
             </Link>
@@ -463,7 +463,7 @@ export default function ClientDashboard() {
                 </div>
                 <div>
                   <h3 className="font-semibold">{t('nav.products')}</h3>
-                  <p className="text-sm dark:text-slate-400 light:text-gray-600">View your products</p>
+                  <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('dashboard.viewProducts')}</p>
                 </div>
               </div>
             </Link>

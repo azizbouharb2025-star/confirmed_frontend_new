@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChartBarIcon, TrophyIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { ChartBarIcon, TrophyIcon, BanknotesIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import MetricCard from '@/components/dashboard/MetricCard'
@@ -124,7 +124,7 @@ export default function Analytics() {
                 value={dashboard.overview?.averageOrderValue || 0}
                 suffix=" TND"
                 decimals={2}
-                icon={<CurrencyDollarIcon className="w-5 h-5" />}
+                icon={<BanknotesIcon className="w-5 h-5" />}
               />
             </div>
           )}
@@ -132,7 +132,7 @@ export default function Analytics() {
           {revenue && (
             <div className="card p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <CurrencyDollarIcon className="h-5 w-5" />
+                <BanknotesIcon className="h-5 w-5" />
                 {t('section.revenueOverview')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

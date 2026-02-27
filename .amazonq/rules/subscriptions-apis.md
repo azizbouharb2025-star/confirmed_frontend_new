@@ -29,7 +29,7 @@ Retrieves available subscription plans and their features.
     "id": "free",
     "name": "Free",
     "price": 0,
-    "currency": "USD",
+    "currency": "TND",
     "interval": "monthly",
     "features": {
       "maxOperators": 1,
@@ -48,7 +48,7 @@ Retrieves available subscription plans and their features.
     "id": "premium",
     "name": "Premium",
     "price": 49,
-    "currency": "USD",
+    "currency": "TND",
     "interval": "monthly",
     "features": {
       "maxOperators": 5,
@@ -67,7 +67,7 @@ Retrieves available subscription plans and their features.
     "id": "enterprise",
     "name": "Enterprise",
     "price": 199,
-    "currency": "USD",
+    "currency": "TND",
     "interval": "monthly",
     "features": {
       "maxOperators": -1,
@@ -151,7 +151,7 @@ Creates a new subscription with Stripe payment processing.
     },
     "pricing": {
       "amount": 49.00,
-      "currency": "USD",
+      "currency": "TND",
       "interval": "monthly"
     },
     "createdAt": "2024-01-01T00:00:00.000Z",
