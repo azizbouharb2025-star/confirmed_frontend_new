@@ -53,7 +53,7 @@ const VIEW_OPTIONS: { value: ViewMode; labelKey: TranslationKey }[] = [
 /**
  * Format currency value
  */
-function formatCurrency(value: number, currency: string): string {
+function formatCurrency(value: number, _currency: string): string {
   return new Intl.NumberFormat('fr-TN', {
     style: 'currency',
     currency: 'TND',
