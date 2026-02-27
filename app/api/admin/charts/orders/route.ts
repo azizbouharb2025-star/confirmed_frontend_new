@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { mockAIService } from '@/services/mockAIService';
 
+// Mark route as dynamic (uses query params)
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/charts/orders
  * Returns order trend data for charts
