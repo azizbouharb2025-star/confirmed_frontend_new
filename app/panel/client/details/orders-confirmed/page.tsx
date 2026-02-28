@@ -55,7 +55,7 @@ export default function OrdersConfirmedDetailPage() {
 
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
-      <DashboardLayout>
+      <DashboardLayout userRole="shop_owner">
         <WidgetDetailPage
           title={t('breadcrumb.ordersConfirmed')}
           description="View all confirmed orders with detailed analytics"

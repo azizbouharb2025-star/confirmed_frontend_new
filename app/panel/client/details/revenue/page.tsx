@@ -107,7 +107,7 @@ export default function RevenueDetailPage() {
 
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
-      <DashboardLayout>
+      <DashboardLayout userRole="shop_owner">
         <WidgetDetailPage
           title={t('breadcrumb.revenue')}
           description="Detailed revenue breakdown and analytics"

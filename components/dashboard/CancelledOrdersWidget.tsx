@@ -179,7 +179,7 @@ export default function CancelledOrdersWidget() {
       {/* Click hint */}
       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          Cliquez pour voir l'analyse détaillée
+          Cliquez pour voir l&apos;analyse détaillée
         </p>
       </div>
     </div>

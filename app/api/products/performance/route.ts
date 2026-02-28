@@ -31,7 +31,7 @@ function calculateProductPerformance(
     { id: '10', name: 'Monitor', imageUrl: '/assets/product10.jpg' },
   ]
 
-  const performances: ProductPerformance[] = mockProducts.map((product, index) => {
+  const performances: ProductPerformance[] = mockProducts.map((product) => {
     // Generate realistic mock data
     const salesVolume = Math.floor(Math.random() * 500) + 50
     const revenue = salesVolume * (Math.random() * 100 + 20)
@@ -54,7 +54,7 @@ function calculateProductPerformance(
       avgAIScore,
       trend,
       isTopPerformer: false, // Will be calculated after sorting
-      isUnderperforming: returnRate > 15 || (avgAIScore && avgAIScore < 50),
+      isUnderperforming: returnRate > 15 || (avgAIScore < 50),
       timeRange,
     }
   })

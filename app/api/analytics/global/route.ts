@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
 
     // TODO: Get shopId from session
     // const session = await getServerSession();
-    // const shopId = session.user.shopId;
+    // const _shopId = session.user.shopId;
 
     // For now, use mock data
-    const shopId = 'shop_123';
+    // const shopId = 'shop_123';
 
     // Parse dates
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

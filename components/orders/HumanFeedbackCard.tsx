@@ -2,7 +2,6 @@
 
 import React from 'react'
 import type { HumanFeedback } from '@/types/feedback'
-import { useLanguage } from '@/hooks/useLanguage'
 
 /**
  * HumanFeedbackCard Component
@@ -57,6 +56,7 @@ function StarRating({ rating }: { rating: number }) {
 function OperatorAvatar({ name, avatar }: { name: string; avatar?: string }) {
   if (avatar) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={avatar}
         alt={name}
@@ -81,8 +81,6 @@ function OperatorAvatar({ name, avatar }: { name: string; avatar?: string }) {
 }
 
 export default function HumanFeedbackCard({ feedback }: HumanFeedbackCardProps) {
-  const { t } = useLanguage()
-
   return (
     <div
       className="bg-blue-50 dark:bg-blue-900/10 border-l-4 border-blue-500 rounded-lg p-4 space-y-3"

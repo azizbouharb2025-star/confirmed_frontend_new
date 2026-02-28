@@ -22,11 +22,12 @@ export default function DeliveryCompanyPanel({ shopId }: DeliveryCompanyPanelPro
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider | null>(null)
-  const [syncing, setSyncing] = useState<string | null>(null)
+  const [_syncing, setSyncing] = useState<string | null>(null)
 
   // Load providers on mount
   useEffect(() => {
     loadProviders()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shopId])
 
   const loadProviders = async () => {

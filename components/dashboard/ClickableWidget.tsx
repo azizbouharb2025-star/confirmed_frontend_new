@@ -7,7 +7,6 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { ReactNode } from 'react';
 import MetricCard, { MetricCardProps } from './MetricCard';
 
 export interface ClickableWidgetProps extends MetricCardProps {

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   syncDeliveryStatuses,
   getMockDeliveryProviders,
-  createDeliveryAPILog,
 } from '@/services/deliveryService';
 import logger from '@/lib/logger';
 

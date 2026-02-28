@@ -2,9 +2,7 @@
 
 import { DeliveryProvider } from '@/types/delivery'
 import { 
-  TruckIcon, 
   ClockIcon, 
-  CheckCircleIcon, 
   XCircleIcon,
   Cog6ToothIcon,
   ArrowPathIcon

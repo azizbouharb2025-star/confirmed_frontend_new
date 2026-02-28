@@ -12,7 +12,7 @@ import logger from '@/lib/logger';
  * Get all delivery providers for a shop
  * Requirements: 2.1, 2.5
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get shopId from session
     // const session = await getServerSession();

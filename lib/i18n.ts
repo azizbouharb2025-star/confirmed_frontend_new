@@ -1124,10 +1124,6 @@ export const translations = {
     'products.topPerformers': 'Top Performers',
     'products.exporting': 'Exporting...',
     'products.productsTab': 'Products',
-    'analytics.today': 'Today',
-    'analytics.yesterday': 'Yesterday',
-    'analytics.last7Days': 'Last 7 Days',
-    'analytics.last30Days': 'Last 30 Days',
     // Delivery Provider
     'delivery.providers': 'Delivery Providers',
     'delivery.addProvider': 'Add Provider',
@@ -2341,8 +2337,6 @@ export const translations = {
     'delivery.enableAutoSync': 'Activer la synchronisation automatique',
     'delivery.syncIntervalHelp': 'Fréquence de synchronisation des statuts (1-1440 minutes)',
     'delivery.regionsHelp': 'Séparez les régions par des virgules',
-    'delivery.configureProvider': 'Configurer le Fournisseur',
-    'delivery.removeProvider': 'Retirer le Fournisseur',
     // Product Images
     'products.uploadImage': 'Télécharger une Image',
     'products.removeImage': 'Supprimer l\'Image',
@@ -3385,10 +3379,6 @@ export const translations = {
     'delivery.enableAutoSync': 'تفعيل المزامنة التلقائية',
     'delivery.syncIntervalHelp': 'عدد مرات مزامنة حالات التوصيل (1-1440 دقيقة)',
     'delivery.regionsHelp': 'افصل المناطق بفواصل',
-    'delivery.lastSyncSuccess': 'آخر مزامنة ناجحة',
-    'delivery.lastSyncFailed': 'فشلت آخر مزامنة',
-    'delivery.configureProvider': 'تكوين المزود',
-    'delivery.removeProvider': 'إزالة المزود',
     // Product Images
     'products.uploadImage': 'تحميل صورة',
     'products.removeImage': 'إزالة الصورة',

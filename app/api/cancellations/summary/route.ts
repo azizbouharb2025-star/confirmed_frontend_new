@@ -53,7 +53,7 @@ function generateMockCancellationSummary(): CancellationSummary {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // In production, you would:
     // 1. Verify authentication

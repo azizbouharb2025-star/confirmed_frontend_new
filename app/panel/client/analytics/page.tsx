@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
-import { GlobalMetrics, OperatorFeedbackSummaryData, TimeRange } from '@/types/analytics'
+import { GlobalMetrics, OperatorFeedbackSummaryData } from '@/types/analytics'
 import { ArrowDownTrayIcon, CalendarIcon } from '@heroicons/react/24/outline'
 import { SkeletonMetricCard, SkeletonChart } from '@/components/ui/SkeletonLoader'
 import OperatorFeedbackSummary from '@/components/analytics/OperatorFeedbackSummary'
@@ -51,6 +51,7 @@ function AnalyticsContent() {
   // Fetch analytics data
   useEffect(() => {
     fetchAnalyticsData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, customStartDate, customEndDate])
 
   const fetchAnalyticsData = async () => {
@@ -91,7 +92,7 @@ function AnalyticsContent() {
   const handleExport = async () => {
     setExporting(true)
     try {
-      const body: any = {
+      const body: Record<string, unknown> = {
         preset: timeRange,
         format: 'csv',
       }
@@ -181,7 +182,7 @@ function AnalyticsContent() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {t(`analytics.${range}` as any)}
+              {t(`analytics.${range}` as keyof typeof t)}
             </button>
           ))}
         </div>

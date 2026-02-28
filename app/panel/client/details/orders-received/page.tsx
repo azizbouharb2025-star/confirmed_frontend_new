@@ -50,7 +50,7 @@ export default function OrdersReceivedDetailPage() {
 
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
-      <DashboardLayout>
+      <DashboardLayout userRole="shop_owner">
         <WidgetDetailPage
           title={t('breadcrumb.ordersReceived')}
           description="View all received orders with detailed information and analytics"

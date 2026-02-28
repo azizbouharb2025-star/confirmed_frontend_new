@@ -71,14 +71,15 @@ export default function ProductPerformanceTab({ shopId }: ProductPerformanceTabP
           break
       }
 
-      const response = await api.get('/api/products/performance', {
-        params: {
-          shopId,
-          startDate: start.toISOString(),
-          endDate: end.toISOString(),
-          preset: timeRangePreset,
-        },
-      })
+      const params = new URLSearchParams()
+      params.set('shopId', shopId)
+      params.set('startDate', start.toISOString())
+      params.set('endDate', end.toISOString())
+      if (timeRangePreset) {
+        params.set('preset', timeRangePreset)
+      }
+
+      const response = await api.get(`/api/products/performance?${params.toString()}`)
 
       if (response.data.products) {
         setProducts(response.data.products)
@@ -123,19 +124,24 @@ export default function ProductPerformanceTab({ shopId }: ProductPerformanceTabP
         preset: timeRangePreset,
       }
 
-      const response = await api.post(
-        '/api/products/performance/export',
-        {
+      // Use fetch directly for blob response
+      const response = await fetch('/api/products/performance/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           products,
           timeRange,
-        },
-        {
-          responseType: 'blob',
-        }
-      )
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Export failed')
+      }
 
       // Create download link
-      const blob = new Blob([response.data], { type: 'text/csv' })
+      const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -168,8 +174,8 @@ export default function ProductPerformanceTab({ shopId }: ProductPerformanceTabP
             >
               <option value="today">{t('analytics.today')}</option>
               <option value="yesterday">{t('analytics.yesterday')}</option>
-              <option value="7days">{t('analytics.last7Days')}</option>
-              <option value="30days">{t('analytics.last30Days')}</option>
+              <option value="7days">{t('analytics.7days')}</option>
+              <option value="30days">{t('analytics.30days')}</option>
             </select>
           </div>
 

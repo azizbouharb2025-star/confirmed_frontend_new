@@ -69,7 +69,7 @@ export default function DeliverySuccessDetailPage() {
 
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
-      <DashboardLayout>
+      <DashboardLayout userRole="shop_owner">
         <WidgetDetailPage
           title={t('breadcrumb.deliverySuccess')}
           description="Detailed delivery success rates and performance analytics"

@@ -3,7 +3,7 @@
 import { OperatorFeedbackSummaryData } from '@/types/analytics'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
-import { StarIcon, ChatBubbleLeftIcon, TrendingUpIcon, TrendingDownIcon } from '@heroicons/react/24/solid'
+import { StarIcon, ChatBubbleLeftIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/solid'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface OperatorFeedbackSummaryProps {
@@ -50,9 +50,9 @@ export default function OperatorFeedbackSummary({ data }: OperatorFeedbackSummar
               : 'bg-red-100 text-red-700'
           }`}>
             {trend > 0 ? (
-              <TrendingUpIcon className="w-4 h-4" />
+              <ArrowTrendingUpIcon className="w-4 h-4" />
             ) : (
-              <TrendingDownIcon className="w-4 h-4" />
+              <ArrowTrendingDownIcon className="w-4 h-4" />
             )}
             {Math.abs(trend).toFixed(1)}
           </div>

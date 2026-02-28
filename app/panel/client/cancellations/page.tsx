@@ -40,6 +40,7 @@ function CancellationsContent() {
 
   useEffect(() => {
     fetchAnalysisData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timePreset]);
 
   const fetchAnalysisData = async () => {
@@ -142,7 +143,7 @@ function CancellationsContent() {
             onChange={(e) => setTimePreset(e.target.value as TimeRange['preset'])}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
           >
-            <option value="today">Aujourd'hui</option>
+            <option value="today">Aujourd&apos;hui</option>
             <option value="yesterday">Hier</option>
             <option value="7days">7 derniers jours</option>
             <option value="30days">30 derniers jours</option>
@@ -165,7 +166,7 @@ function CancellationsContent() {
         {/* Cancellation Rate */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-            Taux d'annulation
+            Taux d&apos;annulation
           </h3>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {analysisData.cancellationRate}%

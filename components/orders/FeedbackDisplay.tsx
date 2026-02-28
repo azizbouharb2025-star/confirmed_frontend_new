@@ -38,6 +38,7 @@ export default function FeedbackDisplay({
     if (!initialHumanFeedback && !initialAIFeedback) {
       fetchFeedback()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId])
 
   const fetchFeedback = async () => {
