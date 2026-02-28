@@ -9,6 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { OperatorFeedbackSummaryData } from '@/types/feedback';
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * Generate mock feedback summary data
  */

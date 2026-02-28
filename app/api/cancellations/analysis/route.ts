@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CancellationAnalysisData, CancellationReasonData, TrendData, TimeRange } from '@/types/cancellation';
 import { CancellationReason } from '@/types/order';
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
 /**
  * Parse time range from query parameters
  */

@@ -8,6 +8,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/logger'
 import type { ProductPerformance, TimeRange } from '@/types/productPerformance'
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
 /**
  * Calculate product performance metrics
  * This is a mock implementation that generates realistic data

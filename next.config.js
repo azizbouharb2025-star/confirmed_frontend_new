@@ -51,15 +51,16 @@ const nextConfig = {
       },
     ]
   },
-  async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/api/:path*`,
-      },
-    ]
-  },
+  // Disable API rewrites - use local API routes
+  // async rewrites() {
+  //   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: `${apiUrl}/api/:path*`,
+  //     },
+  //   ]
+  // },
 }
 
 module.exports = nextConfig

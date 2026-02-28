@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GlobalMetrics, TimeRange } from '@/types/analytics';
 
+// Mark this route as dynamic
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/analytics/global
  * Get global metrics for a shop
