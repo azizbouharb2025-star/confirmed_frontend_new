@@ -1,30 +1,36 @@
-/**
+/***
  * MongoDB Seed Script for Confirmed Platform - COMPLETE DEMO DATA
  * 
- * This script creates ALL necessary data including users, shops, and demo data
- * matching all mock data structures used throughout the application.
+ * This script creates ALL necessary data based on actual models
  * 
  * Run on your VPS with:
- *   mongosh confirmed_db < seed_demo_data.js
+ *   mongosh confirmed < seed_demo_data.js
  * 
  * Or with authentication:
- *   mongosh "mongodb://username:password@localhost:27017/confirmed_db" < seed_demo_data.js
+ *   mongosh "mongodb://username:password@localhost:27017/confirmed" < seed_demo_data.js
  * 
  * ✅ This script is SELF-CONTAINED - no need to update IDs!
  */
 
 // ============================================================
-// GENERATE NEW IDs - These will be created by this script
+// GENERATE NEW IDs
 // ============================================================
+const ADMIN_ID = ObjectId();
 const SHOP_OWNER_ID = ObjectId();
 const OPERATOR_1_ID = ObjectId();
 const OPERATOR_2_ID = ObjectId();
-const ADMIN_ID      = ObjectId();
-const SHOP_1_ID     = ObjectId();
-const SHOP_2_ID     = ObjectId();
-const SHOP_3_ID     = ObjectId();
-// ============================================================
 
+const SUBSCRIPTION_FREE_ID = ObjectId();
+const SUBSCRIPTION_PRO_ID = ObjectId();
+
+const SHOP_1_ID = ObjectId();
+const SHOP_2_ID = ObjectId();
+
+const COURIER_1_ID = ObjectId();
+const COURIER_2_ID = ObjectId();
+const COURIER_3_ID = ObjectId();
+
+// ============================================================
 const now = new Date();
 const hour = 60 * 60 * 1000;
 const day = 24 * hour;
@@ -33,95 +39,196 @@ print("🌱 Starting complete demo data seed...");
 print("");
 
 // ============================================================
-// 0. CREATE USERS AND SHOPS FIRST
+// 1. CREATE SUBSCRIPTIONS FIRST
 // ============================================================
-print("� Creating users and shops...");
+print("💳 Creating subscriptions...");
 
-// Drop existing data to start fresh
-db.users.drop();
-db.shops.drop();
-
-// Create Admin User
-db.users.insertOne({
-  _id: ADMIN_ID,
-  email: "admin1@confirmed.tn",
-  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7", // You should hash this properly
-  firstName: "Admin",
-  lastName: "User",
-  role: "admin",
-  isActive: true,
-  preferences: {
-    emailNotifications: true,
-    pushNotifications: true
+db.subscriptions.insertMany([
+  {
+    _id: SUBSCRIPTION_FREE_ID,
+    plan: 'free',
+    features: {
+      maxOperators: 1,
+      maxAICalls: 0,
+      maxShops: 1,
+      prioritySupport: false,
+      customIntegrations: false,
+      widgets: ['kpi-basic', 'recent-orders'],
+      advancedAnalytics: false,
+      predictiveAnalytics: false
+    },
+    pricing: {
+      amount: 0,
+      currency: 'USD',
+      interval: 'monthly'
+    },
+    status: 'active',
+    currentPeriodStart: new Date(now - 30 * day),
+    currentPeriodEnd: new Date(now + 30 * day),
+    usage: {
+      operatorsUsed: 0,
+      aiCallsUsed: 0,
+      shopsConnected: 0
+    },
+    createdAt: new Date(now - 90 * day),
+    updatedAt: now
   },
-  createdAt: new Date(now - 90 * day),
-  updatedAt: now
-});
+  {
+    _id: SUBSCRIPTION_PRO_ID,
+    plan: 'pro',
+    features: {
+      maxOperators: 10,
+      maxAICalls: 1000,
+      maxShops: 3,
+      prioritySupport: true,
+      customIntegrations: false,
+      widgets: ['kpi-basic', 'recent-orders', 'performance', 'ai-insights'],
+      advancedAnalytics: true,
+      predictiveAnalytics: true
+    },
+    pricing: {
+      amount: 99,
+      currency: 'USD',
+      interval: 'monthly'
+    },
+    status: 'active',
+    currentPeriodStart: new Date(now - 15 * day),
+    currentPeriodEnd: new Date(now + 15 * day),
+    usage: {
+      operatorsUsed: 2,
+      aiCallsUsed: 234,
+      shopsConnected: 2
+    },
+    createdAt: new Date(now - 60 * day),
+    updatedAt: now
+  }
+]);
 
-// Create Shop Owner
-db.users.insertOne({
-  _id: SHOP_OWNER_ID,
-  email: "owner@techstore.tn",
-  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
-  firstName: "Mohamed",
-  lastName: "Alami",
-  role: "shop_owner",
-  isActive: true,
-  preferences: {
-    emailNotifications: true,
-    pushNotifications: true
+print("   ✓ Created 2 subscriptions");
+
+// ============================================================
+// 2. CREATE USERS
+// ============================================================
+print("👤 Creating users...");
+
+db.users.insertMany([
+  {
+    _id: ADMIN_ID,
+    email: "admin@confirmed.tn",
+    password: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", // "password123"
+    role: "admin",
+    firstName: "Admin",
+    lastName: "User",
+    phoneNumber: "+216 70 123 456",
+    whatsappNumber: "+216 70 123 456",
+    isWhatsappLinked: true,
+    country: "Tunisia",
+    isActive: true,
+    preferences: {
+      emailNotifications: true,
+      pushNotifications: true
+    },
+    createdAt: new Date(now - 90 * day),
+    updatedAt: now
   },
-  createdAt: new Date(now - 60 * day),
-  updatedAt: now
-});
-
-// Create Operator 1
-db.users.insertOne({
-  _id: OPERATOR_1_ID,
-  email: "ahmed.hassan@techstore.tn",
-  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
-  firstName: "Ahmed",
-  lastName: "Hassan",
-  role: "operator",
-  isActive: true,
-  preferences: {
-    emailNotifications: true,
-    pushNotifications: true
+  {
+    _id: SHOP_OWNER_ID,
+    email: "owner@techstore.tn",
+    password: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", // "password123"
+    role: "shop_owner",
+    firstName: "Mohamed",
+    lastName: "Alami",
+    phoneNumber: "+216 98 765 432",
+    whatsappNumber: "+216 98 765 432",
+    isWhatsappLinked: true,
+    country: "Tunisia",
+    isActive: true,
+    subscriptionId: SUBSCRIPTION_PRO_ID,
+    preferences: {
+      emailNotifications: true,
+      pushNotifications: true
+    },
+    createdAt: new Date(now - 60 * day),
+    updatedAt: now
   },
-  createdAt: new Date(now - 30 * day),
-  updatedAt: now
-});
-
-// Create Operator 2
-db.users.insertOne({
-  _id: OPERATOR_2_ID,
-  email: "fatima.zahra@techstore.tn",
-  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
-  firstName: "Fatima",
-  lastName: "Zahra",
-  role: "operator",
-  isActive: true,
-  preferences: {
-    emailNotifications: true,
-    pushNotifications: true
+  {
+    _id: OPERATOR_1_ID,
+    email: "ahmed.hassan@techstore.tn",
+    password: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", // "password123"
+    role: "operator",
+    firstName: "Ahmed",
+    lastName: "Hassan",
+    phoneNumber: "+216 97 111 222",
+    whatsappNumber: "+216 97 111 222",
+    isWhatsappLinked: true,
+    country: "Tunisia",
+    isActive: true,
+    shopId: SHOP_1_ID,
+    preferences: {
+      emailNotifications: true,
+      pushNotifications: true
+    },
+    createdAt: new Date(now - 30 * day),
+    updatedAt: now
   },
-  createdAt: new Date(now - 20 * day),
-  updatedAt: now
-});
+  {
+    _id: OPERATOR_2_ID,
+    email: "fatima.zahra@techstore.tn",
+    password: "$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW", // "password123"
+    role: "operator",
+    firstName: "Fatima",
+    lastName: "Zahra",
+    phoneNumber: "+216 96 333 444",
+    whatsappNumber: "+216 96 333 444",
+    isWhatsappLinked: true,
+    country: "Tunisia",
+    isActive: true,
+    shopId: SHOP_1_ID,
+    preferences: {
+      emailNotifications: true,
+      pushNotifications: true
+    },
+    createdAt: new Date(now - 20 * day),
+    updatedAt: now
+  }
+]);
 
-// Create Shops
+print("   ✓ Created 4 users (1 admin, 1 shop owner, 2 operators)");
+
+// ============================================================
+// 3. CREATE SHOPS
+// ============================================================
+print("🏪 Creating shops...");
+
 db.shops.insertMany([
   {
     _id: SHOP_1_ID,
     name: "TechStore Tunisia",
     domain: "techstore.tn",
-    ownerId: SHOP_OWNER_ID,
-    description: "Premium electronics and accessories",
-    isActive: true,
+    platform: "shopify",
+    shopifyCredentials: {
+      apiKey: "demo_api_key_123",
+      apiSecret: "demo_api_secret_456",
+      accessToken: "demo_access_token_789",
+      storeUrl: "techstore-tn.myshopify.com",
+      webhookSecret: "demo_webhook_secret"
+    },
     settings: {
-      currency: "TND",
-      timezone: "Africa/Tunis",
-      language: "fr"
+      autoSync: true,
+      aiCallsEnabled: true,
+      callPriority: "high",
+      productSyncEnabled: true,
+      deliveryIntegrationEnabled: true
+    },
+    subscriptionId: SUBSCRIPTION_PRO_ID,
+    isActive: true,
+    apiCredentials: {
+      apiKey: "sk_live_" + Math.random().toString(36).substring(2, 15),
+      apiSecret: "secret_" + Math.random().toString(36).substring(2, 15),
+      webhookSecret: "whsec_" + Math.random().toString(36).substring(2, 15),
+      isActive: true,
+      createdAt: new Date(now - 60 * day),
+      lastUsed: new Date(now - 1 * hour)
     },
     createdAt: new Date(now - 60 * day),
     updatedAt: now
@@ -130,687 +237,447 @@ db.shops.insertMany([
     _id: SHOP_2_ID,
     name: "ElectroShop",
     domain: "electroshop.tn",
-    ownerId: SHOP_OWNER_ID,
-    description: "Consumer electronics",
-    isActive: true,
-    settings: {
-      currency: "TND",
-      timezone: "Africa/Tunis",
-      language: "fr"
+    platform: "woocommerce",
+    woocommerceCredentials: {
+      consumerKey: "ck_demo_key_123",
+      consumerSecret: "cs_demo_secret_456",
+      storeUrl: "https://electroshop.tn",
+      webhookSecret: "demo_webhook_secret"
     },
+    settings: {
+      autoSync: true,
+      aiCallsEnabled: false,
+      callPriority: "medium",
+      productSyncEnabled: true,
+      deliveryIntegrationEnabled: false
+    },
+    subscriptionId: SUBSCRIPTION_PRO_ID,
+    isActive: true,
     createdAt: new Date(now - 45 * day),
-    updatedAt: now
-  },
-  {
-    _id: SHOP_3_ID,
-    name: "GadgetHub",
-    domain: "gadgethub.tn",
-    ownerId: SHOP_OWNER_ID,
-    description: "Latest gadgets and tech",
-    isActive: true,
-    settings: {
-      currency: "TND",
-      timezone: "Africa/Tunis",
-      language: "fr"
-    },
-    createdAt: new Date(now - 30 * day),
     updatedAt: now
   }
 ]);
 
-// Create indexes for users and shops
-db.users.createIndex({ email: 1 }, { unique: true });
-db.users.createIndex({ role: 1 });
-db.shops.createIndex({ ownerId: 1 });
-db.shops.createIndex({ domain: 1 }, { unique: true });
-
-print("   ✓ Created 4 users (1 admin, 1 shop owner, 2 operators)");
-print("   ✓ Created 3 shops");
-print("");
+print("   ✓ Created 2 shops");
 
 // ============================================================
-// 1. PRODUCTS - For product performance tracking
+// 4. CREATE COURIERS
 // ============================================================
-print("📦 Seeding products...");
+print("🚚 Creating couriers...");
 
-db.products.drop();
-db.products.insertMany([
+db.couriers.insertMany([
   {
-    _id: ObjectId(),
+    _id: COURIER_1_ID,
+    name: "Aramex Tunisia",
+    contactEmail: "contact@aramex.tn",
+    contactPhone: "+216 71 123 456",
+    regions: ["Tunis", "Ariana", "Ben Arous", "Manouba"],
+    performance: {
+      totalDeliveries: 1250,
+      successfulDeliveries: 1100,
+      failedDeliveries: 150,
+      avgDeliveryTime: 48,
+      returnRate: 12
+    },
+    isActive: true,
+    createdAt: new Date(now - 180 * day)
+  },
+  {
+    _id: COURIER_2_ID,
+    name: "Poste Tunisienne",
+    contactEmail: "info@poste.tn",
+    contactPhone: "+216 71 234 567",
+    regions: ["Sfax", "Sousse", "Monastir", "Mahdia", "Kairouan"],
+    performance: {
+      totalDeliveries: 890,
+      successfulDeliveries: 750,
+      failedDeliveries: 140,
+      avgDeliveryTime: 72,
+      returnRate: 15.7
+    },
+    isActive: true,
+    createdAt: new Date(now - 180 * day)
+  },
+  {
+    _id: COURIER_3_ID,
+    name: "Express Delivery",
+    contactEmail: "support@express.tn",
+    contactPhone: "+216 71 345 678",
+    regions: ["Bizerte", "Nabeul", "Zaghouan", "Beja"],
+    performance: {
+      totalDeliveries: 560,
+      successfulDeliveries: 510,
+      failedDeliveries: 50,
+      avgDeliveryTime: 36,
+      returnRate: 8.9
+    },
+    isActive: true,
+    createdAt: new Date(now - 90 * day)
+  }
+]);
+
+print("   ✓ Created 3 couriers");
+
+// ============================================================
+// 5. CREATE PRODUCTS
+// ============================================================
+print("📦 Creating products...");
+
+const products = [
+  {
     shopId: SHOP_1_ID,
-    name: "Wireless Headphones",
-    description: "Premium noise-cancelling wireless headphones",
+    externalId: "shopify_prod_001",
+    name: "Wireless Headphones Pro",
+    productLink: "https://techstore.tn/products/wireless-headphones-pro",
     price: 299.99,
-    sku: "WH-001",
-    imageUrl: "/assets/product1.jpg",
+    sku: "WH-PRO-001",
+    description: "Premium noise-cancelling wireless headphones with 30-hour battery life",
+    imageUrl: "https://techstore.tn/images/headphones-pro.jpg",
     category: "Electronics",
-    stock: 45,
-    isActive: true,
-    createdAt: new Date(now - 90 * day),
-    updatedAt: new Date(now - 2 * day)
+    inStock: true,
+    syncMethod: "auto_sync",
+    lastSyncAt: new Date(now - 2 * hour),
+    isActive: true
   },
   {
-    _id: ObjectId(),
     shopId: SHOP_1_ID,
-    name: "Smart Watch",
-    description: "Fitness tracking smartwatch with heart rate monitor",
+    externalId: "shopify_prod_002",
+    name: "Smart Watch Series 5",
+    productLink: "https://techstore.tn/products/smart-watch-5",
     price: 199.99,
-    sku: "SW-002",
-    imageUrl: "/assets/product2.jpg",
-    category: "Electronics",
-    stock: 32,
-    isActive: true,
-    createdAt: new Date(now - 85 * day),
-    updatedAt: new Date(now - 1 * day)
+    sku: "SW-005",
+    description: "Fitness tracking smartwatch with heart rate monitor and GPS",
+    imageUrl: "https://techstore.tn/images/smartwatch-5.jpg",
+    category: "Wearables",
+    inStock: true,
+    syncMethod: "auto_sync",
+    lastSyncAt: new Date(now - 2 * hour),
+    isActive: true
   },
   {
-    _id: ObjectId(),
     shopId: SHOP_1_ID,
-    name: "Laptop Stand",
-    description: "Ergonomic aluminum laptop stand",
+    name: "Laptop Stand Aluminum",
+    productLink: "https://techstore.tn/products/laptop-stand",
     price: 49.99,
-    sku: "LS-003",
-    imageUrl: "/assets/product3.jpg",
+    sku: "LS-ALU-003",
+    description: "Ergonomic aluminum laptop stand with adjustable height",
+    imageUrl: "https://techstore.tn/images/laptop-stand.jpg",
     category: "Accessories",
-    stock: 78,
-    isActive: true,
-    createdAt: new Date(now - 80 * day),
-    updatedAt: now
+    inStock: true,
+    syncMethod: "manual",
+    isActive: true
   },
   {
-    _id: ObjectId(),
     shopId: SHOP_1_ID,
-    name: "USB-C Cable",
-    description: "Fast charging USB-C cable 2m",
+    name: "USB-C Fast Charging Cable 2m",
+    productLink: "https://techstore.tn/products/usbc-cable",
     price: 19.99,
-    sku: "UC-004",
-    imageUrl: "/assets/product4.jpg",
+    sku: "UC-2M-004",
+    description: "Durable braided USB-C cable with 100W fast charging support",
+    imageUrl: "https://techstore.tn/images/usbc-cable.jpg",
     category: "Accessories",
-    stock: 156,
-    isActive: true,
-    createdAt: new Date(now - 75 * day),
-    updatedAt: now
+    inStock: true,
+    syncMethod: "manual",
+    isActive: true
   },
   {
-    _id: ObjectId(),
     shopId: SHOP_1_ID,
-    name: "Phone Case",
-    description: "Protective silicone phone case",
-    price: 24.99,
-    sku: "PC-005",
-    imageUrl: "/assets/product5.jpg",
-    category: "Accessories",
-    stock: 203,
-    isActive: true,
-    createdAt: new Date(now - 70 * day),
-    updatedAt: now
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "Bluetooth Speaker",
-    description: "Portable waterproof Bluetooth speaker",
-    price: 79.99,
-    sku: "BS-006",
-    imageUrl: "/assets/product6.jpg",
-    category: "Electronics",
-    stock: 67,
-    isActive: true,
-    createdAt: new Date(now - 65 * day),
-    updatedAt: now
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "Wireless Keyboard",
-    description: "Mechanical wireless keyboard with RGB",
+    name: "Wireless Keyboard RGB",
+    productLink: "https://techstore.tn/products/keyboard-rgb",
     price: 129.99,
-    sku: "KB-007",
-    imageUrl: "/assets/product1.jpg",
-    category: "Electronics",
-    stock: 41,
-    isActive: true,
-    createdAt: new Date(now - 60 * day),
-    updatedAt: now
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "Mouse Pad",
-    description: "Large gaming mouse pad",
-    price: 14.99,
-    sku: "MP-008",
-    imageUrl: "/assets/product1.jpg",
-    category: "Accessories",
-    stock: 189,
-    isActive: true,
-    createdAt: new Date(now - 55 * day),
-    updatedAt: now
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "HD Webcam",
-    description: "1080p HD webcam with microphone",
-    price: 89.99,
-    sku: "WC-009",
-    imageUrl: "/assets/product1.jpg",
-    category: "Electronics",
-    stock: 28,
-    isActive: true,
-    createdAt: new Date(now - 50 * day),
-    updatedAt: now
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "27\" Monitor",
-    description: "4K UHD 27-inch monitor",
-    price: 399.99,
-    sku: "MN-010",
-    imageUrl: "/assets/product1.jpg",
-    category: "Electronics",
-    stock: 15,
-    isActive: true,
-    createdAt: new Date(now - 45 * day),
-    updatedAt: now
+    sku: "KB-RGB-007",
+    description: "Mechanical wireless keyboard with customizable RGB lighting",
+    imageUrl: "https://techstore.tn/images/keyboard-rgb.jpg",
+    category: "Peripherals",
+    inStock: true,
+    syncMethod: "manual",
+    isActive: true
   }
-]);
+];
 
-print("   ✓ 10 products inserted");
+const insertedProducts = [];
+products.forEach(function(product) {
+  product._id = ObjectId();
+  product.createdAt = new Date(now - Math.floor(Math.random() * 60) * day);
+  product.updatedAt = new Date(now - Math.floor(Math.random() * 5) * day);
+  insertedProducts.push(product);
+});
+
+db.products.insertMany(insertedProducts);
+print("   ✓ Created " + insertedProducts.length + " products");
 
 // ============================================================
-// 2. ORDERS - With various statuses and cancellation reasons
+// 6. CREATE ORDERS
 // ============================================================
-print("📋 Seeding orders...");
+print("📋 Creating orders...");
 
-// Helper function to generate random order
-function generateOrder(daysAgo, status, shopId, operatorId) {
+const tunisianCities = [
+  { city: "Tunis", state: "Tunis", courier: COURIER_1_ID },
+  { city: "Sfax", state: "Sfax", courier: COURIER_2_ID },
+  { city: "Sousse", state: "Sousse", courier: COURIER_2_ID },
+  { city: "Ariana", state: "Ariana", courier: COURIER_1_ID },
+  { city: "Bizerte", state: "Bizerte", courier: COURIER_3_ID },
+  { city: "Nabeul", state: "Nabeul", courier: COURIER_3_ID }
+];
+
+const customerNames = [
+  "Ahmed Ben Ali", "Fatima Mansouri", "Mohamed Trabelsi",
+  "Leila Gharbi", "Karim Jebali", "Sonia Hamdi",
+  "Youssef Khelifi", "Amira Sassi", "Rami Bouazizi"
+];
+
+function generateOrder(daysAgo, status) {
   const orderDate = new Date(now - daysAgo * day);
-  const orderId = "ORD-" + (1000 + Math.floor(Math.random() * 9000));
+  const orderId = "ORD-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
   
-  const customers = [
-    { name: "Ahmed Ben Ali", phone: "+216 98 123 456", city: "Tunis", region: "Tunis" },
-    { name: "Fatima Mansouri", phone: "+216 97 234 567", city: "Sfax", region: "Sfax" },
-    { name: "Mohamed Trabelsi", phone: "+216 99 345 678", city: "Sousse", region: "Sousse" },
-    { name: "Leila Gharbi", phone: "+216 96 456 789", city: "Ariana", region: "Ariana" },
-    { name: "Karim Jebali", phone: "+216 95 567 890", city: "Bizerte", region: "Bizerte" },
-    { name: "Sonia Hamdi", phone: "+216 94 678 901", city: "Monastir", region: "Monastir" },
-    { name: "Youssef Khelifi", phone: "+216 93 789 012", city: "Nabeul", region: "Nabeul" },
-    { name: "Amira Sassi", phone: "+216 92 890 123", city: "Gabes", region: "Gabes" }
-  ];
+  const customer = customerNames[Math.floor(Math.random() * customerNames.length)];
+  const location = tunisianCities[Math.floor(Math.random() * tunisianCities.length)];
+  const product = insertedProducts[Math.floor(Math.random() * insertedProducts.length)];
   
-  const customer = customers[Math.floor(Math.random() * customers.length)];
-  const total = Math.floor(Math.random() * 500) + 50;
-  const aiScore = Math.floor(Math.random() * 40) + 60;
+  const quantity = Math.floor(Math.random() * 3) + 1;
+  const total = product.price * quantity;
+  
+  // AI scores based on status
+  let aiScore, riskLevel;
+  if (status === 'confirmed' || status === 'shipped' || status === 'delivered') {
+    aiScore = Math.floor(Math.random() * 20) + 75; // 75-95
+    riskLevel = 'low';
+  } else if (status === 'cancelled' || status === 'rejected') {
+    aiScore = Math.floor(Math.random() * 30) + 30; // 30-60
+    riskLevel = 'high';
+  } else {
+    aiScore = Math.floor(Math.random() * 30) + 50; // 50-80
+    riskLevel = aiScore > 70 ? 'low' : aiScore > 50 ? 'medium' : 'high';
+  }
   
   const order = {
     _id: ObjectId(),
     orderId: orderId,
-    shopId: shopId,
-    customerName: customer.name,
-    customerPhone: customer.phone,
-    customerEmail: customer.name.toLowerCase().replace(/ /g, '.') + "@example.com",
-    deliveryAddress: {
-      street: Math.floor(Math.random() * 100) + " Avenue Habib Bourguiba",
-      city: customer.city,
-      state: customer.region,
-      zipCode: String(Math.floor(Math.random() * 9000) + 1000),
-      country: "Tunisia"
-    },
-    items: [
-      {
-        productId: "prod_" + Math.floor(Math.random() * 10 + 1),
-        name: "Product " + Math.floor(Math.random() * 10 + 1),
-        quantity: Math.floor(Math.random() * 3) + 1,
-        price: Math.floor(Math.random() * 200) + 20
+    shopId: SHOP_1_ID,
+    clientInfo: {
+      name: customer,
+      phone: "+216 " + (90 + Math.floor(Math.random() * 9)) + " " + 
+             Math.floor(Math.random() * 900 + 100) + " " + 
+             Math.floor(Math.random() * 900 + 100),
+      email: customer.toLowerCase().replace(/ /g, '.') + "@example.com",
+      address: {
+        street: Math.floor(Math.random() * 100 + 1) + " Avenue Habib Bourguiba",
+        city: location.city,
+        state: location.state,
+        zipCode: String(Math.floor(Math.random() * 9000) + 1000),
+        country: "Tunisia"
       }
-    ],
-    total: total,
+    },
+    items: [{
+      productId: product._id,
+      name: product.name,
+      quantity: quantity,
+      price: product.price,
+      sku: product.sku,
+      url: product.productLink
+    }],
+    totalAmount: total,
     status: status,
+    priority: total > 200 ? 'high' : total > 100 ? 'medium' : 'low',
     aiScore: aiScore,
-    riskLevel: aiScore > 80 ? 'high' : aiScore >= 50 ? 'medium' : 'low',
+    riskLevel: riskLevel,
+    deliverySuccessProbability: aiScore,
+    courier: location.courier,
+    region: location.state,
+    hasComplaint: false,
+    isRepeatBuyer: Math.random() > 0.7,
+    customerLifetimeValue: Math.floor(Math.random() * 1000),
     createdAt: orderDate,
-    updatedAt: new Date(orderDate.getTime() + Math.random() * 2 * hour)
+    updatedAt: orderDate
   };
   
-  if (operatorId && (status === 'confirmed' || status === 'rejected')) {
-    order.assignedOperatorId = operatorId;
-    order.confirmedAt = new Date(orderDate.getTime() + Math.random() * 2 * hour);
+  // Add operator assignment for processed orders
+  if (['confirmed', 'rejected', 'shipped', 'delivered'].includes(status)) {
+    order.assignedOperatorId = Math.random() > 0.5 ? OPERATOR_1_ID : OPERATOR_2_ID;
+    order.callHistory = [{
+      operatorId: order.assignedOperatorId,
+      callType: 'human',
+      timestamp: new Date(orderDate.getTime() + Math.random() * 2 * hour),
+      duration: Math.floor(Math.random() * 300) + 60,
+      result: status === 'confirmed' ? 'confirmed' : status === 'rejected' ? 'rejected' : 'confirmed',
+      notes: status === 'confirmed' ? "Customer confirmed order" : "Customer declined"
+    }];
   }
   
+  // Add cancellation details
   if (status === 'cancelled') {
     const reasons = [
-      'customer_refused',
-      'price_too_high',
-      'quality_doubts',
-      'duplicate_order',
-      'fake_number',
-      'not_available',
-      'courier_failed',
-      'customer_rejected_at_door'
+      'customer_refused', 'price_too_high', 'quality_doubts',
+      'duplicate_order', 'fake_number', 'not_available'
     ];
     order.cancellationReason = reasons[Math.floor(Math.random() * reasons.length)];
-    order.cancelledAt = new Date(orderDate.getTime() + Math.random() * 3 * hour);
+    order.cancelledBy = 'customer';
   }
   
+  // Add delivery info for shipped/delivered
   if (status === 'shipped' || status === 'delivered') {
-    order.shippedAt = new Date(orderDate.getTime() + 1 * day);
-    order.trackingNumber = "TRK" + Math.floor(Math.random() * 1000000);
-  }
-  
-  if (status === 'delivered') {
-    order.deliveredAt = new Date(orderDate.getTime() + 3 * day);
+    order.deliveryInfo = {
+      estimatedDate: new Date(orderDate.getTime() + 3 * day),
+      trackingNumber: "TRK" + Math.floor(Math.random() * 1000000),
+      carrier: "Aramex"
+    };
   }
   
   return order;
 }
 
-// Generate orders for the last 30 days
+// Generate orders for last 30 days
 const orders = [];
 for (let i = 0; i < 30; i++) {
-  const ordersPerDay = Math.floor(Math.random() * 15) + 10; // 10-25 orders per day
+  const ordersPerDay = Math.floor(Math.random() * 12) + 8; // 8-20 orders per day
   
   for (let j = 0; j < ordersPerDay; j++) {
     const rand = Math.random();
-    let status, operatorId;
+    let status;
     
-    if (rand < 0.50) {
-      status = 'confirmed';
-      operatorId = Math.random() > 0.5 ? OPERATOR_1_ID : OPERATOR_2_ID;
-    } else if (rand < 0.65) {
-      status = 'shipped';
-      operatorId = Math.random() > 0.5 ? OPERATOR_1_ID : OPERATOR_2_ID;
-    } else if (rand < 0.75) {
-      status = 'delivered';
-      operatorId = Math.random() > 0.5 ? OPERATOR_1_ID : OPERATOR_2_ID;
-    } else if (rand < 0.85) {
-      status = 'pending';
-      operatorId = null;
-    } else if (rand < 0.92) {
-      status = 'cancelled';
-      operatorId = null;
-    } else {
-      status = 'rejected';
-      operatorId = Math.random() > 0.5 ? OPERATOR_1_ID : OPERATOR_2_ID;
-    }
+    if (rand < 0.45) status = 'confirmed';
+    else if (rand < 0.60) status = 'shipped';
+    else if (rand < 0.70) status = 'delivered';
+    else if (rand < 0.80) status = 'pending';
+    else if (rand < 0.90) status = 'cancelled';
+    else status = 'rejected';
     
-    orders.push(generateOrder(i, status, SHOP_1_ID, operatorId));
+    orders.push(generateOrder(i, status));
   }
 }
 
 db.orders.insertMany(orders);
-
-print("   ✓ " + orders.length + " orders inserted");
-
-// ============================================================
-// 3. HUMAN FEEDBACK - Operator feedback on orders
-// ============================================================
-print("💬 Seeding human feedback...");
-
-db.humanfeedback.drop();
-
-const feedbackDocs = [];
-const confirmedOrders = orders.filter(o => o.status === 'confirmed' || o.status === 'delivered');
-
-confirmedOrders.slice(0, 50).forEach(function(order) {
-  const rating = Math.floor(Math.random() * 2) + 3; // 3-5 stars
-  const tags = [];
-  
-  const allTags = [
-    'polite customer',
-    'price concern',
-    'quality question',
-    'delivery inquiry',
-    'satisfied customer',
-    'repeat buyer',
-    'new customer',
-    'urgent request'
-  ];
-  
-  const numTags = Math.floor(Math.random() * 3) + 1;
-  for (let i = 0; i < numTags; i++) {
-    const tag = allTags[Math.floor(Math.random() * allTags.length)];
-    if (!tags.includes(tag)) tags.push(tag);
-  }
-  
-  const notes = [
-    "Customer was very polite and confirmed immediately",
-    "Had some questions about delivery time but confirmed",
-    "Requested faster delivery option",
-    "Very satisfied with the product details",
-    "Asked about payment options",
-    "Confirmed after price negotiation",
-    "Regular customer, smooth confirmation"
-  ];
-  
-  feedbackDocs.push({
-    _id: ObjectId(),
-    orderId: order._id,
-    operatorId: order.assignedOperatorId,
-    operatorName: order.assignedOperatorId.equals(OPERATOR_1_ID) ? "Ahmed Hassan" : "Fatima Zahra",
-    operatorAvatar: null,
-    rating: rating,
-    tags: tags,
-    notes: notes[Math.floor(Math.random() * notes.length)],
-    timestamp: new Date(order.confirmedAt || order.createdAt),
-    createdAt: new Date(order.confirmedAt || order.createdAt)
-  });
-});
-
-db.humanfeedback.insertMany(feedbackDocs);
-
-print("   ✓ " + feedbackDocs.length + " human feedback entries inserted");
+print("   ✓ Created " + orders.length + " orders");
 
 // ============================================================
-// 4. AI FEEDBACK - AI analysis of orders
+// 7. CREATE COMPLAINTS
 // ============================================================
-print("🤖 Seeding AI feedback...");
-
-db.aifeedback.drop();
-
-const aiFeedbackDocs = [];
-
-orders.slice(0, 100).forEach(function(order) {
-  const confidence = Math.random() * 0.3 + 0.7; // 0.7-1.0
-  
-  const riskFactors = [];
-  if (order.aiScore < 70) {
-    riskFactors.push({
-      factor: "Low historical success rate",
-      impact: -15,
-      confidence: 0.85
-    });
-  }
-  if (order.total > 300) {
-    riskFactors.push({
-      factor: "High order value",
-      impact: 10,
-      confidence: 0.92
-    });
-  }
-  
-  const recommendations = [];
-  if (order.aiScore < 60) {
-    recommendations.push("Verify customer phone number before shipping");
-    recommendations.push("Consider requiring prepayment");
-  } else if (order.aiScore > 85) {
-    recommendations.push("Fast-track for immediate shipping");
-  }
-  
-  aiFeedbackDocs.push({
-    _id: ObjectId(),
-    orderId: order._id,
-    aiScore: order.aiScore,
-    riskLevel: order.riskLevel,
-    confidence: confidence,
-    riskFactors: riskFactors,
-    recommendations: recommendations,
-    predictedOutcome: order.aiScore > 70 ? 'confirmed' : 'uncertain',
-    timestamp: order.createdAt,
-    createdAt: order.createdAt
-  });
-});
-
-db.aifeedback.insertMany(aiFeedbackDocs);
-
-print("   ✓ " + aiFeedbackDocs.length + " AI feedback entries inserted");
-
-// ============================================================
-// 5. DELIVERY PROVIDERS - For delivery company management
-// ============================================================
-print("🚚 Seeding delivery providers...");
-
-db.deliveryproviders.drop();
-db.deliveryproviders.insertMany([
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "Aramex Morocco",
-    type: "aramex",
-    apiEndpoint: "https://api.aramex.com/v1",
-    apiKey: Buffer.from("mock_aramex_key_123").toString('base64'),
-    apiSecret: Buffer.from("mock_aramex_secret_456").toString('base64'),
-    isActive: true,
-    lastSyncAt: new Date(now - 2 * hour),
-    lastSyncStatus: "success",
-    config: {
-      autoSync: true,
-      syncInterval: 30,
-      supportedRegions: ["Casablanca", "Rabat", "Marrakech", "Tangier", "Fes"]
-    },
-    createdAt: new Date(now - 30 * day),
-    updatedAt: new Date(now - 2 * hour)
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    name: "DHL Express",
-    type: "dhl",
-    apiEndpoint: "https://api.dhl.com/v2",
-    apiKey: Buffer.from("mock_dhl_key_789").toString('base64'),
-    isActive: false,
-    lastSyncAt: new Date(now - 5 * day),
-    lastSyncStatus: "failed",
-    lastSyncError: "Authentication failed",
-    config: {
-      autoSync: false,
-      syncInterval: 60,
-      supportedRegions: ["All Morocco"]
-    },
-    createdAt: new Date(now - 15 * day),
-    updatedAt: new Date(now - 5 * day)
-  }
-]);
-
-print("   ✓ 2 delivery providers inserted");
-
-// ============================================================
-// 6. TEAM MEMBERS - For team management
-// ============================================================
-print("👥 Seeding team members...");
-
-db.teammembers.drop();
-db.teammembers.insertMany([
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    userId: OPERATOR_1_ID,
-    email: "operator1@example.com",
-    name: "Ahmed Hassan",
-    role: "operator",
-    status: "confirmed",
-    invitedAt: new Date(now - 30 * day),
-    invitedBy: SHOP_OWNER_ID,
-    acceptedAt: new Date(now - 29 * day),
-    lastActiveAt: new Date(now - 2 * hour),
-    performanceMetrics: {
-      totalCalls: 145,
-      confirmedCalls: 112,
-      confirmationRate: 77.24,
-      averageCallDuration: 180,
-      lastCallAt: new Date(now - 2 * hour)
-    },
-    createdAt: new Date(now - 30 * day),
-    updatedAt: new Date(now - 2 * hour)
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    userId: OPERATOR_2_ID,
-    email: "operator2@example.com",
-    name: "Fatima Zahra",
-    role: "operator",
-    status: "confirmed",
-    invitedAt: new Date(now - 20 * day),
-    invitedBy: SHOP_OWNER_ID,
-    acceptedAt: new Date(now - 19 * day),
-    lastActiveAt: new Date(now - 1 * hour),
-    performanceMetrics: {
-      totalCalls: 98,
-      confirmedCalls: 82,
-      confirmationRate: 83.67,
-      averageCallDuration: 165,
-      lastCallAt: new Date(now - 1 * hour)
-    },
-    createdAt: new Date(now - 20 * day),
-    updatedAt: new Date(now - 1 * hour)
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    userId: ObjectId(),
-    email: "manager@example.com",
-    name: "Youssef Alami",
-    role: "manager",
-    status: "confirmed",
-    invitedAt: new Date(now - 45 * day),
-    invitedBy: SHOP_OWNER_ID,
-    acceptedAt: new Date(now - 44 * day),
-    lastActiveAt: new Date(now - 30 * 60 * 1000),
-    createdAt: new Date(now - 45 * day),
-    updatedAt: new Date(now - 30 * 60 * 1000)
-  },
-  {
-    _id: ObjectId(),
-    shopId: SHOP_1_ID,
-    userId: null,
-    email: "newoperator@example.com",
-    role: "operator",
-    status: "pending",
-    invitedAt: new Date(now - 2 * day),
-    invitedBy: SHOP_OWNER_ID,
-    createdAt: new Date(now - 2 * day),
-    updatedAt: new Date(now - 2 * day)
-  }
-]);
-
-print("   ✓ 4 team members inserted");
-
-// ============================================================
-// 7. ACTIVITY LOGS - For admin dashboard
-// ============================================================
-print("📊 Seeding activity logs...");
-
-db.activitylogs.drop();
-
-const activities = [];
-const activityTypes = [
-  { type: "order", messages: ["New order created", "Order confirmed", "Order shipped", "Order delivered", "Order cancelled"] },
-  { type: "user", messages: ["New user registered", "User logged in", "Password changed", "Profile updated"] },
-  { type: "shop", messages: ["Shop created", "Shop settings updated", "API credentials generated"] },
-  { type: "system", messages: ["Database backup completed", "System maintenance", "Cache cleared"] }
-];
-
-for (let i = 0; i < 50; i++) {
-  const typeData = activityTypes[Math.floor(Math.random() * activityTypes.length)];
-  const message = typeData.messages[Math.floor(Math.random() * typeData.messages.length)];
-  
-  activities.push({
-    _id: ObjectId(),
-    type: typeData.type,
-    action: message,
-    detail: "#" + Math.floor(Math.random() * 9000 + 1000),
-    timestamp: new Date(now - i * 15 * 60 * 1000),
-    createdAt: new Date(now - i * 15 * 60 * 1000)
-  });
-}
-
-db.activitylogs.insertMany(activities);
-
-print("   ✓ " + activities.length + " activity logs inserted");
-
-// ============================================================
-// 8. COMPLAINTS - For complaints analytics
-// ============================================================
-print("📝 Seeding complaints...");
-
-db.complaints.drop();
+print("📝 Creating complaints...");
 
 const complaints = [];
 const complaintCategories = [
-  "Product Quality",
-  "Delivery Issue",
-  "Wrong Item",
-  "Damaged Product",
-  "Missing Item",
-  "Other"
+  'damaged_product', 'wrong_item', 'missing_item',
+  'quality_issue', 'delivery_problem', 'other'
 ];
 
-const complaintTexts = [
-  "Product arrived damaged, box was crushed",
-  "Delivery was 3 days late, very disappointed",
-  "Received wrong color, ordered black got white",
-  "Product quality is poor, not as described",
-  "Missing accessories from the package",
-  "Product stopped working after 2 days"
-];
+const complaintDescriptions = {
+  'damaged_product': "Product arrived with visible damage to the packaging and item",
+  'wrong_item': "Received incorrect product, ordered black but got white",
+  'missing_item': "Package arrived but missing accessories mentioned in description",
+  'quality_issue': "Product quality is below expectations, not as described",
+  'delivery_problem': "Delivery was significantly delayed, arrived 5 days late",
+  'other': "Customer service issue, need assistance with product setup"
+};
 
-for (let i = 0; i < 30; i++) {
-  const daysAgo = Math.floor(Math.random() * 30);
+// Create complaints for some delivered orders
+const deliveredOrders = orders.filter(o => o.status === 'delivered');
+const ordersWithComplaints = deliveredOrders.slice(0, Math.floor(deliveredOrders.length * 0.15));
+
+ordersWithComplaints.forEach(function(order, index) {
   const category = complaintCategories[Math.floor(Math.random() * complaintCategories.length)];
+  const daysAfterDelivery = Math.floor(Math.random() * 5) + 1;
   
-  complaints.push({
+  const complaint = {
     _id: ObjectId(),
-    orderId: orders[Math.floor(Math.random() * orders.length)]._id,
-    shopId: SHOP_1_ID,
+    referenceNumber: "CMP-" + Date.now() + "-" + index,
+    orderId: order._id,
+    shopId: order.shopId,
+    customerInfo: {
+      name: order.clientInfo.name,
+      phone: order.clientInfo.phone,
+      email: order.clientInfo.email
+    },
     category: category,
-    description: complaintTexts[Math.floor(Math.random() * complaintTexts.length)],
-    status: Math.random() > 0.3 ? "resolved" : "pending",
-    priority: Math.random() > 0.7 ? "high" : Math.random() > 0.4 ? "medium" : "low",
-    createdAt: new Date(now - daysAgo * day),
-    updatedAt: new Date(now - (daysAgo - 1) * day),
-    resolvedAt: Math.random() > 0.3 ? new Date(now - (daysAgo - 2) * day) : null
-  });
+    description: complaintDescriptions[category],
+    mediaAttachments: [],
+    aiTags: [
+      { tag: category.replace('_', ' '), confidence: 85 },
+      { tag: 'requires_attention', confidence: 72 }
+    ],
+    aiPrimaryCategory: category,
+    requiresManualReview: Math.random() > 0.7,
+    status: Math.random() > 0.4 ? 'resolved' : 'in_progress',
+    region: order.region,
+    productIds: order.items.map(item => item.productId),
+    createdAt: new Date(order.createdAt.getTime() + daysAfterDelivery * day),
+    updatedAt: new Date(order.createdAt.getTime() + (daysAfterDelivery + 2) * day)
+  };
+  
+  if (complaint.status === 'resolved') {
+    complaint.resolvedAt = new Date(complaint.createdAt.getTime() + 2 * day);
+    complaint.resolvedBy = OPERATOR_1_ID;
+    complaint.resolutionHistory = [{
+      status: 'resolved',
+      note: 'Issue resolved, customer satisfied',
+      userId: OPERATOR_1_ID,
+      timestamp: complaint.resolvedAt
+    }];
+  }
+  
+  complaints.push(complaint);
+  
+  // Update order to mark it has complaint
+  db.orders.updateOne(
+    { _id: order._id },
+    { $set: { hasComplaint: true } }
+  );
+});
+
+if (complaints.length > 0) {
+  db.complaints.insertMany(complaints);
 }
-
-db.complaints.insertMany(complaints);
-
-print("   ✓ " + complaints.length + " complaints inserted");
+print("   ✓ Created " + complaints.length + " complaints");
 
 // ============================================================
-// 9. CREATE INDEXES
+// 8. CREATE INDEXES
 // ============================================================
 print("🔍 Creating indexes...");
 
+// Users
+db.users.createIndex({ email: 1 }, { unique: true });
+db.users.createIndex({ role: 1 });
+db.users.createIndex({ shopId: 1 });
+
+// Shops
+db.shops.createIndex({ domain: 1 });
+db.shops.createIndex({ subscriptionId: 1 });
+db.shops.createIndex({ 'apiCredentials.apiKey': 1 });
+
 // Products
-db.products.createIndex({ shopId: 1, isActive: 1 });
-db.products.createIndex({ sku: 1 }, { unique: true });
+db.products.createIndex({ shopId: 1, externalId: 1 });
+db.products.createIndex({ syncMethod: 1 });
+db.products.createIndex({ shopId: 1, sku: 1 });
 
 // Orders
 db.orders.createIndex({ shopId: 1, createdAt: -1 });
 db.orders.createIndex({ status: 1, createdAt: -1 });
 db.orders.createIndex({ assignedOperatorId: 1, status: 1 });
-db.orders.createIndex({ orderId: 1 }, { unique: true });
+db.orders.createIndex({ orderId: 1, shopId: 1 }, { unique: true });
 db.orders.createIndex({ aiScore: 1 });
-
-// Feedback
-db.humanfeedback.createIndex({ orderId: 1 });
-db.humanfeedback.createIndex({ operatorId: 1, timestamp: -1 });
-db.aifeedback.createIndex({ orderId: 1 });
-db.aifeedback.createIndex({ aiScore: 1 });
-
-// Delivery Providers
-db.deliveryproviders.createIndex({ shopId: 1, isActive: 1 });
-
-// Team Members
-db.teammembers.createIndex({ shopId: 1, status: 1 });
-db.teammembers.createIndex({ userId: 1 });
-db.teammembers.createIndex({ email: 1 });
-
-// Activity Logs
-db.activitylogs.createIndex({ timestamp: -1 });
-db.activitylogs.createIndex({ type: 1, timestamp: -1 });
+db.orders.createIndex({ riskLevel: 1 });
+db.orders.createIndex({ courier: 1 });
+db.orders.createIndex({ region: 1 });
+db.orders.createIndex({ hasComplaint: 1 });
 
 // Complaints
+db.complaints.createIndex({ referenceNumber: 1 }, { unique: true });
 db.complaints.createIndex({ shopId: 1, status: 1 });
+db.complaints.createIndex({ shopId: 1, category: 1 });
+db.complaints.createIndex({ shopId: 1, createdAt: -1 });
 db.complaints.createIndex({ orderId: 1 });
-db.complaints.createIndex({ createdAt: -1 });
+
+// Subscriptions
+db.subscriptions.createIndex({ plan: 1 });
+db.subscriptions.createIndex({ status: 1 });
+
+// Couriers
+db.couriers.createIndex({ isActive: 1 });
+db.couriers.createIndex({ regions: 1 });
 
 print("   ✓ All indexes created");
 
 // ============================================================
-// 10. SUMMARY
+// 9. SUMMARY
 // ============================================================
 print("");
 print("============================================");
@@ -818,49 +685,34 @@ print("🎉 Complete demo data seed finished!");
 print("============================================");
 print("");
 print("Collections populated:");
-print("   • users              — " + db.users.countDocuments() + " docs");
-print("   • shops              — " + db.shops.countDocuments() + " docs");
-print("   • products           — " + db.products.countDocuments() + " docs");
-print("   • orders             — " + db.orders.countDocuments() + " docs");
-print("   • humanfeedback      — " + db.humanfeedback.countDocuments() + " docs");
-print("   • aifeedback         — " + db.aifeedback.countDocuments() + " docs");
-print("   • deliveryproviders  — " + db.deliveryproviders.countDocuments() + " docs");
-print("   • teammembers        — " + db.teammembers.countDocuments() + " docs");
-print("   • activitylogs       — " + db.activitylogs.countDocuments() + " docs");
-print("   • complaints         — " + db.complaints.countDocuments() + " docs");
+print("   • subscriptions  — " + db.subscriptions.countDocuments() + " docs");
+print("   • users          — " + db.users.countDocuments() + " docs");
+print("   • shops          — " + db.shops.countDocuments() + " docs");
+print("   • couriers       — " + db.couriers.countDocuments() + " docs");
+print("   • products       — " + db.products.countDocuments() + " docs");
+print("   • orders         — " + db.orders.countDocuments() + " docs");
+print("   • complaints     — " + db.complaints.countDocuments() + " docs");
 print("");
 print("📋 LOGIN CREDENTIALS:");
 print("============================================");
 print("");
 print("🔑 Admin Account:");
 print("   Email:    admin@confirmed.tn");
-print("   Password: (set your own - hash required)");
-print("   ID:       " + ADMIN_ID);
+print("   Password: password123");
 print("");
 print("🏪 Shop Owner Account:");
 print("   Email:    owner@techstore.tn");
-print("   Password: (set your own - hash required)");
-print("   ID:       " + SHOP_OWNER_ID);
+print("   Password: password123");
 print("   Shop:     TechStore Tunisia");
-print("   Shop ID:  " + SHOP_1_ID);
 print("");
 print("👤 Operator 1:");
 print("   Email:    ahmed.hassan@techstore.tn");
-print("   Password: (set your own - hash required)");
-print("   ID:       " + OPERATOR_1_ID);
+print("   Password: password123");
 print("");
 print("👤 Operator 2:");
 print("   Email:    fatima.zahra@techstore.tn");
-print("   Password: (set your own - hash required)");
-print("   ID:       " + OPERATOR_2_ID);
+print("   Password: password123");
 print("");
 print("============================================");
-print("⚠️  IMPORTANT: Update passwords in the users collection!");
-print("   Use bcrypt to hash passwords properly.");
-print("");
-print("Example to update password:");
-print("   db.users.updateOne(");
-print("     { email: 'admin@confirmed.tn' },");
-print("     { $set: { password: 'YOUR_BCRYPT_HASH' } }");
-print("   )");
+print("✅ All data seeded successfully!");
 print("============================================");
