@@ -365,7 +365,7 @@ export default function ClientDashboard() {
                   <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-sm">Order #ORD-2024-001</p>
+                        <p className="font-semibold text-sm">Order #ORD-004</p>
                         <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Ahmed Ben Ali</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
@@ -386,7 +386,7 @@ export default function ClientDashboard() {
                   <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-sm">Order #ORD-2024-002</p>
+                        <p className="font-semibold text-sm">Order #ORD-005</p>
                         <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Fatma Trabelsi</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
@@ -407,7 +407,7 @@ export default function ClientDashboard() {
                   <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-sm">Order #ORD-2024-003</p>
+                        <p className="font-semibold text-sm">Order #ORD-006</p>
                         <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Mohamed Gharbi</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-orange-500 text-white rounded">
@@ -428,7 +428,7 @@ export default function ClientDashboard() {
                   <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-semibold text-sm">Order #ORD-2024-004</p>
+                        <p className="font-semibold text-sm">Order #ORD-007</p>
                         <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Salma Mansouri</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
