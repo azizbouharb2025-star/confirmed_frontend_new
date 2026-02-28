@@ -72,11 +72,11 @@ export default function Header() {
 
         <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
           {[
-            { key: 'features', label: 'Features' },
-            { key: 'pricing', label: 'Pricing' },
-            { key: 'product', label: 'Product' },
-            { key: 'testimonials', label: 'Testimonials' },
-            { key: 'about', label: 'About' }
+            { key: 'features', label: t('nav.features') },
+            { key: 'pricing', label: t('nav.pricing') },
+            { key: 'product', label: t('nav.product') },
+            { key: 'testimonials', label: t('nav.testimonials') },
+            { key: 'about', label: t('nav.about') }
           ].map((item, index) => (
             <motion.div
               key={item.key}
@@ -157,11 +157,11 @@ export default function Header() {
         >
           <nav className="max-w-7xl mx-auto px-4 py-4 space-y-4">
             {[
-              { key: 'features', label: 'Features' },
-              { key: 'pricing', label: 'Pricing' },
-              { key: 'product', label: 'Product' },
-              { key: 'testimonials', label: 'Testimonials' },
-              { key: 'about', label: 'About' }
+              { key: 'features', label: t('nav.features') },
+              { key: 'pricing', label: t('nav.pricing') },
+              { key: 'product', label: t('nav.product') },
+              { key: 'testimonials', label: t('nav.testimonials') },
+              { key: 'about', label: t('nav.about') }
             ].map((item) => (
               <button
                 key={item.key}
