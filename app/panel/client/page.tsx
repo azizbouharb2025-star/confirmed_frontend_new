@@ -349,7 +349,7 @@ export default function ClientDashboard() {
             <div className="bg-white dark:bg-slate-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
               {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold">Risky Orders (Low AI Score)</h3>
+                <h3 className="text-lg font-semibold">{t('dashboard.riskyOrders')}</h3>
                 <button
                   onClick={() => setShowRiskyOrdersModal(false)}
                   className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
@@ -366,18 +366,18 @@ export default function ClientDashboard() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">Order #ORD-2024-001</p>
-                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Ahmed Ben Ali</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Ahmed Ben Ali</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
-                        AI Score: 35%
+                        {t('dashboard.riskyOrderAIScore')}: 35%
                       </span>
                     </div>
                     <div className="text-xs space-y-1">
-                      <p><span className="font-medium">Phone:</span> +216 98 765 432</p>
-                      <p><span className="font-medium">Amount:</span> 45 TND</p>
-                      <p><span className="font-medium">Region:</span> Kasserine</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderPhone')}:</span> +216 98 765 432</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderAmount')}:</span> 45 TND</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderRegion')}:</span> Kasserine</p>
                       <p className="text-red-600 dark:text-red-400 mt-2">
-                        ⚠️ Reasons: New customer, low-value region, suspicious phone pattern
+                        ⚠️ {t('dashboard.riskyOrderReasons')}: New customer, low-value region, suspicious phone pattern
                       </p>
                     </div>
                   </div>
@@ -387,18 +387,18 @@ export default function ClientDashboard() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">Order #ORD-2024-002</p>
-                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Fatma Trabelsi</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Fatma Trabelsi</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
-                        AI Score: 28%
+                        {t('dashboard.riskyOrderAIScore')}: 28%
                       </span>
                     </div>
                     <div className="text-xs space-y-1">
-                      <p><span className="font-medium">Phone:</span> +216 20 111 222</p>
-                      <p><span className="font-medium">Amount:</span> 25 TND</p>
-                      <p><span className="font-medium">Region:</span> Tataouine</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderPhone')}:</span> +216 20 111 222</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderAmount')}:</span> 25 TND</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderRegion')}:</span> Tataouine</p>
                       <p className="text-red-600 dark:text-red-400 mt-2">
-                        ⚠️ Reasons: Very low order value, remote region, order placed at 3 AM
+                        ⚠️ {t('dashboard.riskyOrderReasons')}: Very low order value, remote region, order placed at 3 AM
                       </p>
                     </div>
                   </div>
@@ -408,18 +408,18 @@ export default function ClientDashboard() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">Order #ORD-2024-003</p>
-                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Mohamed Gharbi</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Mohamed Gharbi</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-orange-500 text-white rounded">
-                        AI Score: 42%
+                        {t('dashboard.riskyOrderAIScore')}: 42%
                       </span>
                     </div>
                     <div className="text-xs space-y-1">
-                      <p><span className="font-medium">Phone:</span> +216 55 999 888</p>
-                      <p><span className="font-medium">Amount:</span> 35 TND</p>
-                      <p><span className="font-medium">Region:</span> Gafsa</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderPhone')}:</span> +216 55 999 888</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderAmount')}:</span> 35 TND</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderRegion')}:</span> Gafsa</p>
                       <p className="text-orange-600 dark:text-orange-400 mt-2">
-                        ⚠️ Reasons: Duplicate phone number detected, previous cancellation history
+                        ⚠️ {t('dashboard.riskyOrderReasons')}: Duplicate phone number detected, previous cancellation history
                       </p>
                     </div>
                   </div>
@@ -429,18 +429,18 @@ export default function ClientDashboard() {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <p className="font-semibold text-sm">Order #ORD-2024-004</p>
-                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Salma Mansouri</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">{t('dashboard.riskyOrderCustomer')}: Salma Mansouri</p>
                       </div>
                       <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
-                        AI Score: 31%
+                        {t('dashboard.riskyOrderAIScore')}: 31%
                       </span>
                     </div>
                     <div className="text-xs space-y-1">
-                      <p><span className="font-medium">Phone:</span> +216 22 333 444</p>
-                      <p><span className="font-medium">Amount:</span> 18 TND</p>
-                      <p><span className="font-medium">Region:</span> Tozeur</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderPhone')}:</span> +216 22 333 444</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderAmount')}:</span> 18 TND</p>
+                      <p><span className="font-medium">{t('dashboard.riskyOrderRegion')}:</span> Tozeur</p>
                       <p className="text-red-600 dark:text-red-400 mt-2">
-                        ⚠️ Reasons: Extremely low value, incomplete address, invalid phone format
+                        ⚠️ {t('dashboard.riskyOrderReasons')}: Extremely low value, incomplete address, invalid phone format
                       </p>
                     </div>
                   </div>
@@ -453,13 +453,13 @@ export default function ClientDashboard() {
                   onClick={() => setShowRiskyOrdersModal(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
                 >
-                  Close
+                  {t('dashboard.riskyOrdersClose')}
                 </button>
                 <Link
                   href="/panel/client/orders?filter=risky"
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg"
                 >
-                  View All Risky Orders
+                  {t('dashboard.riskyOrdersViewAll')}
                 </Link>
               </div>
             </div>
