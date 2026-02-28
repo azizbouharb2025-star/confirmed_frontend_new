@@ -7,12 +7,13 @@ import type { Order, OrderStatus, CallHistoryEntry } from '@/types/order'
 import StatusBadge, { getTranslatedStatusLabels } from '@/components/ui/StatusBadge'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { TranslationKey } from '@/lib/i18n'
+import FeedbackDisplay from './FeedbackDisplay'
 
 /**
  * OrderDetailPanel Component
  * Slide-over panel showing complete order information
  * 
- * Requirements: 4.1, 4.2, 4.3, 4.4
+ * Requirements: 4.1, 4.2, 4.3, 4.4, 7.1, 7.6
  * Property 10: Order detail displays all required sections
  * Property 11: Call history displays required fields
  */
@@ -474,6 +475,13 @@ export default function OrderDetailPanel({
                       <OrderItemsSection order={order} t={t} />
                       <DeliveryAddressSection order={order} t={t} />
                       <CallHistorySection order={order} t={t} />
+                      
+                      {/* Feedback Section */}
+                      <div className="py-4 border-b border-gray-200 dark:border-slate-700">
+                        <SectionHeader title={t('feedback.callFeedback')} />
+                        <FeedbackDisplay orderId={order._id} />
+                      </div>
+                      
                       <StatusTimelineSection order={order} t={t} />
                     </div>
                   </div>

@@ -61,10 +61,10 @@ export default function Header() {
             <Image 
               src={theme === 'dark' ? '/assets/logo2.png' : '/assets/logo1.png'}
               alt="Confirmed"
-              width={300}
-              height={300}
+              width={390}
+              height={390}
               className={`object-contain transition-all duration-300 ${
-                isScrolled ? 'w-28 h-16' : 'w-32 h-20'
+                isScrolled ? 'w-36 h-20' : 'w-42 h-26'
               }`}
             />
           </Link>

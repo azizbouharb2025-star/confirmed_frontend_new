@@ -2,18 +2,19 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import ThemeProvider from '@/components/providers/ThemeProvider'
 import { WebSocketProvider } from '@/components/providers/WebSocketProvider'
+import LanguageProvider from '@/components/providers/LanguageProvider'
 import CookieConsent from '@/components/ui/CookieConsent'
 import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
-  title: 'Confirmed - AI Order Management',
+  title: 'Confirmed',
   description: 'Revolutionary AI-powered order confirmation platform',
   icons: {
-    icon: '/assets/logo3.png',
-    shortcut: '/assets/logo3.png',
-    apple: '/assets/logo3.png',
+    icon: [{ url: '/assets/logo3.png', sizes: '512x512', type: 'image/png' }],
+    shortcut: [{ url: '/assets/logo3.png', sizes: '512x512', type: 'image/png' }],
+    apple: [{ url: '/assets/logo3.png', sizes: '512x512', type: 'image/png' }],
   },
 }
 
@@ -23,13 +24,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider>
-          <WebSocketProvider>
-            {children}
-          </WebSocketProvider>
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider>
+            <WebSocketProvider>
+              {children}
+            </WebSocketProvider>
+          </ThemeProvider>
+        </LanguageProvider>
         <CookieConsent />
         <Toaster />
       </body>

@@ -5,6 +5,7 @@ import { clsx } from 'clsx'
 import type { OrderFilters as OrderFiltersType, OrderStatus } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import { useLanguage } from '@/hooks/useLanguage'
+import AIScoreFilter from '@/components/orders/AIScoreFilter'
 
 /**
  * OrderFilters Component
@@ -328,26 +329,11 @@ export default function OrderFilters({
   }, [filters, onFiltersChange])
   
   // Handle AI score range changes (Pro+)
-  const handleAiScoreMinChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const min = parseInt(e.target.value, 10)
-    if (!isNaN(min)) {
-      const max = filters.aiScoreRange?.max ?? 100
-      onFiltersChange({
-        ...filters,
-        aiScoreRange: { min: Math.max(0, Math.min(min, 100)), max }
-      })
-    }
-  }, [filters, onFiltersChange])
-  
-  const handleAiScoreMaxChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const max = parseInt(e.target.value, 10)
-    if (!isNaN(max)) {
-      const min = filters.aiScoreRange?.min ?? 0
-      onFiltersChange({
-        ...filters,
-        aiScoreRange: { min, max: Math.max(0, Math.min(max, 100)) }
-      })
-    }
+  const handleAiScoreRangeChange = useCallback((min: number, max: number) => {
+    onFiltersChange({
+      ...filters,
+      aiScoreRange: { min, max }
+    })
   }, [filters, onFiltersChange])
   
   // Handle region change (Business+)
@@ -500,48 +486,38 @@ export default function OrderFilters({
       {/* Tier-based filters row */}
       <div className="flex flex-wrap gap-4 items-end">
         {/* AI Score Range Filter (Pro+) */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-            {t('orders.aiScoreRange')}
-            {!hasProAccess && <LockIcon />}
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={filters.aiScoreRange?.min ?? ''}
-              onChange={handleAiScoreMinChange}
-              placeholder="Min"
-              disabled={!hasProAccess}
-              className={clsx(
-                inputBaseStyles,
-                'w-[80px]',
-                !hasProAccess && disabledStyles
-              )}
-              data-testid="ai-score-min-input"
+        <div className="relative w-[280px]">
+          {hasProAccess ? (
+            <AIScoreFilter
+              minScore={filters.aiScoreRange?.min ?? 0}
+              maxScore={filters.aiScoreRange?.max ?? 100}
+              onChange={handleAiScoreRangeChange}
             />
-            <span className="text-gray-500 dark:text-slate-400">-</span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              value={filters.aiScoreRange?.max ?? ''}
-              onChange={handleAiScoreMaxChange}
-              placeholder="Max"
-              disabled={!hasProAccess}
-              className={clsx(
-                inputBaseStyles,
-                'w-[80px]',
-                !hasProAccess && disabledStyles
-              )}
-              data-testid="ai-score-max-input"
-            />
-          </div>
-          {!hasProAccess && (
-            <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
-              {t('orders.upgradeProAiScore')}
-            </p>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                {t('orders.aiScoreRange')}
+                <LockIcon />
+              </label>
+              <div className="flex gap-2 items-center opacity-50">
+                <input
+                  type="number"
+                  disabled
+                  placeholder="Min"
+                  className={clsx(inputBaseStyles, 'w-[80px]', disabledStyles)}
+                />
+                <span className="text-gray-500 dark:text-slate-400">-</span>
+                <input
+                  type="number"
+                  disabled
+                  placeholder="Max"
+                  className={clsx(inputBaseStyles, 'w-[80px]', disabledStyles)}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
+                {t('orders.upgradeProAiScore')}
+              </p>
+            </div>
           )}
         </div>
         

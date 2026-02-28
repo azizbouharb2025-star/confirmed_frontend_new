@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon, QrCodeIcon, UserGroupIcon, TruckIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon, QrCodeIcon, UserGroupIcon, TruckIcon, ChartPieIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { TranslationKey } from '@/lib/i18n'
 import Image from 'next/image'
+import LanguageSelector from '@/components/ui/LanguageSelector'
 
 interface SidebarProps {
   isOpen: boolean
@@ -38,6 +39,7 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
     { name: t('nav.supportCards'), href: '/panel/client/support-cards', icon: QrCodeIcon },
     { name: t('nav.team'), href: '/panel/client/team', icon: UserGroupIcon },
     { name: t('nav.deliveryCompany'), href: '/panel/client/delivery-company', icon: TruckIcon },
+    { name: t('analytics.title'), href: '/panel/client/analytics', icon: ChartPieIcon },
     { name: t('nav.api'), href: '/panel/client/api', icon: CogIcon },
   ]
 })
@@ -57,10 +59,11 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
         <div className={`flex grow flex-col gap-y-5 overflow-y-auto border-r px-6 ${
           isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex h-16 shrink-0 items-center">
+          <div className="flex h-20 shrink-0 items-center justify-between">
             <Link href="/">
-              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={160} height={50} className="object-contain" />
+              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={208} height={65} className="object-contain" />
             </Link>
+            <LanguageSelector />
           </div>
           
           <nav className="flex flex-1 flex-col">
@@ -95,17 +98,20 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
               ? 'bg-slate-900 border-slate-800'
               : 'bg-white border-gray-200'
           }`}>
-            <div className="flex h-16 shrink-0 items-center justify-between">
-              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={120} height={40} />
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-600'
-                }`}
-                aria-label="Close sidebar"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
+            <div className="flex h-20 shrink-0 items-center justify-between">
+              <Image src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'} alt="Confirmed" width={156} height={52} />
+              <div className="flex items-center gap-2">
+                <LanguageSelector />
+                <button
+                  onClick={onClose}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                  aria-label="Close sidebar"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             
             <nav className="flex flex-1 flex-col">

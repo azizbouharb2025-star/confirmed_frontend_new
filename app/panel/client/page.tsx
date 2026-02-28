@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, TruckIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import MetricCard from '@/components/dashboard/MetricCard'
+import ClickableWidget from '@/components/dashboard/ClickableWidget'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import RecentOrdersWidget from '@/components/dashboard/widgets/RecentOrdersWidget'
 import RiskScoreWidget, { RiskScoreData } from '@/components/dashboard/widgets/RiskScoreWidget'
@@ -18,6 +19,7 @@ import ComplaintsAnalyticsWidget from '@/components/dashboard/widgets/Complaints
 import CourierPerformanceWidget from '@/components/dashboard/widgets/CourierPerformanceWidget'
 import PredictiveAnalyticsWidget from '@/components/dashboard/widgets/PredictiveAnalyticsWidget'
 import AutomationRecommendationsWidget, { Recommendation } from '@/components/dashboard/widgets/AutomationRecommendationsWidget'
+import CancelledOrdersWidget from '@/components/dashboard/CancelledOrdersWidget'
 import WidgetGate from '@/components/dashboard/WidgetGate'
 import StaleDataIndicator from '@/components/dashboard/StaleDataIndicator'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -139,21 +141,23 @@ export default function ClientDashboard() {
             'md:grid-cols-3 lg:grid-cols-6'
           }`}>
             {/* Orders Received - All Plans */}
-            <MetricCard
+            <ClickableWidget
               title={plan === 'pro' ? t('dashboard.ordersReceivedToday') : t('dashboard.ordersReceived')}
               value={metrics?.ordersReceived ?? 0}
               icon={<ShoppingBagIcon className="w-6 h-6" />}
               isLoading={isLoading}
+              detailPageUrl="/panel/client/details/orders-received"
             />
             
             {/* Orders Confirmed - All Plans */}
-            <MetricCard
+            <ClickableWidget
               title={plan === 'pro' ? t('dashboard.ordersConfirmedToday') : t('dashboard.ordersConfirmed')}
               value={metrics?.ordersConfirmed ?? 0}
               change={metrics?.confirmationRate}
               icon={<CheckCircleIcon className="w-6 h-6" />}
               trend={metrics?.confirmationRate && metrics.confirmationRate > 0 ? 'up' : 'neutral'}
               isLoading={isLoading}
+              detailPageUrl="/panel/client/details/orders-confirmed"
             />
             
             {/* Starter: Orders Pending */}
@@ -178,7 +182,7 @@ export default function ClientDashboard() {
             
             {/* Pro+: Delivery Success Rate (last 7 days) */}
             {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
-              <MetricCard
+              <ClickableWidget
                 title={plan === 'pro' ? t('dashboard.deliverySuccessRate7d') : t('dashboard.deliverySuccessRate')}
                 value={metrics?.deliverySuccessRate ?? 0}
                 suffix="%"
@@ -186,6 +190,7 @@ export default function ClientDashboard() {
                 icon={<CheckCircleIcon className="w-6 h-6" />}
                 trend={metrics?.deliverySuccessRate && metrics.deliverySuccessRate >= 80 ? 'up' : metrics?.deliverySuccessRate && metrics.deliverySuccessRate < 60 ? 'down' : 'neutral'}
                 isLoading={isLoading}
+                detailPageUrl="/panel/client/details/delivery-success"
               />
             )}
             
@@ -218,6 +223,9 @@ export default function ClientDashboard() {
 
           {/* Recent Orders Widget - Requirements: 1.2 */}
           <RecentOrdersWidget maxOrders={10} />
+
+          {/* Cancelled Orders Widget - Requirements: 9.1, 9.2, 9.6 */}
+          <CancelledOrdersWidget />
 
           {/* Pro Plan Widgets - Requirements: 2.1, 2.4 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

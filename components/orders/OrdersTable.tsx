@@ -5,8 +5,9 @@ import { clsx } from 'clsx'
 import type { Order } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import StatusBadge from '@/components/ui/StatusBadge'
-import RiskScoreIndicator from '@/components/ui/RiskScoreIndicator'
 import RepeatBuyerBadge from '@/components/ui/RepeatBuyerBadge'
+import AIScoreColumn from '@/components/orders/AIScoreColumn'
+import { getAIScore } from '@/services/aiScoreService'
 import { useLanguage } from '@/hooks/useLanguage'
 import { TranslationKey } from '@/lib/i18n'
 
@@ -361,12 +362,10 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       key: 'aiScore',
       label: t('orders.aiScore'),
       minPlan: 'pro',
-      render: (order) =>
-        order.aiRiskScore !== undefined ? (
-          <RiskScoreIndicator score={order.aiRiskScore} size="sm" />
-        ) : (
-          <span className="text-gray-400 dark:text-slate-500">-</span>
-        ),
+      render: (order) => {
+        const score = getAIScore(order, true) // Use mock fallback
+        return <AIScoreColumn score={score} showDetails={true} size="sm" />
+      },
     },
     {
       key: 'operatorFeedback',

@@ -8,6 +8,9 @@ import { useLanguage } from '@/hooks/useLanguage'
 import Link from 'next/link'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
+import ProductImageDisplay from '@/components/products/ProductImageDisplay'
+import ProductImageUpload from '@/components/products/ProductImageUpload'
+import ProductPerformanceTab from '@/components/products/ProductPerformanceTab'
 
 interface Product {
   _id: string
@@ -17,6 +20,8 @@ interface Product {
   sku: string
   category: string
   images: string[]
+  imageUrl?: string // NEW: Primary image URL
+  imageUploadedAt?: string // NEW: Image upload timestamp
   url: string
   platform: string
   isActive: boolean
@@ -52,6 +57,7 @@ const initialFormData: FormData = {
 
 export default function ProductsPage() {
   const { t } = useLanguage()
+  const [activeTab, setActiveTab] = useState<'products' | 'performance'>('products')
   const [showModal, setShowModal] = useState(false)
   const [filter, setFilter] = useState('all')
   const [products, setProducts] = useState<Product[]>([])
@@ -205,6 +211,50 @@ export default function ProductsPage() {
     }
   }
 
+  const handleImageUpload = async (imageUrl: string) => {
+    if (!editingProduct) return
+
+    try {
+      const response = await api.post(`/api/products/${editingProduct._id}/image`, { imageUrl })
+      
+      if (response.data.imageUrl) {
+        // Update the product in state
+        setProducts(prev => prev.map(p => 
+          p._id === editingProduct._id 
+            ? { ...p, imageUrl: response.data.imageUrl, imageUploadedAt: response.data.uploadedAt }
+            : p
+        ))
+        setEditingProduct(prev => prev ? { ...prev, imageUrl: response.data.imageUrl, imageUploadedAt: response.data.uploadedAt } : null)
+        setSuccess(t('products.imageUploaded'))
+        setTimeout(() => setSuccess(null), 3000)
+      }
+    } catch (err) {
+      const error = err as { message?: string }
+      throw new Error(error.message || t('products.imageUploadFailed'))
+    }
+  }
+
+  const handleImageRemove = async () => {
+    if (!editingProduct) return
+
+    try {
+      await api.delete(`/api/products/${editingProduct._id}/image`)
+      
+      // Update the product in state
+      setProducts(prev => prev.map(p => 
+        p._id === editingProduct._id 
+          ? { ...p, imageUrl: undefined, imageUploadedAt: undefined }
+          : p
+      ))
+      setEditingProduct(prev => prev ? { ...prev, imageUrl: undefined, imageUploadedAt: undefined } : null)
+      setSuccess(t('products.imageUploaded'))
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      const error = err as { message?: string }
+      throw new Error(error.message || t('products.imageUploadFailed'))
+    }
+  }
+
   const openEditModal = (product: Product) => {
     setEditingProduct(product)
     setFormData({
@@ -283,26 +333,60 @@ export default function ProductsPage() {
                 <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 dark:text-slate-400 light:text-gray-500 pointer-events-none" />
               </div>
 
-              {/* Sync Button */}
-              <button
-                onClick={handleSync}
-                disabled={syncing || !selectedShop}
-                className="flex items-center gap-2 px-4 py-2 dark:bg-slate-800 light:bg-white border dark:border-slate-700 light:border-gray-300 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
-              >
-                <ArrowPathIcon className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? t('products.syncing') : t('products.syncNow')}
-              </button>
+              {/* Sync Button - only show on products tab */}
+              {activeTab === 'products' && (
+                <button
+                  onClick={handleSync}
+                  disabled={syncing || !selectedShop}
+                  className="flex items-center gap-2 px-4 py-2 dark:bg-slate-800 light:bg-white border dark:border-slate-700 light:border-gray-300 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
+                >
+                  <ArrowPathIcon className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? t('products.syncing') : t('products.syncNow')}
+                </button>
+              )}
 
-              {/* Add Product Button */}
-              <button
-                onClick={() => setShowModal(true)}
-                disabled={!selectedShop}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-              >
-                <PlusIcon className="w-5 h-5" />
-                {t('products.addManual')}
-              </button>
+              {/* Add Product Button - only show on products tab */}
+              {activeTab === 'products' && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  disabled={!selectedShop}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  {t('products.addManual')}
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex gap-2 border-b dark:border-slate-700 light:border-gray-200">
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === 'products'
+                  ? 'text-blue-500'
+                  : 'dark:text-slate-400 light:text-gray-600 hover:dark:text-white hover:light:text-gray-900'
+              }`}
+            >
+              {t('products.productsTab')}
+              {activeTab === 'products' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                activeTab === 'performance'
+                  ? 'text-blue-500'
+                  : 'dark:text-slate-400 light:text-gray-600 hover:dark:text-white hover:light:text-gray-900'
+              }`}
+            >
+              {t('products.performance')}
+              {activeTab === 'performance' && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+              )}
+            </button>
           </div>
 
           {/* Alerts */}
@@ -320,92 +404,97 @@ export default function ProductsPage() {
             </div>
           )}
 
-          {/* Filter Tabs */}
-          <div className="flex gap-2">
-            {['all', 'manual', 'synced'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  filter === f
-                    ? 'bg-blue-500 text-white'
-                    : 'dark:bg-slate-800 light:bg-gray-100 dark:text-slate-300 light:text-gray-700 hover:opacity-80'
-                }`}
-              >
-                {f === 'all' ? t('products.all') : f === 'manual' ? t('products.manual') : t('products.synced')} {filter === f && `(${filteredProducts.length})`}
-              </button>
-            ))}
-          </div>
-
-
-          {/* Content */}
-          {loading ? (
-            <div className="card p-12 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="dark:text-slate-400 light:text-gray-600">{t('common.loadingProducts')}</p>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="card p-12 text-center">
-              <CubeIcon className="w-16 h-16 mx-auto dark:text-slate-600 light:text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{t('products.noProducts')}</h3>
-              <p className="dark:text-slate-400 light:text-gray-600 mb-6">{t('products.addFirst')}</p>
-              <div className="flex gap-3 justify-center">
-                <button onClick={() => setShowModal(true)} className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                  {t('products.addManual')}
-                </button>
-                <button onClick={handleSync} disabled={syncing} className="px-6 py-2 dark:bg-slate-800 light:bg-gray-100 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50">
-                  {syncing ? t('products.syncing') : t('products.syncNow')}
-                </button>
+          {/* Tab Content */}
+          {activeTab === 'products' ? (
+            <>
+              {/* Filter Tabs */}
+              <div className="flex gap-2">
+                {['all', 'manual', 'synced'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setFilter(f)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filter === f
+                        ? 'bg-blue-500 text-white'
+                        : 'dark:bg-slate-800 light:bg-gray-100 dark:text-slate-300 light:text-gray-700 hover:opacity-80'
+                    }`}
+                  >
+                    {f === 'all' ? t('products.all') : f === 'manual' ? t('products.manual') : t('products.synced')} {filter === f && `(${filteredProducts.length})`}
+                  </button>
+                ))}
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredProducts.map((product) => (
-                <div key={product._id} className="card overflow-hidden group">
-                  {/* Product Image */}
-                  <div className="relative h-48 bg-slate-800">
-                    {product.images?.[0] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <CubeIcon className="w-16 h-16 dark:text-slate-600 light:text-gray-400" />
-                      </div>
-                    )}
-                    {/* Actions Overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <button onClick={() => openEditModal(product)} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                        <PencilIcon className="w-5 h-5 text-white" />
-                      </button>
-                      <button onClick={() => handleDelete(product._id)} className="p-2 bg-red-500/50 rounded-lg hover:bg-red-500/70 transition-colors">
-                        <TrashIcon className="w-5 h-5 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Product Info */}
-                  <div className="p-4">
-                    <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
-                    <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || t('products.noDescription')}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-blue-500">${product.price.toFixed(2)}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        product.platform === 'manual' 
-                          ? 'bg-purple-500/10 text-purple-500' 
-                          : 'bg-green-500/10 text-green-500'
-                      }`}>
-                        {product.platform === 'manual' ? t('products.manual') : t('products.synced')}
-                      </span>
-                    </div>
-                    {product.inventory && (
-                      <div className="mt-2 text-xs dark:text-slate-400 light:text-gray-500">
-                        {t('products.stock')}: {product.inventory.quantity} {product.inventory.inStock ? '✓' : '✗'}
-                      </div>
-                    )}
+
+
+              {/* Content */}
+              {loading ? (
+                <div className="card p-12 text-center">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="dark:text-slate-400 light:text-gray-600">{t('common.loadingProducts')}</p>
+                </div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="card p-12 text-center">
+                  <CubeIcon className="w-16 h-16 mx-auto dark:text-slate-600 light:text-gray-400 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">{t('products.noProducts')}</h3>
+                  <p className="dark:text-slate-400 light:text-gray-600 mb-6">{t('products.addFirst')}</p>
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={() => setShowModal(true)} className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      {t('products.addManual')}
+                    </button>
+                    <button onClick={handleSync} disabled={syncing} className="px-6 py-2 dark:bg-slate-800 light:bg-gray-100 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50">
+                      {syncing ? t('products.syncing') : t('products.syncNow')}
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredProducts.map((product) => (
+                    <div key={product._id} className="card overflow-hidden group">
+                      {/* Product Image */}
+                      <div className="relative h-48">
+                        <ProductImageDisplay
+                          imageUrl={product.imageUrl || product.images?.[0]}
+                          productName={product.name}
+                          size="medium"
+                        />
+                        {/* Actions Overlay */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <button onClick={() => openEditModal(product)} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
+                            <PencilIcon className="w-5 h-5 text-white" />
+                          </button>
+                          <button onClick={() => handleDelete(product._id)} className="p-2 bg-red-500/50 rounded-lg hover:bg-red-500/70 transition-colors">
+                            <TrashIcon className="w-5 h-5 text-white" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Product Info */}
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
+                        <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || t('products.noDescription')}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-blue-500">${product.price.toFixed(2)}</span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            product.platform === 'manual' 
+                              ? 'bg-purple-500/10 text-purple-500' 
+                              : 'bg-green-500/10 text-green-500'
+                          }`}>
+                            {product.platform === 'manual' ? t('products.manual') : t('products.synced')}
+                          </span>
+                        </div>
+                        {product.inventory && (
+                          <div className="mt-2 text-xs dark:text-slate-400 light:text-gray-500">
+                            {t('products.stock')}: {product.inventory.quantity} {product.inventory.inStock ? '✓' : '✗'}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Performance Tab */
+            <ProductPerformanceTab shopId={selectedShop} />
           )}
 
 
@@ -447,6 +536,18 @@ export default function ProductsPage() {
                       placeholder="High-quality wireless headphones..."
                     />
                   </div>
+
+                  {/* Product Image Upload (only for editing existing products) */}
+                  {editingProduct && (
+                    <div>
+                      <ProductImageUpload
+                        currentImageUrl={editingProduct.imageUrl}
+                        productName={editingProduct.name}
+                        onUpload={handleImageUpload}
+                        onRemove={handleImageRemove}
+                      />
+                    </div>
+                  )}
 
                   {/* Price & SKU */}
                   <div className="grid grid-cols-2 gap-4">
