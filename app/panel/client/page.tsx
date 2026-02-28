@@ -7,23 +7,23 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, TruckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
+import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, TruckIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import MetricCard from '@/components/dashboard/MetricCard'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import RecentOrdersWidget from '@/components/dashboard/widgets/RecentOrdersWidget'
 import RiskScoreWidget, { RiskScoreData } from '@/components/dashboard/widgets/RiskScoreWidget'
-import OperatorFeedbackWidget, { FeedbackTag } from '@/components/dashboard/widgets/OperatorFeedbackWidget'
-import ComplaintsAnalyticsWidget, { ComplaintTrendData, ComplaintCategory } from '@/components/dashboard/widgets/ComplaintsAnalyticsWidget'
-import CourierPerformanceWidget, { CourierData } from '@/components/dashboard/widgets/CourierPerformanceWidget'
-import PredictiveAnalyticsWidget, { ForecastDataPoint } from '@/components/dashboard/widgets/PredictiveAnalyticsWidget'
+import OperatorFeedbackWidget from '@/components/dashboard/widgets/OperatorFeedbackWidget'
+import ComplaintsAnalyticsWidget from '@/components/dashboard/widgets/ComplaintsAnalyticsWidget'
+import CourierPerformanceWidget from '@/components/dashboard/widgets/CourierPerformanceWidget'
+import PredictiveAnalyticsWidget from '@/components/dashboard/widgets/PredictiveAnalyticsWidget'
 import AutomationRecommendationsWidget, { Recommendation } from '@/components/dashboard/widgets/AutomationRecommendationsWidget'
 import WidgetGate from '@/components/dashboard/WidgetGate'
 import StaleDataIndicator from '@/components/dashboard/StaleDataIndicator'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useSubscription } from '@/hooks/useSubscription'
-import api from '@/lib/api'
+import { mockAIService } from '@/services/mockAIService'
 import Link from 'next/link'
 
 export default function ClientDashboard() {
@@ -43,45 +43,26 @@ export default function ClientDashboard() {
   // Track refresh key to force re-render on plan change
   const [_refreshKey, setRefreshKey] = useState(0)
   
-  // Pro widget data states
-  const [riskScoreData, setRiskScoreData] = useState<RiskScoreData>({ high: 0, medium: 0, low: 0 })
-  const [riskScoreLoading, setRiskScoreLoading] = useState(true)
-  const [feedbackData, setFeedbackData] = useState<{ averageRating: number; totalFeedback: number; topTags: FeedbackTag[] }>({
-    averageRating: 0,
-    totalFeedback: 0,
-    topTags: []
-  })
-  const [feedbackLoading, setFeedbackLoading] = useState(true)
+  // Modal state for risky orders
+  const [showRiskyOrdersModal, setShowRiskyOrdersModal] = useState(false)
+  
+  // Pro widget data states - using mock data directly
+  const [riskScoreData] = useState<RiskScoreData>(mockAIService.getRiskScoreData())
+  const [riskScoreLoading] = useState(false)
+  const [feedbackData] = useState(mockAIService.getOperatorFeedback())
+  const [feedbackLoading] = useState(false)
 
-  // Business widget data states
-  const [complaintsData, setComplaintsData] = useState<{
-    totalComplaints: number;
-    resolutionRate: number;
-    trendData: ComplaintTrendData[];
-    categories: ComplaintCategory[];
-  }>({
-    totalComplaints: 0,
-    resolutionRate: 0,
-    trendData: [],
-    categories: []
-  })
-  const [complaintsLoading, setComplaintsLoading] = useState(true)
-  const [courierData, setCourierData] = useState<CourierData[]>([])
-  const [courierLoading, setCourierLoading] = useState(true)
+  // Business widget data states - using mock data directly
+  const [complaintsData] = useState(mockAIService.getComplaintsAnalytics())
+  const [complaintsLoading] = useState(false)
+  const [courierData] = useState(mockAIService.getCourierPerformance())
+  const [courierLoading] = useState(false)
 
-  // Enterprise widget data states
-  const [predictiveData, setPredictiveData] = useState<{
-    forecastedOrders: ForecastDataPoint[];
-    forecastedConfirmationRate: number;
-    confidence: number;
-  }>({
-    forecastedOrders: [],
-    forecastedConfirmationRate: 0,
-    confidence: 0
-  })
-  const [predictiveLoading, setPredictiveLoading] = useState(true)
-  const [recommendationsData, setRecommendationsData] = useState<Recommendation[]>([])
-  const [recommendationsLoading, setRecommendationsLoading] = useState(true)
+  // Enterprise widget data states - using mock data directly
+  const [predictiveData] = useState(mockAIService.getPredictiveAnalytics())
+  const [predictiveLoading] = useState(false)
+  const [recommendationsData] = useState(mockAIService.getAutomationRecommendations())
+  const [recommendationsLoading] = useState(false)
 
   /**
    * Listen for subscription plan changes and trigger dashboard refresh
@@ -99,123 +80,15 @@ export default function ClientDashboard() {
     return () => unsubscribe()
   }, [onPlanChange, handlePlanChange])
 
-  // Fetch Pro widget data - only if user has pro+ plan
-  useEffect(() => {
-    if (plan === 'starter') {
-      setRiskScoreLoading(false)
-      setFeedbackLoading(false)
-      return
-    }
-
-    const fetchProData = async () => {
-      try {
-        const [riskResponse, feedbackResponse] = await Promise.all([
-          api.get('/api/analytics/risk-score-distribution'),
-          api.get('/api/analytics/operator-feedback')
-        ])
-        if (riskResponse.data) setRiskScoreData(riskResponse.data)
-        if (feedbackResponse.data) setFeedbackData(feedbackResponse.data)
-      } catch (err) {
-        console.error('Failed to fetch pro data:', err)
-      } finally {
-        setRiskScoreLoading(false)
-        setFeedbackLoading(false)
-      }
-    }
-
-    fetchProData()
-  }, [plan])
-
-  // Fetch Business widget data - only if user has business+ plan
-  useEffect(() => {
-    if (plan === 'starter' || plan === 'pro') {
-      setComplaintsLoading(false)
-      setCourierLoading(false)
-      return
-    }
-
-    const fetchBusinessData = async () => {
-      try {
-        const [complaintsResponse, courierResponse] = await Promise.all([
-          api.get('/api/analytics/complaints'),
-          api.get('/api/analytics/courier-performance')
-        ])
-        if (complaintsResponse.data) setComplaintsData(complaintsResponse.data)
-        if (courierResponse.data) {
-          // Handle both array and object response formats
-          const couriers = Array.isArray(courierResponse.data) 
-            ? courierResponse.data 
-            : courierResponse.data.couriers || []
-          setCourierData(couriers)
-        }
-      } catch (err) {
-        console.error('Failed to fetch business data:', err)
-      } finally {
-        setComplaintsLoading(false)
-        setCourierLoading(false)
-      }
-    }
-
-    fetchBusinessData()
-  }, [plan])
-
-  // Fetch Enterprise widget data - only if user has enterprise plan
-  useEffect(() => {
-    if (plan !== 'enterprise') {
-      setPredictiveLoading(false)
-      setRecommendationsLoading(false)
-      return
-    }
-
-    const fetchEnterpriseData = async () => {
-      try {
-        const [predictiveResponse, recommendationsResponse] = await Promise.all([
-          api.get('/api/analytics/predictive'),
-          api.get('/api/analytics/automation-recommendations')
-        ])
-        if (predictiveResponse.data) setPredictiveData(predictiveResponse.data)
-        if (recommendationsResponse.data) {
-          // Handle both array and object response formats
-          const recommendations = Array.isArray(recommendationsResponse.data)
-            ? recommendationsResponse.data
-            : recommendationsResponse.data.recommendations || []
-          setRecommendationsData(recommendations)
-        }
-      } catch (err) {
-        console.error('Failed to fetch enterprise data:', err)
-      } finally {
-        setPredictiveLoading(false)
-        setRecommendationsLoading(false)
-      }
-    }
-
-    fetchEnterpriseData()
-  }, [plan])
-
   // Handle recommendation action click
   const handleRecommendationAction = useCallback(async (recommendation: Recommendation) => {
-    // Apply the recommendation based on its type
-    try {
-      await api.post(`/api/analytics/recommendations/${recommendation.id}/apply`, {
-        recommendationId: recommendation.id,
-      })
-      // Refresh recommendations after applying
-      const response = await api.get('/api/analytics/automation-recommendations')
-      if (response.data) {
-        const recommendations = Array.isArray(response.data)
-          ? response.data
-          : response.data.recommendations || []
-        setRecommendationsData(recommendations)
-      }
-    } catch {
-      // Silently handle error - recommendation may not be applicable
-    }
+    // Show toast notification
+    alert(`Applying recommendation: ${recommendation.title}`)
   }, [])
 
   // Handle "Show me risky orders" click
   const handleShowRiskyOrders = useCallback(() => {
-    // Navigate to orders page with filter for risky orders
-    window.location.href = '/panel/client/orders?filter=risky'
+    setShowRiskyOrdersModal(true)
   }, [])
 
   return (
@@ -469,6 +342,129 @@ export default function ClientDashboard() {
             </Link>
           </div>
         </div>
+
+        {/* Risky Orders Modal */}
+        {showRiskyOrdersModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold">Risky Orders (Low AI Score)</h3>
+                <button
+                  onClick={() => setShowRiskyOrdersModal(false)}
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-4 overflow-y-auto max-h-[60vh]">
+                <div className="space-y-3">
+                  {/* Mock Risky Order 1 */}
+                  <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">Order #ORD-2024-001</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Ahmed Ben Ali</p>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
+                        AI Score: 35%
+                      </span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-medium">Phone:</span> +216 98 765 432</p>
+                      <p><span className="font-medium">Amount:</span> 45 TND</p>
+                      <p><span className="font-medium">Region:</span> Kasserine</p>
+                      <p className="text-red-600 dark:text-red-400 mt-2">
+                        ⚠️ Reasons: New customer, low-value region, suspicious phone pattern
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mock Risky Order 2 */}
+                  <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">Order #ORD-2024-002</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Fatma Trabelsi</p>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
+                        AI Score: 28%
+                      </span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-medium">Phone:</span> +216 20 111 222</p>
+                      <p><span className="font-medium">Amount:</span> 25 TND</p>
+                      <p><span className="font-medium">Region:</span> Tataouine</p>
+                      <p className="text-red-600 dark:text-red-400 mt-2">
+                        ⚠️ Reasons: Very low order value, remote region, order placed at 3 AM
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mock Risky Order 3 */}
+                  <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">Order #ORD-2024-003</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Mohamed Gharbi</p>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium bg-orange-500 text-white rounded">
+                        AI Score: 42%
+                      </span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-medium">Phone:</span> +216 55 999 888</p>
+                      <p><span className="font-medium">Amount:</span> 35 TND</p>
+                      <p><span className="font-medium">Region:</span> Gafsa</p>
+                      <p className="text-orange-600 dark:text-orange-400 mt-2">
+                        ⚠️ Reasons: Duplicate phone number detected, previous cancellation history
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Mock Risky Order 4 */}
+                  <div className="p-4 border border-red-200 dark:border-red-900/30 rounded-lg bg-red-50 dark:bg-red-900/10">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-sm">Order #ORD-2024-004</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-400">Customer: Salma Mansouri</p>
+                      </div>
+                      <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded">
+                        AI Score: 31%
+                      </span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p><span className="font-medium">Phone:</span> +216 22 333 444</p>
+                      <p><span className="font-medium">Amount:</span> 18 TND</p>
+                      <p><span className="font-medium">Region:</span> Tozeur</p>
+                      <p className="text-red-600 dark:text-red-400 mt-2">
+                        ⚠️ Reasons: Extremely low value, incomplete address, invalid phone format
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-2">
+                <button
+                  onClick={() => setShowRiskyOrdersModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg"
+                >
+                  Close
+                </button>
+                <Link
+                  href="/panel/client/orders?filter=risky"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg"
+                >
+                  View All Risky Orders
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
     </ProtectedRoute>
   )
