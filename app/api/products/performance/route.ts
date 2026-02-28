@@ -36,7 +36,7 @@ function calculateProductPerformance(
     const salesVolume = Math.floor(Math.random() * 500) + 50
     const revenue = salesVolume * (Math.random() * 100 + 20)
     const returnCount = Math.floor(salesVolume * (Math.random() * 0.25))
-    const returnRate = (returnCount / salesVolume) * 100
+    const returnRate = salesVolume > 0 ? (returnCount / salesVolume) * 100 : 0
     const avgAIScore = Math.floor(Math.random() * 40) + 60 // 60-100 range
     
     // Determine trend (random for mock)
@@ -46,12 +46,12 @@ function calculateProductPerformance(
     return {
       productId: product.id,
       productName: product.name,
-      imageUrl: product.imageUrl,
-      salesVolume,
-      revenue: parseFloat(revenue.toFixed(2)),
-      returnCount,
-      returnRate: parseFloat(returnRate.toFixed(2)),
-      avgAIScore,
+      imageUrl: product.imageUrl || '',
+      salesVolume: salesVolume || 0,
+      revenue: Number(revenue?.toFixed(2)) || 0,
+      returnCount: returnCount || 0,
+      returnRate: Number(returnRate?.toFixed(2)) || 0,
+      avgAIScore: avgAIScore || 0,
       trend,
       isTopPerformer: false, // Will be calculated after sorting
       isUnderperforming: returnRate > 15 || (avgAIScore < 50),
