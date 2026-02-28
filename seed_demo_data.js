@@ -1,8 +1,8 @@
 /**
- * MongoDB Seed Script for Confirmed Platform - DEMO DATA
+ * MongoDB Seed Script for Confirmed Platform - COMPLETE DEMO DATA
  * 
- * This script creates realistic demo data matching all mock data structures
- * used throughout the application for recording credible demos.
+ * This script creates ALL necessary data including users, shops, and demo data
+ * matching all mock data structures used throughout the application.
  * 
  * Run on your VPS with:
  *   mongosh confirmed_db < seed_demo_data.js
@@ -10,26 +10,162 @@
  * Or with authentication:
  *   mongosh "mongodb://username:password@localhost:27017/confirmed_db" < seed_demo_data.js
  * 
- * ⚠️  BEFORE RUNNING: Update the IDs below with your actual database IDs
+ * ✅ This script is SELF-CONTAINED - no need to update IDs!
  */
 
 // ============================================================
-// YOUR REAL IDs - UPDATE THESE!
+// GENERATE NEW IDs - These will be created by this script
 // ============================================================
-const SHOP_OWNER_ID = ObjectId("YOUR_SHOP_OWNER_ID_HERE");
-const OPERATOR_1_ID = ObjectId("YOUR_OPERATOR_1_ID_HERE");
-const OPERATOR_2_ID = ObjectId("YOUR_OPERATOR_2_ID_HERE");
-const ADMIN_ID      = ObjectId("YOUR_ADMIN_ID_HERE");
-const SHOP_1_ID     = ObjectId("YOUR_SHOP_1_ID_HERE");
-const SHOP_2_ID     = ObjectId("YOUR_SHOP_2_ID_HERE");
-const SHOP_3_ID     = ObjectId("YOUR_SHOP_3_ID_HERE");
+const SHOP_OWNER_ID = ObjectId();
+const OPERATOR_1_ID = ObjectId();
+const OPERATOR_2_ID = ObjectId();
+const ADMIN_ID      = ObjectId();
+const SHOP_1_ID     = ObjectId();
+const SHOP_2_ID     = ObjectId();
+const SHOP_3_ID     = ObjectId();
 // ============================================================
 
 const now = new Date();
 const hour = 60 * 60 * 1000;
 const day = 24 * hour;
 
-print("🌱 Starting demo data seed...");
+print("🌱 Starting complete demo data seed...");
+print("");
+
+// ============================================================
+// 0. CREATE USERS AND SHOPS FIRST
+// ============================================================
+print("� Creating users and shops...");
+
+// Drop existing data to start fresh
+db.users.drop();
+db.shops.drop();
+
+// Create Admin User
+db.users.insertOne({
+  _id: ADMIN_ID,
+  email: "admin1@confirmed.tn",
+  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7", // You should hash this properly
+  firstName: "Admin",
+  lastName: "User",
+  role: "admin",
+  isActive: true,
+  preferences: {
+    emailNotifications: true,
+    pushNotifications: true
+  },
+  createdAt: new Date(now - 90 * day),
+  updatedAt: now
+});
+
+// Create Shop Owner
+db.users.insertOne({
+  _id: SHOP_OWNER_ID,
+  email: "owner@techstore.tn",
+  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
+  firstName: "Mohamed",
+  lastName: "Alami",
+  role: "shop_owner",
+  isActive: true,
+  preferences: {
+    emailNotifications: true,
+    pushNotifications: true
+  },
+  createdAt: new Date(now - 60 * day),
+  updatedAt: now
+});
+
+// Create Operator 1
+db.users.insertOne({
+  _id: OPERATOR_1_ID,
+  email: "ahmed.hassan@techstore.tn",
+  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
+  firstName: "Ahmed",
+  lastName: "Hassan",
+  role: "operator",
+  isActive: true,
+  preferences: {
+    emailNotifications: true,
+    pushNotifications: true
+  },
+  createdAt: new Date(now - 30 * day),
+  updatedAt: now
+});
+
+// Create Operator 2
+db.users.insertOne({
+  _id: OPERATOR_2_ID,
+  email: "fatima.zahra@techstore.tn",
+  password: "$2b$10$97305e86f36b830a36ac7dc722ac570a3a66e3b10bd981125a8c7",
+  firstName: "Fatima",
+  lastName: "Zahra",
+  role: "operator",
+  isActive: true,
+  preferences: {
+    emailNotifications: true,
+    pushNotifications: true
+  },
+  createdAt: new Date(now - 20 * day),
+  updatedAt: now
+});
+
+// Create Shops
+db.shops.insertMany([
+  {
+    _id: SHOP_1_ID,
+    name: "TechStore Tunisia",
+    domain: "techstore.tn",
+    ownerId: SHOP_OWNER_ID,
+    description: "Premium electronics and accessories",
+    isActive: true,
+    settings: {
+      currency: "TND",
+      timezone: "Africa/Tunis",
+      language: "fr"
+    },
+    createdAt: new Date(now - 60 * day),
+    updatedAt: now
+  },
+  {
+    _id: SHOP_2_ID,
+    name: "ElectroShop",
+    domain: "electroshop.tn",
+    ownerId: SHOP_OWNER_ID,
+    description: "Consumer electronics",
+    isActive: true,
+    settings: {
+      currency: "TND",
+      timezone: "Africa/Tunis",
+      language: "fr"
+    },
+    createdAt: new Date(now - 45 * day),
+    updatedAt: now
+  },
+  {
+    _id: SHOP_3_ID,
+    name: "GadgetHub",
+    domain: "gadgethub.tn",
+    ownerId: SHOP_OWNER_ID,
+    description: "Latest gadgets and tech",
+    isActive: true,
+    settings: {
+      currency: "TND",
+      timezone: "Africa/Tunis",
+      language: "fr"
+    },
+    createdAt: new Date(now - 30 * day),
+    updatedAt: now
+  }
+]);
+
+// Create indexes for users and shops
+db.users.createIndex({ email: 1 }, { unique: true });
+db.users.createIndex({ role: 1 });
+db.shops.createIndex({ ownerId: 1 });
+db.shops.createIndex({ domain: 1 }, { unique: true });
+
+print("   ✓ Created 4 users (1 admin, 1 shop owner, 2 operators)");
+print("   ✓ Created 3 shops");
 print("");
 
 // ============================================================
@@ -678,10 +814,12 @@ print("   ✓ All indexes created");
 // ============================================================
 print("");
 print("============================================");
-print("🎉 Demo data seed complete!");
+print("🎉 Complete demo data seed finished!");
 print("============================================");
 print("");
 print("Collections populated:");
+print("   • users              — " + db.users.countDocuments() + " docs");
+print("   • shops              — " + db.shops.countDocuments() + " docs");
 print("   • products           — " + db.products.countDocuments() + " docs");
 print("   • orders             — " + db.orders.countDocuments() + " docs");
 print("   • humanfeedback      — " + db.humanfeedback.countDocuments() + " docs");
@@ -691,11 +829,38 @@ print("   • teammembers        — " + db.teammembers.countDocuments() + " doc
 print("   • activitylogs       — " + db.activitylogs.countDocuments() + " docs");
 print("   • complaints         — " + db.complaints.countDocuments() + " docs");
 print("");
-print("⚠️  IMPORTANT: Update the IDs at the top of this script");
-print("   with your actual database IDs before running!");
+print("📋 LOGIN CREDENTIALS:");
+print("============================================");
 print("");
-print("To get your IDs, run:");
-print("   db.users.find({ role: 'shop_owner' }, { _id: 1, email: 1 })");
-print("   db.users.find({ role: 'operator' }, { _id: 1, email: 1 })");
-print("   db.shops.find({}, { _id: 1, name: 1 })");
+print("🔑 Admin Account:");
+print("   Email:    admin@confirmed.tn");
+print("   Password: (set your own - hash required)");
+print("   ID:       " + ADMIN_ID);
+print("");
+print("🏪 Shop Owner Account:");
+print("   Email:    owner@techstore.tn");
+print("   Password: (set your own - hash required)");
+print("   ID:       " + SHOP_OWNER_ID);
+print("   Shop:     TechStore Tunisia");
+print("   Shop ID:  " + SHOP_1_ID);
+print("");
+print("👤 Operator 1:");
+print("   Email:    ahmed.hassan@techstore.tn");
+print("   Password: (set your own - hash required)");
+print("   ID:       " + OPERATOR_1_ID);
+print("");
+print("👤 Operator 2:");
+print("   Email:    fatima.zahra@techstore.tn");
+print("   Password: (set your own - hash required)");
+print("   ID:       " + OPERATOR_2_ID);
+print("");
+print("============================================");
+print("⚠️  IMPORTANT: Update passwords in the users collection!");
+print("   Use bcrypt to hash passwords properly.");
+print("");
+print("Example to update password:");
+print("   db.users.updateOne(");
+print("     { email: 'admin@confirmed.tn' },");
+print("     { $set: { password: 'YOUR_BCRYPT_HASH' } }");
+print("   )");
 print("============================================");
