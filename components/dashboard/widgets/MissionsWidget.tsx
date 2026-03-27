@@ -93,19 +93,19 @@ function getRewardIcon(rewardType?: Mission['rewardType']): JSX.Element {
 /**
  * Format time remaining until expiration
  */
-function formatTimeRemaining(expiresAt: string): string {
+function formatTimeRemaining(expiresAt: string, t: (key: TranslationKey) => string): string {
   const now = new Date();
   const expiry = new Date(expiresAt);
   const diffMs = expiry.getTime() - now.getTime();
   
-  if (diffMs <= 0) return 'Expired';
+  if (diffMs <= 0) return t('widget.missions.expired');
   
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
   
-  if (diffDays > 0) return `${diffDays}d left`;
-  if (diffHours > 0) return `${diffHours}h left`;
-  return 'Expiring soon';
+  if (diffDays > 0) return `${diffDays}${t('widget.missions.daysLeft')}`;
+  if (diffHours > 0) return `${diffHours}${t('widget.missions.hoursLeft')}`;
+  return t('widget.missions.expiringSoon');
 }
 
 /**
@@ -142,7 +142,7 @@ function MissionCard({
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeBadgeColor(mission.type)}`}>
-              {mission.type}
+              {t(`widget.missions.${mission.type}` as TranslationKey)}
             </span>
             {isCompleted && (
               <CheckCircleSolidIcon className="w-4 h-4 text-green-500" />
@@ -186,7 +186,7 @@ function MissionCard({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1 text-xs text-slate-400">
           <ClockIcon className="w-3 h-3" />
-          <span>{formatTimeRemaining(mission.expiresAt)}</span>
+          <span>{formatTimeRemaining(mission.expiresAt, t)}</span>
         </div>
         
         {isCompleted && !mission.completedAt && onComplete && (

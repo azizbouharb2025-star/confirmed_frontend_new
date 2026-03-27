@@ -108,15 +108,15 @@ function getLatencyColor(latency: number): string {
 /**
  * Format timestamp to relative time
  */
-function formatLastCheck(timestamp: string): string {
+function formatLastCheck(timestamp: string, t: (key: TranslationKey) => string): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSecs = Math.floor(diffMs / 1000);
   
-  if (diffSecs < 60) return `${diffSecs}s ago`;
-  if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}m ago`;
-  return `${Math.floor(diffSecs / 3600)}h ago`;
+  if (diffSecs < 60) return `${diffSecs}${t('widget.time.sAgo')}`;
+  if (diffSecs < 3600) return `${Math.floor(diffSecs / 60)}${t('widget.time.mAgo')}`;
+  return `${Math.floor(diffSecs / 3600)}${t('widget.time.hAgo')}`;
 }
 
 /**
@@ -220,13 +220,13 @@ export function SystemHealthWidget({
                   <div>
                     <p className="text-sm font-medium">{service.name}</p>
                     <p className="text-xs text-slate-400">
-                      {t('widget.systemHealth.lastCheck')}: {formatLastCheck(service.lastCheck)}
+                      {t('widget.systemHealth.lastCheck')}: {formatLastCheck(service.lastCheck, t)}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-semibold capitalize ${getStatusTextColor(service.status)}`}>
-                    {service.status}
+                    {t(`widget.status.${service.status}` as TranslationKey)}
                   </p>
                   {service.latency !== undefined && (
                     <p className={`text-xs ${getLatencyColor(service.latency)}`}>

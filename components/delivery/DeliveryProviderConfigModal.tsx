@@ -149,7 +149,7 @@ export default function DeliveryProviderConfigModal({
                   ? 'bg-slate-700 border-slate-600 text-white' 
                   : 'bg-white border-gray-300 text-gray-900'
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="e.g., Aramex Morocco"
+              placeholder="e.g., Aramex Tunisia"
             />
           </div>
 
@@ -317,7 +317,7 @@ export default function DeliveryProviderConfigModal({
                   ? 'bg-slate-700 border-slate-600 text-white' 
                   : 'bg-white border-gray-300 text-gray-900'
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              placeholder="Casablanca, Rabat, Marrakech"
+              placeholder="Tunis, Sfax, Sousse, Ariana, Nabeul"
             />
             <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
               {t('delivery.regionsHelp')}

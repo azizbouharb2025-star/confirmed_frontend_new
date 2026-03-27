@@ -59,11 +59,11 @@ function formatDate(dateString: string): string {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMins < 60) {
-    return `${diffMins}m ago`;
+    return `${diffMins}m`;
   } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
+    return `${diffHours}h`;
   } else if (diffDays < 7) {
-    return `${diffDays}d ago`;
+    return `${diffDays}d`;
   }
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

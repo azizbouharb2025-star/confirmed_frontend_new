@@ -78,7 +78,7 @@ function getActivityBgColor(type: ActivityType): string {
 /**
  * Format timestamp to relative time or formatted date
  */
-function formatTimestamp(timestamp: string): string {
+function formatTimestamp(timestamp: string, t: (key: TranslationKey) => string): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -87,10 +87,10 @@ function formatTimestamp(timestamp: string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
   
-  if (diffSecs < 60) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffSecs < 60) return t('widget.activityFeed.justNow');
+  if (diffMins < 60) return `${diffMins}${t('widget.time.mAgo')}`;
+  if (diffHours < 24) return `${diffHours}${t('widget.time.hAgo')}`;
+  if (diffDays < 7) return `${diffDays}${t('widget.time.dAgo')}`;
   
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -170,7 +170,7 @@ export function ActivityFeedWidget({
               
               {/* Timestamp */}
               <div className="text-xs text-slate-500 whitespace-nowrap">
-                {formatTimestamp(activity.timestamp)}
+                {formatTimestamp(activity.timestamp, t)}
               </div>
             </div>
           ))}

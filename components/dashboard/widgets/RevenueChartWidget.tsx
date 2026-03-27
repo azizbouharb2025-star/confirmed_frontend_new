@@ -68,11 +68,13 @@ function ChartTooltip({
   payload, 
   label,
   currency = 'TND',
+  t,
 }: { 
   active?: boolean; 
   payload?: Array<{ value: number; dataKey: string }>; 
   label?: string;
   currency?: string;
+  t: (key: TranslationKey) => string;
 }) {
   if (active && payload && payload.length) {
     return (
@@ -80,7 +82,7 @@ function ChartTooltip({
         <p className="text-xs text-slate-400 mb-1">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm text-green-400">
-            {entry.dataKey === 'cumulative' ? 'Total' : 'Revenue'}: {formatCurrency(entry.value, currency)}
+            {entry.dataKey === 'cumulative' ? t('widget.chart.total') : t('widget.chart.revenue')}: {formatCurrency(entry.value, currency)}
           </p>
         ))}
       </div>
@@ -211,7 +213,7 @@ export function RevenueChartWidget({
                   tickLine={{ stroke: '#475569' }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}k TND`}
                 />
-                <Tooltip content={<ChartTooltip currency={currency} />} />
+                <Tooltip content={<ChartTooltip currency={currency} t={t} />} />
                 <Area 
                   type="monotone" 
                   dataKey={dataKey}

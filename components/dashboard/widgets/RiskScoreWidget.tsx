@@ -27,11 +27,11 @@ const RISK_COLORS = {
   low: '#ef4444',
 };
 
-export function getRiskChartData(data: RiskScoreData, _t: (key: TranslationKey) => string): Array<{ name: string; value: number; color: string }> {
+export function getRiskChartData(data: RiskScoreData, t: (key: TranslationKey) => string): Array<{ name: string; value: number; color: string }> {
   return [
-    { name: 'High (>80%)', value: data.high, color: RISK_COLORS.high },
-    { name: 'Medium (50-80%)', value: data.medium, color: RISK_COLORS.medium },
-    { name: 'Low (<50%)', value: data.low, color: RISK_COLORS.low },
+    { name: t('widget.riskScore.highLabel'), value: data.high, color: RISK_COLORS.high },
+    { name: t('widget.riskScore.mediumLabel'), value: data.medium, color: RISK_COLORS.medium },
+    { name: t('widget.riskScore.lowLabel'), value: data.low, color: RISK_COLORS.low },
   ];
 }
 
@@ -47,7 +47,7 @@ function getTotalOrders(data: RiskScoreData): number {
   return data.high + data.medium + data.low;
 }
 
-function CustomTooltip({ active, payload, _t }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }>; _t: (key: TranslationKey) => string }) {
+function CustomTooltip({ active, payload, t }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }>; t: (key: TranslationKey) => string }) {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -56,7 +56,7 @@ function CustomTooltip({ active, payload, _t }: { active?: boolean; payload?: Ar
           {data.name}
         </p>
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-600">
-          {data.value} orders
+          {data.value} {t('widget.riskScore.orders')}
         </p>
       </div>
     );
@@ -85,14 +85,14 @@ function renderLegend(props: { payload?: Array<{ value: string; color?: string }
   );
 }
 
-function EmptyState({ _t }: { _t: (key: TranslationKey) => string }): JSX.Element {
+function EmptyState({ t }: { t: (key: TranslationKey) => string }): JSX.Element {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 p-3 rounded-full bg-slate-500/10">
         <ShieldCheckIcon className="w-8 h-8 text-slate-400" />
       </div>
       <p className="text-sm text-slate-400 dark:text-slate-400 light:text-gray-600">
-        No risk score data available
+        {t('widget.riskScore.empty')}
       </p>
     </div>
   );
@@ -115,7 +115,7 @@ export function RiskScoreWidget(props: RiskScoreWidgetProps): JSX.Element {
 
   return (
     <WidgetContainer
-      title="AI Order Probability"
+      title={t('widget.riskScore.title')}
       icon={<ShieldCheckIcon className="w-6 h-6" />}
       isLoading={isLoading}
       error={error}
@@ -123,7 +123,7 @@ export function RiskScoreWidget(props: RiskScoreWidgetProps): JSX.Element {
       className={className}
     >
       {!hasData ? (
-        <EmptyState _t={t} />
+        <EmptyState t={t} />
       ) : (
         <div className="flex flex-col items-center" data-testid="risk-score-chart">
           <div className="w-full h-[200px]">
@@ -142,7 +142,7 @@ export function RiskScoreWidget(props: RiskScoreWidgetProps): JSX.Element {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip _t={t} />} />
+                <Tooltip content={<CustomTooltip t={t} />} />
                 <Legend content={renderLegend} />
               </PieChart>
             </ResponsiveContainer>
@@ -151,15 +151,15 @@ export function RiskScoreWidget(props: RiskScoreWidgetProps): JSX.Element {
           <div className="grid grid-cols-3 gap-4 w-full mt-4 pt-4 border-t border-slate-700 dark:border-slate-700 light:border-gray-200">
             <div className="text-center">
               <p className="text-lg font-semibold text-green-500">{data.high}</p>
-              <p className="text-xs text-slate-400">High (&gt;80%)</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.highLabel')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-orange-500">{data.medium}</p>
-              <p className="text-xs text-slate-400">Medium (50-80%)</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.mediumLabel')}</p>
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-red-500">{data.low}</p>
-              <p className="text-xs text-slate-400">Low (&lt;50%)</p>
+              <p className="text-xs text-slate-400">{t('widget.riskScore.lowLabel')}</p>
             </div>
           </div>
           
@@ -168,7 +168,7 @@ export function RiskScoreWidget(props: RiskScoreWidgetProps): JSX.Element {
               onClick={onShowRiskyOrders}
               className="mt-4 w-full px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
             >
-              Show me risky orders
+              {t('widget.riskScore.showRiskyOrders')}
             </button>
           )}
         </div>

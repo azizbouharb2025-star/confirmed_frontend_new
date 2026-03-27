@@ -67,15 +67,16 @@ function getImpactBadgeStyles(impact: 'high' | 'medium' | 'low'): {
 /**
  * Impact badge component
  */
-function ImpactBadge({ impact }: { impact: 'high' | 'medium' | 'low' }): JSX.Element {
+function ImpactBadge({ impact, t }: { impact: 'high' | 'medium' | 'low'; t: (key: TranslationKey) => string }): JSX.Element {
   const styles = getImpactBadgeStyles(impact);
+  const labelKey = `widget.automationRecommendations.${impact}` as TranslationKey;
   return (
     <span 
       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${styles.bgColor} ${styles.textColor}`}
       data-testid={`impact-badge-${impact}`}
     >
       {styles.icon}
-      {impact.charAt(0).toUpperCase() + impact.slice(1)}
+      {t(labelKey)}
     </span>
   );
 }
@@ -111,7 +112,7 @@ function RecommendationCard({
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <h4 className="text-sm font-medium flex-1">{recommendation.title}</h4>
-        <ImpactBadge impact={recommendation.impact} />
+        <ImpactBadge impact={recommendation.impact} t={t} />
       </div>
       
       <p className="text-xs text-slate-400 dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">

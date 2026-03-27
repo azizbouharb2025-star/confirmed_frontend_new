@@ -55,11 +55,13 @@ const PERIOD_OPTIONS: { value: TimePeriod; labelKey: TranslationKey }[] = [
 function ChartTooltip({ 
   active, 
   payload, 
-  label 
+  label,
+  t,
 }: { 
   active?: boolean; 
   payload?: Array<{ value: number; dataKey: string; color: string }>; 
   label?: string;
+  t: (key: TranslationKey) => string;
 }) {
   if (active && payload && payload.length) {
     return (
@@ -67,7 +69,7 @@ function ChartTooltip({
         <p className="text-xs text-slate-400 mb-1">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.dataKey === 'orders' ? 'Current' : 'Previous'}: {entry.value.toLocaleString()}
+            {entry.dataKey === 'orders' ? t('widget.chart.current') : t('widget.chart.previous')}: {entry.value.toLocaleString()}
           </p>
         ))}
       </div>
@@ -188,7 +190,7 @@ export function OrdersChartWidget({
                   axisLine={{ stroke: '#475569' }}
                   tickLine={{ stroke: '#475569' }}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip content={<ChartTooltip t={t} />} />
                 <Line 
                   type="monotone" 
                   dataKey="orders" 

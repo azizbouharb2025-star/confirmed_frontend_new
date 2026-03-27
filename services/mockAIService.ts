@@ -21,9 +21,9 @@ import type { Recommendation } from '@/components/dashboard/widgets/AutomationRe
  */
 export function getMockRiskScoreData(): RiskScoreData {
   return {
-    high: Math.floor(Math.random() * 50) + 30,  // 30-80 high confidence orders
-    medium: Math.floor(Math.random() * 40) + 20, // 20-60 medium confidence
-    low: Math.floor(Math.random() * 20) + 5,     // 5-25 low confidence
+    high: 142,  // High confidence orders (85-100% AI score)
+    medium: 67, // Medium confidence orders (50-84% AI score)
+    low: 18,    // Low confidence orders (0-49% AI score)
   };
 }
 
@@ -37,17 +37,17 @@ export function getMockOperatorFeedback(): {
   topTags: FeedbackTag[];
 } {
   const tags: FeedbackTag[] = [
-    { tag: 'Professional', count: Math.floor(Math.random() * 30) + 20 },
-    { tag: 'Clear Communication', count: Math.floor(Math.random() * 25) + 15 },
-    { tag: 'Fast Response', count: Math.floor(Math.random() * 20) + 10 },
-    { tag: 'Helpful', count: Math.floor(Math.random() * 18) + 8 },
-    { tag: 'Polite', count: Math.floor(Math.random() * 15) + 5 },
+    { tag: 'Professional', count: 48 },
+    { tag: 'Clear Communication', count: 42 },
+    { tag: 'Fast Response', count: 38 },
+    { tag: 'Helpful', count: 35 },
+    { tag: 'Polite', count: 31 },
   ];
 
   return {
-    averageRating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)), // 3.5-5.0
-    totalFeedback: Math.floor(Math.random() * 100) + 50, // 50-150
-    topTags: tags.sort((a, b) => b.count - a.count).slice(0, 5),
+    averageRating: 4.6,
+    totalFeedback: 227,
+    topTags: tags,
   };
 }
 
@@ -67,24 +67,29 @@ export function getMockComplaintsAnalytics(): {
     return date.toISOString().split('T')[0];
   });
 
-  const trendData: ComplaintTrendData[] = last7Days.map(date => ({
-    date,
-    count: Math.floor(Math.random() * 15) + 2, // 2-17 complaints per day
-  }));
-
-  const categories: WidgetComplaintCategory[] = [
-    { category: 'Product Quality', count: Math.floor(Math.random() * 20) + 10 },
-    { category: 'Delivery Issue', count: Math.floor(Math.random() * 15) + 8 },
-    { category: 'Wrong Item', count: Math.floor(Math.random() * 12) + 5 },
-    { category: 'Damaged Product', count: Math.floor(Math.random() * 10) + 3 },
-    { category: 'Other', count: Math.floor(Math.random() * 8) + 2 },
+  const trendData: ComplaintTrendData[] = [
+    { date: last7Days[0], count: 8 },
+    { date: last7Days[1], count: 12 },
+    { date: last7Days[2], count: 6 },
+    { date: last7Days[3], count: 9 },
+    { date: last7Days[4], count: 11 },
+    { date: last7Days[5], count: 7 },
+    { date: last7Days[6], count: 5 },
   ];
 
-  const totalComplaints = categories.reduce((sum, cat) => sum + cat.count, 0);
+  const categories: WidgetComplaintCategory[] = [
+    { category: 'Delivery Issue', count: 24 },
+    { category: 'Product Quality', count: 18 },
+    { category: 'Wrong Item', count: 9 },
+    { category: 'Damaged Product', count: 6 },
+    { category: 'Other', count: 1 },
+  ];
+
+  const totalComplaints = 58;
 
   return {
     totalComplaints,
-    resolutionRate: parseFloat((Math.random() * 20 + 70).toFixed(1)), // 70-90%
+    resolutionRate: 86.2,
     trendData,
     categories,
   };
@@ -95,15 +100,13 @@ export function getMockComplaintsAnalytics(): {
  * Shows delivery success rates by courier
  */
 export function getMockCourierPerformance(): CourierData[] {
-  const courierNames = ['Express Delivery', 'Fast Track', 'Quick Ship', 'Prime Courier', 'Swift Logistics'];
-  
-  return courierNames.map(name => ({
-    name,
-    successRate: parseFloat((Math.random() * 25 + 70).toFixed(1)), // 70-95%
-    avgDeliveryTime: Math.floor(Math.random() * 24) + 24, // 24-48 hours
-    totalDeliveries: Math.floor(Math.random() * 500) + 200, // 200-700
-    returnRate: parseFloat((Math.random() * 8 + 2).toFixed(1)), // 2-10%
-  })).sort((a, b) => b.successRate - a.successRate);
+  return [
+    { name: 'Aramex Tunisia', successRate: 94.3, avgDeliveryTime: 26, totalDeliveries: 542, returnRate: 2.8 },
+    { name: 'Rapid Express', successRate: 91.7, avgDeliveryTime: 28, totalDeliveries: 387, returnRate: 3.5 },
+    { name: 'Tunisia Post', successRate: 88.2, avgDeliveryTime: 35, totalDeliveries: 621, returnRate: 4.9 },
+    { name: 'Swift Delivery', successRate: 85.6, avgDeliveryTime: 32, totalDeliveries: 298, returnRate: 5.7 },
+    { name: 'Local Courier', successRate: 79.4, avgDeliveryTime: 41, totalDeliveries: 156, returnRate: 8.2 },
+  ];
 }
 
 /**
@@ -121,25 +124,21 @@ export function getMockPredictiveAnalytics(): {
     return date.toISOString().split('T')[0];
   });
 
-  const baseOrders = Math.floor(Math.random() * 30) + 40; // 40-70 base orders
+  const predictions = [58, 62, 65, 71, 68, 74, 79];
+  const actuals = [56, 64, undefined, undefined, undefined, undefined, undefined];
 
-  const forecastedOrders: ForecastDataPoint[] = next7Days.map((date, i) => {
-    const predicted = baseOrders + Math.floor(Math.random() * 20) - 10 + i * 2;
-    const actual = i < 2 ? predicted + Math.floor(Math.random() * 10) - 5 : undefined;
-    
-    return {
-      date,
-      predicted,
-      actual,
-      confidenceLow: Math.floor(predicted * 0.85),
-      confidenceHigh: Math.floor(predicted * 1.15),
-    };
-  });
+  const forecastedOrders: ForecastDataPoint[] = next7Days.map((date, i) => ({
+    date,
+    predicted: predictions[i],
+    actual: actuals[i],
+    confidenceLow: Math.floor(predictions[i] * 0.88),
+    confidenceHigh: Math.floor(predictions[i] * 1.12),
+  }));
 
   return {
     forecastedOrders,
-    forecastedConfirmationRate: parseFloat((Math.random() * 15 + 75).toFixed(1)), // 75-90%
-    confidence: parseFloat((Math.random() * 20 + 75).toFixed(0)), // 75-95%
+    forecastedConfirmationRate: 87.3,
+    confidence: 89,
   };
 }
 
@@ -148,49 +147,29 @@ export function getMockPredictiveAnalytics(): {
  * Shows AI-powered workflow optimization suggestions
  */
 export function getMockAutomationRecommendations(): Recommendation[] {
-  const recommendations: Recommendation[] = [
+  return [
     {
       id: '1',
-      title: 'Switch to Express Delivery in Tunis',
-      description: 'Express Delivery has 92% success rate vs 78% for current courier in Tunis region',
+      title: 'Switch to Aramex Tunisia for Tunis deliveries',
+      description: 'Aramex has 94.3% success rate vs 79.4% for current courier in Tunis region. Potential 15% improvement.',
       impact: 'high',
       category: 'Courier Optimization',
     },
     {
       id: '2',
-      title: 'Adjust pricing for Product X in Sfax',
-      description: 'Product X has 40% cancellation rate in Sfax. Consider 10% price reduction.',
-      impact: 'high',
-      category: 'Pricing Strategy',
-    },
-    {
-      id: '3',
       title: 'Enable auto-confirmation for high-score orders',
-      description: 'Orders with AI score >85% have 95% confirmation rate. Auto-confirm to save time.',
-      impact: 'medium',
+      description: 'Orders with AI score >85% have 96% confirmation rate. Auto-confirm to save 2.5 hours daily.',
+      impact: 'high',
       category: 'Workflow Automation',
     },
     {
-      id: '4',
-      title: 'Schedule deliveries for afternoon',
-      description: 'Afternoon deliveries have 15% higher success rate in your region.',
+      id: '3',
+      title: 'Schedule deliveries for afternoon slots',
+      description: 'Afternoon deliveries (14:00-18:00) have 18% higher success rate in your regions.',
       impact: 'medium',
       category: 'Delivery Optimization',
     },
-    {
-      id: '5',
-      title: 'Add product images to reduce complaints',
-      description: 'Products without images have 3x more complaints. Add images to top 10 products.',
-      impact: 'low',
-      category: 'Product Quality',
-    },
   ];
-
-  // Randomly select 2-4 recommendations
-  const count = Math.floor(Math.random() * 3) + 2;
-  return recommendations
-    .sort(() => Math.random() - 0.5)
-    .slice(0, count);
 }
 
 // ============================================================================
@@ -281,14 +260,14 @@ export function getMockAdminKPIs(): {
   activeShopsChange: number;
 } {
   return {
-    totalUsers: Math.floor(Math.random() * 500) + 200, // 200-700
-    totalUsersChange: parseFloat((Math.random() * 20 - 5).toFixed(1)), // -5% to +15%
-    totalOrders: Math.floor(Math.random() * 2000) + 1000, // 1000-3000
-    totalOrdersChange: parseFloat((Math.random() * 25 - 5).toFixed(1)), // -5% to +20%
-    revenue: Math.floor(Math.random() * 50000) + 30000, // 30k-80k
-    revenueChange: parseFloat((Math.random() * 30 - 10).toFixed(1)), // -10% to +20%
-    activeShops: Math.floor(Math.random() * 50) + 20, // 20-70
-    activeShopsChange: parseFloat((Math.random() * 15 - 3).toFixed(1)), // -3% to +12%
+    totalUsers: 487,
+    totalUsersChange: 12.3,
+    totalOrders: 2847,
+    totalOrdersChange: 18.7,
+    revenue: 68450,
+    revenueChange: 15.2,
+    activeShops: 43,
+    activeShopsChange: 8.6,
   };
 }
 
@@ -301,6 +280,9 @@ export function getMockOrdersChartData(period: 'daily' | 'weekly' | 'monthly' = 
   orders: number;
 }> {
   const days = period === 'daily' ? 7 : period === 'weekly' ? 12 : 12;
+  const dailyOrders = [52, 68, 71, 65, 78, 82, 89];
+  const weeklyOrders = [385, 412, 398, 445, 467, 489, 512, 538, 556, 582, 601, 627];
+  const monthlyOrders = [1842, 1956, 2103, 2187, 2345, 2421, 2598, 2687, 2789, 2856, 2934, 3012];
   
   return Array.from({ length: days }, (_, i) => {
     const date = new Date();
@@ -312,9 +294,11 @@ export function getMockOrdersChartData(period: 'daily' | 'weekly' | 'monthly' = 
       date.setMonth(date.getMonth() - (days - 1 - i));
     }
     
+    const orders = period === 'daily' ? dailyOrders[i] : period === 'weekly' ? weeklyOrders[i] : monthlyOrders[i];
+    
     return {
       date: date.toISOString().split('T')[0],
-      orders: Math.floor(Math.random() * 100) + 50, // 50-150 orders
+      orders,
     };
   });
 }
@@ -329,13 +313,20 @@ export function getMockRevenueChartData(viewMode: 'daily' | 'cumulative' = 'dail
   cumulative?: number;
 }> {
   const days = 30;
+  const dailyRevenues = [
+    1850, 2120, 2340, 1980, 2450, 2680, 2890,
+    2150, 2420, 2580, 2210, 2750, 2920, 3100,
+    2380, 2640, 2810, 2450, 2890, 3050, 3280,
+    2520, 2780, 2950, 2590, 3020, 3180, 3420,
+    2680, 2940
+  ];
   let cumulative = 0;
   
   return Array.from({ length: days }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (days - 1 - i));
     
-    const dailyRevenue = Math.floor(Math.random() * 3000) + 1000; // 1k-4k per day
+    const dailyRevenue = dailyRevenues[i];
     cumulative += dailyRevenue;
     
     return {

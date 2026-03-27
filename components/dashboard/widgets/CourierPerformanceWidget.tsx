@@ -64,7 +64,7 @@ export function findBestCourier(couriers: CourierData[]): CourierData | null {
 /**
  * Custom tooltip for the bar chart
  */
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+function ChartTooltip({ active, payload, label, t }: { active?: boolean; payload?: Array<{ value: number }>; label?: string; t: (key: TranslationKey) => string }) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-slate-800 dark:bg-slate-800 light:bg-white border border-slate-700 dark:border-slate-700 light:border-gray-200 rounded-lg px-3 py-2 shadow-lg">
@@ -72,7 +72,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
           {label}
         </p>
         <p className="text-sm text-slate-300 dark:text-slate-300 light:text-gray-600">
-          Success Rate: {payload[0].value.toFixed(1)}%
+          {t('widget.chart.successRate')}: {payload[0].value.toFixed(1)}%
         </p>
       </div>
     );
@@ -175,7 +175,7 @@ export function CourierPerformanceWidget({
                   tickLine={{ stroke: '#475569' }}
                   width={60}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip content={<ChartTooltip t={t} />} />
                 <Bar dataKey="successRate" radius={[0, 4, 4, 0]}>
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

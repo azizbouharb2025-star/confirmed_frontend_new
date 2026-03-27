@@ -62,7 +62,8 @@ function getConfidenceBgColor(confidence: number): string {
 function ForecastTooltip({ 
   active, 
   payload, 
-  label 
+  label,
+  t,
 }: { 
   active?: boolean; 
   payload?: Array<{ 
@@ -72,6 +73,7 @@ function ForecastTooltip({
     name: string;
   }>; 
   label?: string;
+  t: (key: TranslationKey) => string;
 }) {
   if (active && payload && payload.length) {
     const predicted = payload.find(p => p.dataKey === 'predicted');
@@ -82,12 +84,12 @@ function ForecastTooltip({
         <p className="text-xs text-slate-400 mb-2">{label}</p>
         {predicted && (
           <p className="text-sm text-purple-400">
-            Predicted: {predicted.value.toLocaleString()} orders
+            {t('widget.chart.predicted')}: {predicted.value.toLocaleString()} {t('widget.predictiveAnalytics.predictedOrders')}
           </p>
         )}
         {actual && actual.value !== undefined && (
           <p className="text-sm text-blue-400">
-            Actual: {actual.value.toLocaleString()} orders
+            {t('widget.chart.actual')}: {actual.value.toLocaleString()} {t('widget.predictiveAnalytics.predictedOrders')}
           </p>
         )}
       </div>
@@ -207,7 +209,7 @@ export function PredictiveAnalyticsWidget({
                     tickLine={{ stroke: '#475569' }}
                     width={40}
                   />
-                  <Tooltip content={<ForecastTooltip />} />
+                  <Tooltip content={<ForecastTooltip t={t} />} />
                   <Legend 
                     wrapperStyle={{ fontSize: '10px' }}
                     iconSize={8}
@@ -218,7 +220,7 @@ export function PredictiveAnalyticsWidget({
                     dataKey="confidenceHigh"
                     stroke="none"
                     fill="url(#confidenceBand)"
-                    name="Confidence Band"
+                    name={t('widget.chart.confidenceBand')}
                   />
                   <Area
                     type="monotone"
@@ -236,7 +238,7 @@ export function PredictiveAnalyticsWidget({
                     strokeDasharray="5 5"
                     dot={{ fill: '#8b5cf6', strokeWidth: 0, r: 3 }}
                     activeDot={{ r: 5, fill: '#8b5cf6' }}
-                    name="Predicted"
+                    name={t('widget.chart.predicted')}
                   />
                   {/* Actual line */}
                   <Line 
@@ -246,7 +248,7 @@ export function PredictiveAnalyticsWidget({
                     strokeWidth={2}
                     dot={{ fill: '#3b82f6', strokeWidth: 0, r: 3 }}
                     activeDot={{ r: 5, fill: '#3b82f6' }}
-                    name="Actual"
+                    name={t('widget.chart.actual')}
                     connectNulls={false}
                   />
                 </ComposedChart>

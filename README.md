@@ -10,7 +10,7 @@
 
 **Revolutionary AI-powered order confirmation platform with stunning UI/UX**
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Screenshots](#-screenshots) • [API Docs](#-api-documentation)
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [Documentation](#-documentation) • [API Docs](#-api-documentation)
 
 </div>
 
@@ -201,6 +201,67 @@ Confirmed V1/
 
 ---
 
+## 📚 Documentation
+
+### Comprehensive Guides
+
+We've created extensive documentation for the Client Panel Enhancements:
+
+#### **[API Documentation](docs/API_DOCUMENTATION.md)**
+Complete API reference for all endpoints including:
+- Team Management APIs
+- Delivery Company Integration APIs
+- Product Image APIs
+- Feedback APIs
+- Analytics APIs
+- Cancellation Analysis APIs
+- Error handling and authentication
+
+#### **[User Guide](docs/USER_GUIDE.md)**
+Step-by-step guide for shop owners covering:
+- Team member management and invitations
+- Delivery provider setup and configuration
+- Multi-language settings (FR/EN/AR)
+- Product image management
+- AI Score system usage
+- Interactive dashboard widgets
+- Operator feedback analysis
+- Analytics and reporting
+- Cancellation tracking
+- Product performance metrics
+
+#### **[Database Migrations](docs/DATABASE_MIGRATIONS.md)**
+Database schema changes and migration scripts:
+- Team management schema
+- Delivery provider schema
+- Product image fields
+- AI score and cancellation fields
+- Feedback collections
+- Analytics cache
+- Migration runner scripts
+- Rollback procedures
+
+#### **[Feature Flags](docs/FEATURE_FLAGS.md)**
+Feature flag configuration for gradual rollout:
+- All 10 feature flags documented
+- Rollout strategies and schedules
+- Implementation examples
+- Monitoring and metrics
+- Rollback procedures
+- Testing guidelines
+
+#### **[Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md)**
+Complete deployment guide including:
+- Pre-deployment checklist
+- Step-by-step deployment procedures
+- Post-deployment verification
+- Rollback procedures
+- Performance benchmarks
+- Support preparation
+- Success metrics
+
+---
+
 ## 🎨 Screenshots
 
 ### **Landing Page**
@@ -243,13 +304,54 @@ Use your backend credentials to test different roles:
 ### **Backend Integration**
 The frontend connects to your backend API running on port 3000.
 
+### **Complete API Reference**
+See **[docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)** for comprehensive API documentation including:
+
+- **Team Management**: Invite, accept, and manage team members
+- **Delivery Integration**: Configure providers and sync statuses
+- **Product Management**: Upload images and track performance
+- **Feedback System**: Separate human and AI feedback
+- **Analytics**: Global metrics and operator performance
+- **Cancellations**: Track and analyze cancellation reasons
+
 ### **API Proxy**
 Next.js proxies all `/api/*` requests to `http://51.255.201.244:3000/api/*` to avoid CORS issues.
 
-### **Endpoints Used**
+### **Key Endpoints**
+
+#### Authentication
 - `POST /api/auth/login` - User authentication
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/me` - Get current user
+
+#### Team Management
+- `POST /api/team/invite` - Invite team member
+- `GET /api/team/members` - Get all team members
+- `PATCH /api/team/accept/:token` - Accept invitation
+- `DELETE /api/team/members/:id` - Remove team member
+
+#### Delivery Integration
+- `GET /api/delivery/providers` - Get delivery providers
+- `POST /api/delivery/providers` - Add delivery provider
+- `POST /api/delivery/sync/:providerId` - Sync delivery status
+- `DELETE /api/delivery/providers` - Remove provider
+
+#### Product Management
+- `POST /api/products/:id/image` - Upload product image
+- `DELETE /api/products/:id/image` - Remove product image
+- `GET /api/products/performance` - Get product performance
+- `POST /api/products/performance/export` - Export performance data
+
+#### Feedback & Analytics
+- `GET /api/feedback/:orderId` - Get order feedback
+- `GET /api/feedback/summary` - Get feedback summary
+- `GET /api/analytics/global` - Get global metrics
+- `GET /api/analytics/operator-feedback` - Get operator analytics
+- `POST /api/analytics/export` - Export analytics data
+
+#### Cancellations
+- `GET /api/cancellations/summary` - Get cancellation summary
+- `GET /api/cancellations/analysis` - Get detailed analysis
 
 ### **Authentication Header**
 ```javascript

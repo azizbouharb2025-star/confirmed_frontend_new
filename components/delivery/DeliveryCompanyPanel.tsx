@@ -43,7 +43,7 @@ export default function DeliveryCompanyPanel({ shopId }: DeliveryCompanyPanelPro
         {
           _id: 'provider_1',
           shopId,
-          name: 'Aramex Morocco',
+          name: 'Aramex Tunisie',
           type: 'aramex',
           apiEndpoint: 'https://api.aramex.com/v1',
           apiKey: 'encrypted_key_123',
@@ -54,7 +54,7 @@ export default function DeliveryCompanyPanel({ shopId }: DeliveryCompanyPanelPro
           config: {
             autoSync: true,
             syncInterval: 30,
-            supportedRegions: ['Casablanca', 'Rabat', 'Marrakech', 'Tangier', 'Fes']
+            supportedRegions: ['Tunis', 'Ariana', 'Ben Arous', 'Sousse', 'Sfax', 'Nabeul']
           },
           createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
@@ -73,7 +73,7 @@ export default function DeliveryCompanyPanel({ shopId }: DeliveryCompanyPanelPro
           config: {
             autoSync: false,
             syncInterval: 60,
-            supportedRegions: ['All Morocco']
+            supportedRegions: ['All Tunisia']
           },
           createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()

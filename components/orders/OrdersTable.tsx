@@ -401,6 +401,38 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       ),
     },
     {
+      key: 'riskPercentage',
+      label: t('orders.riskPercentage'),
+      minPlan: 'business',
+      render: (order) => {
+        const aiScore = getAIScore(order, true)
+        const riskPercentage = 100 - aiScore.score
+        const getRiskColor = (risk: number) => {
+          if (risk >= 70) return 'bg-red-500'
+          if (risk >= 40) return 'bg-yellow-500'
+          return 'bg-green-500'
+        }
+        const getRiskTextColor = (risk: number) => {
+          if (risk >= 70) return 'text-red-600 dark:text-red-400'
+          if (risk >= 40) return 'text-yellow-600 dark:text-yellow-400'
+          return 'text-green-600 dark:text-green-400'
+        }
+        return (
+          <div className="flex items-center gap-2 min-w-[120px]">
+            <span className={`text-sm font-medium ${getRiskTextColor(riskPercentage)}`}>
+              {riskPercentage}%
+            </span>
+            <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full ${getRiskColor(riskPercentage)} transition-all duration-300`}
+                style={{ width: `${riskPercentage}%` }}
+              />
+            </div>
+          </div>
+        )
+      },
+    },
+    {
       key: 'complaintFlags',
       label: t('orders.complaints'),
       minPlan: 'business',
