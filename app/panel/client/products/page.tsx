@@ -472,7 +472,7 @@ export default function ProductsPage() {
                         <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
                         <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || t('products.noDescription')}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-blue-500">${product.price.toFixed(2)}</span>
+                          <span className="text-lg font-bold text-blue-500">{product.price.toFixed(2)} TND</span>
                           <span className={`text-xs px-2 py-1 rounded-full ${
                             product.platform === 'manual' 
                               ? 'bg-purple-500/10 text-purple-500' 
