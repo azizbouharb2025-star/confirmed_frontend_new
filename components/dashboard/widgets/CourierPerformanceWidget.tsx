@@ -17,6 +17,7 @@ export interface CourierData {
   successRate: number;
   avgDeliveryTime: number;
   totalDeliveries: number;
+  returnRate?: number;
 }
 
 export interface CourierPerformanceWidgetProps {
