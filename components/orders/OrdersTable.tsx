@@ -406,7 +406,7 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       minPlan: 'business',
       render: (order) => {
         const aiScore = getAIScore(order, true)
-        const riskPercentage = 100 - aiScore.score
+        const riskPercentage = 100 - aiScore
         const getRiskColor = (risk: number) => {
           if (risk >= 70) return 'bg-red-500'
           if (risk >= 40) return 'bg-yellow-500'
