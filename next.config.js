@@ -1,4 +1,7 @@
 /** @type {import('next').NextConfig} */
+
+const isDev = process.env.NODE_ENV === 'development';
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -8,6 +11,7 @@ const nextConfig = {
       },
     ],
   },
+
   async headers() {
     return [
       {
@@ -21,7 +25,9 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+              `script-src 'self' 'unsafe-inline' ${
+                isDev ? "'unsafe-eval'" : ''
+              } https://static.cloudflareinsights.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.confirmed.tn",
@@ -49,8 +55,9 @@ const nextConfig = {
           },
         ],
       },
-    ]
+    ];
   },
+
   // Disable API rewrites - use local API routes
   // async rewrites() {
   //   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
@@ -61,6 +68,6 @@ const nextConfig = {
   //     },
   //   ]
   // },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
