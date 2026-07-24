@@ -1,4 +1,3 @@
-# 🚀 Confirmed - AI-Powered Order Confirmation Platform
 
 <div align="center">
 
