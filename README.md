@@ -28,7 +28,7 @@
 - **3 Languages**: English, French, Arabic
 - **RTL Support** - Full right-to-left layout for Arabic
 - **Persistent Settings** - Language preferences saved across sessions
-- **Animated Switcher** - Beautiful flag-based language selector
+- **Animated Switcher** -  flag-based language selector
 
 ### 🌙 **Dark/Light Mode**
 - **Complete Theme System** - Every component supports both modes
