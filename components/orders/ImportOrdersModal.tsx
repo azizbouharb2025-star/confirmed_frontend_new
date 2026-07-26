@@ -1,11 +1,9 @@
 ﻿'use client'
-
 import React, { useState, useCallback, useRef } from 'react'
 import { clsx } from 'clsx'
 import { useLanguage } from '@/hooks/useLanguage'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const API_BASE_URL: string = (typeof process !== 'undefined' && (process as any).env?.NEXT_PUBLIC_API_URL) || 'https://api.confirmed.tn'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_EXTENSIONS = ['.xlsx', '.csv']
@@ -73,7 +71,7 @@ function formatBytes(bytes: number): string {
 
 function validateFile(file: File): string | null {
   const ext = '.' + file.name.split('.').pop()?.toLowerCase()
-  if (!ALLOWED_EXTENSIONS.indexOf(ext) !== -1) {
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return `Format non supporté. Utilisez XLSX ou CSV.`
   }
   if (file.size > MAX_FILE_SIZE) {
@@ -473,5 +471,4 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
     </div>
   )
 }
-
 

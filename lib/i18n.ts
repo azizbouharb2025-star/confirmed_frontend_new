@@ -534,8 +534,6 @@ export const translations = {
     'bulk.processing': 'Processing...',
     'bulk.success': 'Success',
     'bulk.failed': 'Failed',
-    'bulk.failedCount': 'failed',
-    'bulk.dismiss': 'Dismiss',
     'bulk.exportSuccess': 'Export completed successfully',
     // Import Orders Module
     'import.button': 'Import Orders',
@@ -1841,8 +1839,6 @@ export const translations = {
     'bulk.processing': 'Traitement...',
     'bulk.success': 'Succès',
     'bulk.failed': 'Échec',
-    'bulk.failedCount': 'échoué(s)',
-    'bulk.dismiss': 'Fermer',
     'bulk.exportSuccess': 'Export terminé avec succès',
     // Import Orders Module
     'import.button': 'Importer des commandes',
@@ -3107,8 +3103,6 @@ export const translations = {
     'bulk.processing': 'جاري المعالجة...',
     'bulk.success': 'نجاح',
     'bulk.failed': 'فشل',
-    'bulk.failedCount': 'فشل',
-    'bulk.dismiss': 'إغلاق',
     'bulk.exportSuccess': 'تم التصدير بنجاح',
     // Import Orders Module
     'import.button': 'استيراد الطلبات',
