@@ -7,13 +7,6 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.t
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_EXTENSIONS = ['.xlsx', '.csv']
-const ALLOWED_MIME = [
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-excel',
-  'text/csv',
-  'text/plain',
-  'application/csv',
-]
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
