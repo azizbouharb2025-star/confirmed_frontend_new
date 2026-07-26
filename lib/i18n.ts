@@ -3358,7 +3358,6 @@ export const translations = {
     'nav.operatorCallQueue': 'قائمة المكالمات',
     'nav.operatorOrders': 'الطلبات',
     'bulk.successful': 'ناجح',
-    'bulk.failedCount': 'فاشل',
     'complaint.table.retry': 'إعادة المحاولة',
     'complaint.table.noComplaints': 'لم يتم العثور على شكاوى',
     'complaint.table.previous': 'السابق',
