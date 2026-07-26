@@ -31,7 +31,7 @@
 - **Animated Switcher** -  flag-based language selector
 
 ### 🌙 **Dark/Light Mode**
-- **Complete Theme System** - Every component supports both modes
+- **Complete Theme System** - Every  supports both modes
 - **Smooth Transitions** - Animated theme switching
 - **Persistent Theme** - User preference saved in localStorage
 - **Optimized Contrast** - Perfect readability in both modes
