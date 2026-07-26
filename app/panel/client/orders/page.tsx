@@ -11,6 +11,7 @@ import { orderService, downloadCSV } from '@/services/orderService'
 import { generateOrdersCSV } from '@/components/orders/BulkActionsToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
+import ImportOrdersModal from '@/components/orders/ImportOrdersModal'
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult } from '@/types/order'
 import type { SubscriptionPlan } from '@/types/subscription'
 
@@ -65,6 +66,7 @@ export default function ClientOrdersPage() {
   // Manual order modal state
   const { t } = useLanguage()
   const [showManualModal, setShowManualModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [manualSaving, setManualSaving] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
   const [manualSuccess, setManualSuccess] = useState<string | null>(null)
@@ -315,6 +317,15 @@ export default function ClientOrdersPage() {
           </h1>
           <div className="flex items-center gap-4">
             <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg shadow-green-500/25"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              {t('import.button')}
+            </button>
+            <button
               onClick={() => setShowManualModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25"
             >
@@ -376,6 +387,12 @@ export default function ClientOrdersPage() {
           order={selectedOrder}
           isOpen={isDetailPanelOpen}
           onClose={handleCloseDetailPanel}
+        />
+
+        {/* Import Orders Modal */}
+        <ImportOrdersModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
         />
 
         {/* Manual Order Modal */}
