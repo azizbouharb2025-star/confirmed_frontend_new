@@ -88,17 +88,67 @@ const FIELD_LABELS: Record<string, string> = {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: PreviewRow['status'] }) {
+function StatusBadge({
+  status,
+  warnings,
+  errors,
+}: {
+  status: PreviewRow['status']
+  warnings: string[]
+  errors: string[]
+}) {
   const cfg = {
-    valid: { label: '✓ Valide', cls: 'bg-green-500/10 text-green-500 border-green-500/20' },
-    warning: { label: '⚠ Vérification', cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
-    rejected: { label: '✗ Rejetée', cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
-    duplicate_ignored: { label: 'Doublon', cls: 'bg-gray-500/10 text-gray-400 border-gray-500/20' },
+    valid:            { label: '✓ Valide',        cls: 'bg-green-500/10 text-green-500 border-green-500/20' },
+    warning:          { label: '⚠ Vérification',  cls: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+    rejected:         { label: '✗ Rejetée',        cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    duplicate_ignored:{ label: 'Doublon',          cls: 'bg-gray-500/10 text-gray-400 border-gray-500/20' },
   }[status] ?? { label: status, cls: 'bg-gray-500/10 text-gray-400 border-gray-500/20' }
 
+  // Collect tooltip lines: errors first, then warnings
+  const lines = [
+    ...errors.map(e => `✗ ${e}`),
+    ...warnings.map(w => `⚠ ${w}`),
+  ]
+
+  const hasTooltip = lines.length > 0
+
   return (
-    <span className={clsx('inline-block text-xs px-2 py-0.5 rounded border font-medium', cfg.cls)}>
-      {cfg.label}
+    <span className="relative group inline-block">
+      <span
+        className={clsx(
+          'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border font-medium',
+          hasTooltip ? 'cursor-help' : 'cursor-default',
+          cfg.cls,
+        )}
+      >
+        {cfg.label}
+        {hasTooltip && (
+          <svg className="w-3 h-3 opacity-60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )}
+      </span>
+
+      {hasTooltip && (
+        <span
+          className={clsx(
+            'pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50',
+            'w-max max-w-[220px] rounded-lg px-3 py-2 text-xs leading-snug shadow-xl',
+            'dark:bg-slate-700 bg-gray-800 text-white',
+            'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+            // small arrow
+            'after:content-[""] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2',
+            'after:border-4 after:border-transparent after:border-t-gray-800 dark:after:border-t-slate-700',
+          )}
+          role="tooltip"
+        >
+          <ul className="space-y-0.5">
+            {lines.map((line, i) => (
+              <li key={i}>{line}</li>
+            ))}
+          </ul>
+        </span>
+      )}
     </span>
   )
 }
@@ -187,7 +237,19 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
         throw new Error(data?.error || `Erreur ${response.status}`)
       }
 
-      setResult(data as AnalyzeResult)
+      // Normalise API response — guard every array/object field against null
+      const safe: AnalyzeResult = {
+        ...data,
+        columnMapping: data.columnMapping ?? {},
+        headers:       data.headers       ?? [],
+        insights:      data.insights      ?? [],
+        previewRows:  (data.previewRows   ?? []).map((r: PreviewRow) => ({
+          ...r,
+          warnings: r.warnings ?? [],
+          errors:   r.errors   ?? [],
+        })),
+      }
+      setResult(safe)
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Erreur inattendue')
     } finally {
@@ -197,7 +259,7 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
 
   if (!isOpen) return null
 
-  const mappedFields = result ? Object.keys(result.columnMapping) : []
+  const mappedFields = result?.columnMapping ? Object.keys(result.columnMapping) : []
 
   return (
     <div
@@ -417,7 +479,11 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
                             <td className="px-3 py-1.5 dark:text-slate-400 text-gray-500">{row.region || '—'}</td>
                             <td className="px-3 py-1.5 dark:text-slate-300 text-gray-700 whitespace-nowrap">{row.totalAmount || '—'}</td>
                             <td className="px-3 py-1.5">
-                              <StatusBadge status={row.status} />
+                              <StatusBadge
+                                status={row.status}
+                                warnings={row.warnings ?? []}
+                                errors={row.errors ?? []}
+                              />
                             </td>
                           </tr>
                         ))}
