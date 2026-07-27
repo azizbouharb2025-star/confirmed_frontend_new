@@ -162,6 +162,124 @@ function SummaryCard({ label, value, color }: { label: string; value: number; co
   )
 }
 
+// ─── Row detail / edit panel ──────────────────────────────────────────────────
+
+interface RowDetailPanelProps {
+  row: PreviewRow
+  onClose: () => void
+  onSave: (updated: PreviewRow) => void
+}
+
+function RowDetailPanel({ row, onClose, onSave }: RowDetailPanelProps) {
+  const [draft, setDraft] = useState<PreviewRow>({ ...row })
+
+  const field = (
+    label: string,
+    key: keyof PreviewRow,
+    type: 'text' | 'tel' | 'number' = 'text',
+    placeholder = '',
+  ) => (
+    <div>
+      <label className="block text-xs font-medium mb-1 dark:text-slate-300 text-gray-600">
+        {label}
+      </label>
+      <input
+        type={type}
+        value={String(draft[key] ?? '')}
+        onChange={e => setDraft(prev => ({ ...prev, [key]: e.target.value }))}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 text-sm rounded-lg dark:bg-slate-800 bg-gray-50 border dark:border-slate-600 border-gray-300 dark:text-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
+      />
+    </div>
+  )
+
+  return (
+    /* backdrop */
+    <div
+      className="absolute inset-0 z-20 flex justify-end"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      {/* semi-transparent left cover */}
+      <div className="flex-1 bg-black/20" onClick={onClose} />
+
+      {/* panel */}
+      <div className="w-80 h-full dark:bg-slate-900 bg-white border-l dark:border-slate-700 border-gray-200 flex flex-col shadow-2xl">
+
+        {/* panel header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b dark:border-slate-700 border-gray-200 shrink-0">
+          <span className="text-sm font-semibold dark:text-white text-gray-900">
+            Détails — ligne {row.rowIndex + 1}
+          </span>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg dark:hover:bg-slate-800 hover:bg-gray-100 transition-colors dark:text-slate-400 text-gray-500"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* status badge */}
+        <div className="px-4 py-2 shrink-0 border-b dark:border-slate-700/50 border-gray-100">
+          <StatusBadge
+            status={draft.status}
+            warnings={draft.warnings ?? []}
+            errors={draft.errors ?? []}
+          />
+        </div>
+
+        {/* scrollable fields */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+          {field('Nom client',   'clientName',  'text', 'ex: Ahmed Ben Ali')}
+          {field('Téléphone',    'clientPhone', 'tel',  'ex: 21234567')}
+          {field('Produit',      'productName', 'text', 'ex: Pack De Deux Hachoirs')}
+          {field('Région',       'region',      'text', 'ex: Tunis')}
+          {field('Adresse',      'address',     'text', 'ex: Rue Habib Bourguiba')}
+          {field('Montant (TND)','totalAmount', 'number','ex: 49.900')}
+
+          {/* warnings / errors list */}
+          {(draft.warnings.length > 0 || draft.errors.length > 0) && (
+            <div className="rounded-lg dark:bg-slate-800 bg-gray-50 border dark:border-slate-700 border-gray-200 p-3 space-y-1">
+              <p className="text-xs font-medium dark:text-slate-300 text-gray-600 mb-1">Problèmes détectés</p>
+              {draft.errors.map((e, i) => (
+                <p key={i} className="text-xs text-red-500 flex items-start gap-1">
+                  <span className="shrink-0">✗</span>{e}
+                </p>
+              ))}
+              {draft.warnings.map((w, i) => (
+                <p key={i} className="text-xs text-yellow-500 flex items-start gap-1">
+                  <span className="shrink-0">⚠</span>{w}
+                </p>
+              ))}
+            </div>
+          )}
+
+          <p className="text-xs dark:text-slate-500 text-gray-400 pt-1">
+            Modifiez les champs ci-dessus puis cliquez sur <strong>Enregistrer</strong> pour mettre à jour cette ligne dans l&apos;aperçu.
+          </p>
+        </div>
+
+        {/* actions */}
+        <div className="flex gap-2 px-4 py-3 border-t dark:border-slate-700 border-gray-200 shrink-0">
+          <button
+            onClick={onClose}
+            className="flex-1 px-3 py-2 text-sm dark:bg-slate-800 bg-white dark:text-slate-300 text-gray-600 border dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={() => onSave(draft)}
+            className="flex-1 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModalProps) {
@@ -173,12 +291,18 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [result, setResult] = useState<AnalyzeResult | null>(null)
+  // local editable copy of preview rows (survives edits without re-fetching)
+  const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
+  // currently selected row for detail panel
+  const [selectedRow, setSelectedRow] = useState<PreviewRow | null>(null)
 
   const reset = useCallback(() => {
     setFile(null)
     setFileError(null)
     setApiError(null)
     setResult(null)
+    setPreviewRows([])
+    setSelectedRow(null)
     setLoading(false)
     setIsDragging(false)
   }, [])
@@ -250,12 +374,38 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
         })),
       }
       setResult(safe)
+      setPreviewRows(safe.previewRows)
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Erreur inattendue')
     } finally {
       setLoading(false)
     }
   }, [file])
+
+  // Save edits from the detail panel back into the local previewRows list
+  const handleRowSave = useCallback((updated: PreviewRow) => {
+    // Re-derive status: if phone is present → at least warning, else rejected
+    const hasPhone = updated.clientPhone.trim().replace(/[\s\-\(\)\+\.]/g, '').length >= 8
+    const newErrors  = hasPhone ? [] : ['Numéro de téléphone invalide']
+    const newWarnings: string[] = []
+    if (!updated.clientName || updated.clientName.trim().length < 2)  newWarnings.push('Nom client manquant ou incomplet')
+    if (!updated.address    || updated.address.trim()    === '')       newWarnings.push('Adresse vide')
+    if (!updated.totalAmount || parseFloat(updated.totalAmount) < 0)   newWarnings.push('Montant invalide')
+
+    const newStatus: PreviewRow['status'] =
+      newErrors.length > 0   ? 'rejected' :
+      newWarnings.length > 0 ? 'warning'  : 'valid'
+
+    const saved: PreviewRow = {
+      ...updated,
+      errors:   newErrors,
+      warnings: newWarnings,
+      status:   updated.isDuplicate ? updated.status : newStatus,
+    }
+
+    setPreviewRows(prev => prev.map(r => r.rowIndex === saved.rowIndex ? saved : r))
+    setSelectedRow(null)
+  }, [])
 
   if (!isOpen) return null
 
@@ -266,7 +416,16 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     >
-      <div className="dark:bg-slate-900 bg-white rounded-xl shadow-2xl border dark:border-slate-700 border-gray-200 w-full max-w-3xl max-h-[90vh] flex flex-col">
+      <div className="dark:bg-slate-900 bg-white rounded-xl shadow-2xl border dark:border-slate-700 border-gray-200 w-full max-w-3xl max-h-[90vh] flex flex-col relative overflow-hidden">
+
+        {/* Row detail / edit panel — renders on top when a row is selected */}
+        {selectedRow && (
+          <RowDetailPanel
+            row={selectedRow}
+            onClose={() => setSelectedRow(null)}
+            onSave={handleRowSave}
+          />
+        )}
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b dark:border-slate-700 border-gray-200 shrink-0">
@@ -453,7 +612,7 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
               )}
 
               {/* Preview table */}
-              {result.previewRows.length > 0 && (
+              {previewRows.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold dark:text-white text-gray-900 mb-2">
                     {t('import.preview')}
@@ -462,16 +621,17 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
                     <table className="w-full text-xs min-w-[640px]">
                       <thead className="sticky top-0 dark:bg-slate-800 bg-gray-100 z-10">
                         <tr>
-                          {['Nom', 'Téléphone', 'Produit', 'Région', 'Montant', 'Statut'].map(h => (
-                            <th key={h} className="text-left px-3 py-2 font-medium dark:text-slate-300 text-gray-600 whitespace-nowrap">{h}</th>
+                          {['Nom', 'Téléphone', 'Produit', 'Région', 'Montant', 'Statut', ''].map((h, i) => (
+                            <th key={i} className="text-left px-3 py-2 font-medium dark:text-slate-300 text-gray-600 whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {result.previewRows.slice(0, 50).map((row) => (
+                        {previewRows.slice(0, 50).map((row) => (
                           <tr
                             key={row.rowIndex}
-                            className="border-t dark:border-slate-700/50 border-gray-100 dark:hover:bg-slate-800/40 hover:bg-gray-50"
+                            onClick={() => setSelectedRow(row)}
+                            className="border-t dark:border-slate-700/50 border-gray-100 dark:hover:bg-slate-800/60 hover:bg-blue-50/60 cursor-pointer group transition-colors"
                           >
                             <td className="px-3 py-1.5 dark:text-white text-gray-900 max-w-[140px] truncate">{row.clientName || '—'}</td>
                             <td className="px-3 py-1.5 dark:text-slate-300 text-gray-700 font-mono">{row.clientPhone || '—'}</td>
@@ -485,13 +645,19 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
                                 errors={row.errors ?? []}
                               />
                             </td>
+                            {/* edit hint */}
+                            <td className="px-2 py-1.5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                              <svg className="w-3.5 h-3.5 dark:text-slate-400 text-gray-400 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 16H9v-3z" />
+                              </svg>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    {result.previewRows.length > 50 && (
+                    {previewRows.length > 50 && (
                       <p className="text-center text-xs dark:text-slate-500 text-gray-400 py-2">
-                        + {result.previewRows.length - 50} lignes supplémentaires
+                        + {previewRows.length - 50} lignes supplémentaires
                       </p>
                     )}
                   </div>
