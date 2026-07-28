@@ -24,6 +24,13 @@ interface PreviewRow {
   errors: string[]
 }
 
+interface MappingDetail {
+  rawHeader: string
+  confirmedField: string | null
+  confidence: number      // 0–100
+  allScores: Record<string, number>
+}
+
 interface AnalyzeResult {
   success: boolean
   dryRun: boolean
@@ -33,6 +40,8 @@ interface AnalyzeResult {
   totalRejected: number
   totalDuplicates: number
   columnMapping: Record<string, string>
+  mappingDetails: MappingDetail[]
+  unmappedHeaders: string[]
   headers: string[]
   insights: string[]
   previewRows: PreviewRow[]
@@ -86,7 +95,55 @@ const FIELD_LABELS: Record<string, string> = {
   notes: 'Notes',
 }
 
+// All assignable CONFIRMED fields for the mapping dropdown
+const ALL_CONFIRMED_FIELDS = [
+  'clientName', 'clientPhone', 'totalAmount', 'productName',
+  'quantity', 'region', 'city', 'address', 'orderId', 'notes',
+] as const
+
+// Rebuild previewRows from raw file rows using a (possibly edited) column mapping
+function derivePreviewRows(
+  rawRows: Record<string, string>[],
+  mapping: Record<string, string>,    // { confirmedField: rawHeader }
+): PreviewRow[] {
+  return rawRows.map((raw, i) => {
+    const clientName  = raw[mapping.clientName]  ?? ''
+    const clientPhone = raw[mapping.clientPhone] ?? ''
+    const productName = raw[mapping.productName] ?? ''
+    const region      = raw[mapping.region] ?? raw[mapping.city] ?? ''
+    const address     = raw[mapping.address]     ?? ''
+    const totalAmount = raw[mapping.totalAmount]  ?? ''
+
+    // Minimal re-validation (mirrors backend rule: phone = only hard requirement)
+    const cleanPhone = clientPhone.trim().replace(/[\s\-().+]/g, '')
+    const phoneOk = cleanPhone.length >= 8 && /^\d+$/.test(cleanPhone)
+    const errors: string[]   = phoneOk ? [] : ['Numéro de téléphone invalide']
+    const warnings: string[] = []
+    if (!clientName.trim() || clientName.trim().length < 2) warnings.push('Nom client manquant ou incomplet')
+    if (!address.trim()) warnings.push('Adresse vide')
+
+    const status: PreviewRow['status'] =
+      errors.length   > 0 ? 'rejected' :
+      warnings.length > 0 ? 'warning'  : 'valid'
+
+    return { rowIndex: i, clientName, clientPhone, productName, region, totalAmount, address,
+             status, isDuplicate: false, warnings, errors }
+  })
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ConfidenceBadge({ confidence }: { confidence: number }) {
+  const cfg =
+    confidence >= 90 ? { label: `${confidence}%`, cls: 'bg-green-500/10 text-green-500 border-green-500/20' } :
+    confidence >= 60 ? { label: `${confidence}%`, cls: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' } :
+                       { label: `${confidence}%`, cls: 'bg-orange-500/10 text-orange-500 border-orange-500/20' }
+  return (
+    <span className={clsx('inline-block text-xs px-1.5 py-0.5 rounded border font-mono', cfg.cls)}>
+      {cfg.label}
+    </span>
+  )
+}
 
 function StatusBadge({
   status,
@@ -194,89 +251,73 @@ function RowDetailPanel({ row, onClose, onSave }: RowDetailPanelProps) {
   )
 
   return (
-    /* backdrop */
-    <div
-      className="absolute inset-0 z-20 flex justify-end"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      {/* semi-transparent left cover */}
-      <div className="flex-1 bg-black/20" onClick={onClose} />
-
-      {/* panel */}
-      <div className="w-80 h-full dark:bg-slate-900 bg-white border-l dark:border-slate-700 border-gray-200 flex flex-col shadow-2xl">
-
-        {/* panel header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b dark:border-slate-700 border-gray-200 shrink-0">
-          <span className="text-sm font-semibold dark:text-white text-gray-900">
-            Détails — ligne {row.rowIndex + 1}
-          </span>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg dark:hover:bg-slate-800 hover:bg-gray-100 transition-colors dark:text-slate-400 text-gray-500"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* status badge */}
-        <div className="px-4 py-2 shrink-0 border-b dark:border-slate-700/50 border-gray-100">
-          <StatusBadge
-            status={draft.status}
-            warnings={draft.warnings ?? []}
-            errors={draft.errors ?? []}
-          />
-        </div>
-
-        {/* scrollable fields */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {field('Nom client',   'clientName',  'text', 'ex: Ahmed Ben Ali')}
-          {field('Téléphone',    'clientPhone', 'tel',  'ex: 21234567')}
-          {field('Produit',      'productName', 'text', 'ex: Pack De Deux Hachoirs')}
-          {field('Région',       'region',      'text', 'ex: Tunis')}
-          {field('Adresse',      'address',     'text', 'ex: Rue Habib Bourguiba')}
-          {field('Montant (TND)','totalAmount', 'number','ex: 49.900')}
-
-          {/* warnings / errors list */}
-          {(draft.warnings.length > 0 || draft.errors.length > 0) && (
-            <div className="rounded-lg dark:bg-slate-800 bg-gray-50 border dark:border-slate-700 border-gray-200 p-3 space-y-1">
-              <p className="text-xs font-medium dark:text-slate-300 text-gray-600 mb-1">Problèmes détectés</p>
-              {draft.errors.map((e, i) => (
-                <p key={i} className="text-xs text-red-500 flex items-start gap-1">
-                  <span className="shrink-0">✗</span>{e}
-                </p>
-              ))}
-              {draft.warnings.map((w, i) => (
-                <p key={i} className="text-xs text-yellow-500 flex items-start gap-1">
-                  <span className="shrink-0">⚠</span>{w}
-                </p>
-              ))}
-            </div>
-          )}
-
-          <p className="text-xs dark:text-slate-500 text-gray-400 pt-1">
-            Modifiez les champs ci-dessus puis cliquez sur <strong>Enregistrer</strong> pour mettre à jour cette ligne dans l&apos;aperçu.
-          </p>
-        </div>
-
-        {/* actions */}
-        <div className="flex gap-2 px-4 py-3 border-t dark:border-slate-700 border-gray-200 shrink-0">
-          <button
-            onClick={onClose}
-            className="flex-1 px-3 py-2 text-sm dark:bg-slate-800 bg-white dark:text-slate-300 text-gray-600 border dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={() => onSave(draft)}
-            className="flex-1 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-          >
-            Enregistrer
-          </button>
-        </div>
+    <>
+      {/* panel header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b dark:border-slate-700 border-gray-200 shrink-0">
+        <span className="text-sm font-semibold dark:text-white text-gray-900">
+          Détails — ligne {row.rowIndex + 1}
+        </span>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg dark:hover:bg-slate-800 hover:bg-gray-100 transition-colors dark:text-slate-400 text-gray-500"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-    </div>
+
+      {/* status badge */}
+      <div className="px-4 py-2 shrink-0 border-b dark:border-slate-700/50 border-gray-100">
+        <StatusBadge
+          status={draft.status}
+          warnings={draft.warnings ?? []}
+          errors={draft.errors ?? []}
+        />
+      </div>
+
+      {/* scrollable fields */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {field('Nom client',    'clientName',  'text',   'ex: Ahmed Ben Ali')}
+        {field('Téléphone',     'clientPhone', 'tel',    'ex: 21234567')}
+        {field('Produit',       'productName', 'text',   'ex: Pack De Deux Hachoirs')}
+        {field('Région',        'region',      'text',   'ex: Tunis')}
+        {field('Adresse',       'address',     'text',   'ex: Rue Habib Bourguiba')}
+        {field('Montant (TND)', 'totalAmount', 'number', 'ex: 49.900')}
+
+        {(draft.warnings.length > 0 || draft.errors.length > 0) && (
+          <div className="rounded-lg dark:bg-slate-800 bg-gray-50 border dark:border-slate-700 border-gray-200 p-3 space-y-1">
+            <p className="text-xs font-medium dark:text-slate-300 text-gray-600 mb-1">Problèmes détectés</p>
+            {draft.errors.map((e, i) => (
+              <p key={i} className="text-xs text-red-500 flex items-start gap-1"><span className="shrink-0">✗</span>{e}</p>
+            ))}
+            {draft.warnings.map((w, i) => (
+              <p key={i} className="text-xs text-yellow-500 flex items-start gap-1"><span className="shrink-0">⚠</span>{w}</p>
+            ))}
+          </div>
+        )}
+
+        <p className="text-xs dark:text-slate-500 text-gray-400 pt-1">
+          Modifiez les champs puis cliquez sur <strong>Enregistrer</strong>.
+        </p>
+      </div>
+
+      {/* actions */}
+      <div className="flex gap-2 px-4 py-3 border-t dark:border-slate-700 border-gray-200 shrink-0">
+        <button
+          onClick={onClose}
+          className="flex-1 px-3 py-2 text-sm dark:bg-slate-800 bg-white dark:text-slate-300 text-gray-600 border dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={() => onSave(draft)}
+          className="flex-1 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+        >
+          Enregistrer
+        </button>
+      </div>
+    </>
   )
 }
 
@@ -295,6 +336,10 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
   // currently selected row for detail panel
   const [selectedRow, setSelectedRow] = useState<PreviewRow | null>(null)
+  // user-editable column mapping (starts from AI detection, can be corrected)
+  const [userMapping, setUserMapping] = useState<Record<string, string>>({})
+  // raw file rows kept in memory so mapping changes re-derive preview instantly
+  const [rawRows, setRawRows] = useState<Record<string, string>[]>([])
 
   const reset = useCallback(() => {
     setFile(null)
@@ -303,6 +348,8 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
     setResult(null)
     setPreviewRows([])
     setSelectedRow(null)
+    setUserMapping({})
+    setRawRows([])
     setLoading(false)
     setIsDragging(false)
   }, [])
@@ -375,6 +422,24 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
       }
       setResult(safe)
       setPreviewRows(safe.previewRows)
+      setUserMapping(safe.columnMapping)
+      // Store raw rows: the API returns previewRows as mapped values, but we need the
+      // original file rows to re-derive when the user changes a mapping.
+      // We reconstruct them from previewRows + the original headers mapping.
+      // Actually we store them keyed by rawHeader so re-mapping works correctly.
+      // The backend doesn't return raw rows, so we build a synthetic rawRows structure
+      // from previewRows using the inverse of columnMapping.
+      const inverseMapping: Record<string, string> = {}
+      Object.entries(safe.columnMapping).forEach(([field, raw]) => { inverseMapping[field] = raw })
+      const syntheticRaws: Record<string, string>[] = safe.previewRows.map(pr => {
+        const row: Record<string, string> = {}
+        Object.entries(inverseMapping).forEach(([field, rawHeader]) => {
+          const val = (pr as unknown as Record<string, string>)[field] ?? ''
+          row[rawHeader] = val
+        })
+        return row
+      })
+      setRawRows(syntheticRaws)
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Erreur inattendue')
     } finally {
@@ -407,6 +472,25 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
     setSelectedRow(null)
   }, [])
 
+  // Handle user changing a column mapping via the dropdown
+  // Re-derives previewRows immediately so the table reflects the correction
+  const handleMappingChange = useCallback((rawHeader: string, newField: string | null) => {
+    setUserMapping(prev => {
+      // Remove this rawHeader from any existing field assignment
+      const next: Record<string, string> = {}
+      Object.entries(prev).forEach(([field, rh]) => {
+        if (rh !== rawHeader) next[field] = rh
+      })
+      // Assign to new field (unless user chose "— ignorer —")
+      if (newField) next[newField] = rawHeader
+      // Re-derive preview rows from raw data with updated mapping
+      if (rawRows.length > 0) {
+        setPreviewRows(derivePreviewRows(rawRows, next))
+      }
+      return next
+    })
+  }, [rawRows])
+
   if (!isOpen) return null
 
   const mappedFields = result?.columnMapping ? Object.keys(result.columnMapping) : []
@@ -416,16 +500,7 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     >
-      <div className="dark:bg-slate-900 bg-white rounded-xl shadow-2xl border dark:border-slate-700 border-gray-200 w-full max-w-3xl max-h-[90vh] flex flex-col relative overflow-hidden">
-
-        {/* Row detail / edit panel — renders on top when a row is selected */}
-        {selectedRow && (
-          <RowDetailPanel
-            row={selectedRow}
-            onClose={() => setSelectedRow(null)}
-            onSave={handleRowSave}
-          />
-        )}
+      <div className="dark:bg-slate-900 bg-white rounded-xl shadow-2xl border dark:border-slate-700 border-gray-200 w-full max-w-3xl max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b dark:border-slate-700 border-gray-200 shrink-0">
@@ -575,39 +650,91 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
                 />
               </div>
 
-              {/* Detected columns */}
-              {mappedFields.length > 0 && (
+              {/* Detected columns — editable mapping table */}
+              {result.mappingDetails && result.mappingDetails.length > 0 && (
                 <div>
                   <h3 className="text-sm font-semibold dark:text-white text-gray-900 mb-2 flex items-center gap-2">
                     <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                     {t('import.columnDetection')}
+                    <span className="text-xs font-normal dark:text-slate-400 text-gray-500 ml-1">
+                      — corrigez si nécessaire
+                    </span>
                   </h3>
-                  <div className="dark:bg-slate-800/50 bg-gray-50 rounded-lg border dark:border-slate-700 border-gray-200 overflow-hidden">
+
+                  <div className="rounded-lg border dark:border-slate-700 border-gray-200 overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b dark:border-slate-700 border-gray-200">
-                          <th className="text-left px-4 py-2 font-medium dark:text-slate-300 text-gray-600">{t('import.confirmedField')}</th>
-                          <th className="text-left px-4 py-2 font-medium dark:text-slate-300 text-gray-600">{t('import.fileColumn')}</th>
+                        <tr className="border-b dark:border-slate-700 border-gray-200 dark:bg-slate-800/50 bg-gray-50">
+                          <th className="text-left px-4 py-2 font-medium dark:text-slate-300 text-gray-600 w-1/3">Colonne fichier</th>
+                          <th className="text-left px-4 py-2 font-medium dark:text-slate-300 text-gray-600 w-1/3">Champ CONFIRMED</th>
+                          <th className="text-left px-4 py-2 font-medium dark:text-slate-300 text-gray-600 w-1/4">Confiance</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {mappedFields.map((field) => (
-                          <tr key={field} className="border-b dark:border-slate-700/50 border-gray-100 last:border-0">
-                            <td className="px-4 py-2 dark:text-white text-gray-900 font-medium">
-                              {FIELD_LABELS[field] ?? field}
-                            </td>
-                            <td className="px-4 py-2">
-                              <code className="px-2 py-0.5 rounded dark:bg-slate-700 bg-gray-200 text-xs dark:text-slate-300 text-gray-700">
-                                {result.columnMapping[field]}
-                              </code>
-                            </td>
-                          </tr>
-                        ))}
+                        {result.mappingDetails.map((detail) => {
+                          // Current assignment for this rawHeader in userMapping
+                          const currentField = Object.entries(userMapping).find(
+                            ([, rh]) => rh === detail.rawHeader
+                          )?.[0] ?? null
+
+                          return (
+                            <tr key={detail.rawHeader} className="border-b dark:border-slate-700/50 border-gray-100 last:border-0">
+                              {/* Raw header */}
+                              <td className="px-4 py-2">
+                                <code className="px-2 py-0.5 rounded dark:bg-slate-700 bg-gray-100 text-xs dark:text-slate-300 text-gray-700">
+                                  {detail.rawHeader}
+                                </code>
+                              </td>
+
+                              {/* Editable field dropdown */}
+                              <td className="px-4 py-2">
+                                <select
+                                  value={currentField ?? ''}
+                                  onChange={e => handleMappingChange(detail.rawHeader, e.target.value || null)}
+                                  className="w-full text-xs px-2 py-1.5 rounded-lg dark:bg-slate-800 bg-white border dark:border-slate-600 border-gray-300 dark:text-white text-gray-900 outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+                                >
+                                  <option value="">— ignorer —</option>
+                                  {ALL_CONFIRMED_FIELDS.map(f => (
+                                    <option
+                                      key={f}
+                                      value={f}
+                                      disabled={f !== currentField && Object.values(userMapping).includes(detail.rawHeader) === false && userMapping[f] !== undefined && userMapping[f] !== detail.rawHeader}
+                                    >
+                                      {FIELD_LABELS[f] ?? f}
+                                      {userMapping[f] && userMapping[f] !== detail.rawHeader ? ' ✓' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+
+                              {/* Confidence badge */}
+                              <td className="px-4 py-2">
+                                {detail.confirmedField ? (
+                                  <ConfidenceBadge confidence={detail.confidence} />
+                                ) : (
+                                  <span className="text-xs dark:text-slate-500 text-gray-400 italic">non détectée</span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Unmapped columns notice */}
+                  {result.unmappedHeaders && result.unmappedHeaders.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+                      <span className="text-xs dark:text-slate-400 text-gray-500 shrink-0">Colonnes ignorées :</span>
+                      {result.unmappedHeaders.map(h => (
+                        <code key={h} className="text-xs px-1.5 py-0.5 rounded dark:bg-slate-800 bg-gray-100 dark:text-slate-400 text-gray-500 border dark:border-slate-700 border-gray-200">
+                          {h}
+                        </code>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -693,6 +820,25 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
           </button>
         </div>
       </div>
+
+      {/* Row detail panel — fixed z-[60] so modal overflow:hidden cannot clip it */}
+      {selectedRow && (
+        <div
+          className="fixed inset-0 z-[60] flex justify-end"
+          onClick={() => setSelectedRow(null)}
+        >
+          <div
+            className="w-80 h-full dark:bg-slate-900 bg-white border-l dark:border-slate-700 border-gray-200 flex flex-col shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <RowDetailPanel
+              row={selectedRow}
+              onClose={() => setSelectedRow(null)}
+              onSave={handleRowSave}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
