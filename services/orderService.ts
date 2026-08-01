@@ -211,13 +211,15 @@ export const orderService = {
    * Export orders in a logistics-provider-specific format (CSV or XLSX).
    * Returns a Blob ready for download.
    * @param orderIds - IDs of the orders to export (empty = all)
-   * @param provider - "generic" | "intigo" | ...
+   * @param provider - "generic" | "intigo" | "aramex" | "rapid_poste" | "yalidine" | "custom"
    * @param fileType - "csv" | "xlsx"
+   * @param columns  - custom column keys (only sent when provider === "custom")
    */
   async exportLogistics(
     orderIds: string[],
     provider: string,
-    fileType: 'csv' | 'xlsx'
+    fileType: 'csv' | 'xlsx',
+    columns?: string[]
   ): Promise<Blob> {
     const token =
       typeof window !== 'undefined'
@@ -241,7 +243,12 @@ export const orderService = {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ provider, fileType, orderIds }),
+      body: JSON.stringify({
+        provider,
+        fileType,
+        orderIds,
+        ...(provider === 'custom' && columns ? { columns } : {}),
+      }),
     });
 
     if (!response.ok) {
