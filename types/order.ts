@@ -253,3 +253,49 @@ export interface BulkResult {
   failed: number;
   errors: Array<{ orderId: string; error: string }>;
 }
+
+// ─── Import History ───────────────────────────────────────────────────────────
+
+/** Status values for an import operation */
+export type ImportHistoryStatus = 'completed' | 'partial' | 'failed' | 'processing' | 'pending'
+
+/** Populated user reference returned by the history endpoint */
+export interface ImportHistoryUser {
+  _id: string
+  firstName: string
+  lastName: string
+  email: string
+}
+
+/** A single import history record as returned by the backend */
+export interface ImportHistoryRecord {
+  _id: string
+  shopId: string
+  userId: ImportHistoryUser | string   // may be populated or just an ID
+  fileName: string
+  fileType: 'xlsx' | 'csv'
+  fileSize: number | null              // null on older records
+  totalDetected: number
+  totalImported: number
+  totalRejected: number
+  totalDuplicates: number
+  errorsDetected: number
+  status: ImportHistoryStatus
+  createdAt: string
+  updatedAt: string
+}
+
+/** Pagination object from the backend */
+export interface ImportHistoryPagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+}
+
+/** Full response shape from GET /api/orders/import/history */
+export interface ImportHistoryResponse {
+  success: boolean
+  history: ImportHistoryRecord[]
+  pagination: ImportHistoryPagination
+}

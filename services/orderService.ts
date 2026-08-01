@@ -12,6 +12,7 @@ import {
   PaginatedOrders,
   GetOrdersParams,
   BulkResult,
+  ImportHistoryResponse,
 } from '@/types/order';
 
 /**
@@ -204,6 +205,74 @@ export const orderService = {
     // If the API returns order data, convert to CSV
     const orders: Order[] = response.data.orders || response.data;
     return generateCSV(orders);
+  },
+
+  /**
+   * Export orders in a logistics-provider-specific format (CSV or XLSX).
+   * Returns a Blob ready for download.
+   * @param orderIds - IDs of the orders to export (empty = all)
+   * @param provider - "generic" | "intigo" | ...
+   * @param fileType - "csv" | "xlsx"
+   */
+  async exportLogistics(
+    orderIds: string[],
+    provider: string,
+    fileType: 'csv' | 'xlsx'
+  ): Promise<Blob> {
+    const token =
+      typeof window !== 'undefined'
+        ? (() => {
+            const raw = localStorage.getItem('auth-storage');
+            if (!raw) return null;
+            try {
+              return JSON.parse(raw)?.state?.token ?? null;
+            } catch {
+              return null;
+            }
+          })()
+        : null;
+
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_URL || 'https://api.confirmed.tn';
+
+    const response = await fetch(`${apiBase}/api/orders/export/logistics`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ provider, fileType, orderIds }),
+    });
+
+    if (!response.ok) {
+      let msg = `HTTP ${response.status}`;
+      try {
+        const json = await response.json();
+        msg = json?.error || msg;
+      } catch { /* ignore */ }
+      throw new Error(msg);
+    }
+
+    return response.blob();
+  },
+
+  /**
+   * Fetch paginated import history.
+   * shop_owner: automatically scoped to their shop by the backend.
+   * admin: may pass shopId to filter by a specific shop.
+   */
+  async getImportHistory(params: {
+    page?: number
+    limit?: number
+    shopId?: string   // admin-only filter — ignored for shop_owner
+  } = {}): Promise<ImportHistoryResponse> {
+    const parts: string[] = []
+    if (params.page)    parts.push(`page=${params.page}`)
+    if (params.limit)   parts.push(`limit=${params.limit}`)
+    if (params.shopId)  parts.push(`shopId=${encodeURIComponent(params.shopId)}`)
+    const qs = parts.length ? `?${parts.join('&')}` : ''
+    const response = await api.get(`/api/orders/import/history${qs}`)
+    return response.data as ImportHistoryResponse
   },
 };
 

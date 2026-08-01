@@ -12,6 +12,7 @@ import { generateOrdersCSV } from '@/components/orders/BulkActionsToolbar'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 import ImportOrdersModal from '@/components/orders/ImportOrdersModal'
+import LogisticsExportModal from '@/components/orders/LogisticsExportModal'
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult } from '@/types/order'
 import type { SubscriptionPlan } from '@/types/subscription'
 
@@ -67,6 +68,7 @@ export default function ClientOrdersPage() {
   const { t } = useLanguage()
   const [showManualModal, setShowManualModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showLogisticsExportModal, setShowLogisticsExportModal] = useState(false)
   const [manualSaving, setManualSaving] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
   const [manualSuccess, setManualSuccess] = useState<string | null>(null)
@@ -326,6 +328,15 @@ export default function ClientOrdersPage() {
               {t('import.button')}
             </button>
             <button
+              onClick={() => setShowLogisticsExportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/25"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export Logistique
+            </button>
+            <button
               onClick={() => setShowManualModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25"
             >
@@ -393,6 +404,13 @@ export default function ClientOrdersPage() {
         <ImportOrdersModal
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
+        />
+
+        {/* Logistics Export Modal */}
+        <LogisticsExportModal
+          isOpen={showLogisticsExportModal}
+          onClose={() => setShowLogisticsExportModal(false)}
+          orderIds={selectedIds}
         />
 
         {/* Manual Order Modal */}

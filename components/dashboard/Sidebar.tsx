@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon, QrCodeIcon, UserGroupIcon, TruckIcon, ChartPieIcon } from '@heroicons/react/24/outline'
+import { XMarkIcon, HomeIcon, ShoppingBagIcon, UsersIcon, ChartBarIcon, CogIcon, PhoneIcon, BuildingStorefrontIcon, DocumentTextIcon, ExclamationCircleIcon, QrCodeIcon, UserGroupIcon, TruckIcon, ChartPieIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { TranslationKey } from '@/lib/i18n'
@@ -22,6 +22,7 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
     { name: t('nav.orders'), href: '/panel/admin/orders', icon: ShoppingBagIcon },
     { name: t('nav.analytics'), href: '/panel/admin/analytics', icon: ChartBarIcon },
     { name: t('nav.shops'), href: '/panel/admin/shops', icon: BuildingStorefrontIcon },
+    { name: t('import.historyNavLabel'), href: '/panel/admin/import-history', icon: ArrowDownTrayIcon },
     { name: t('nav.settings'), href: '/panel/admin/settings', icon: CogIcon },
   ],
   operator: [
@@ -35,6 +36,7 @@ const getNavigationItems = (t: (key: TranslationKey) => string) => ({
     { name: t('nav.myShops'), href: '/panel/client/shops', icon: BuildingStorefrontIcon },
     { name: t('nav.orders'), href: '/panel/client/orders', icon: ShoppingBagIcon },
     { name: t('nav.products'), href: '/panel/client/products', icon: DocumentTextIcon },
+    { name: t('import.historyNavLabel'), href: '/panel/client/import-history', icon: ArrowDownTrayIcon },
     { name: t('nav.complaints'), href: '/panel/client/complaints', icon: ExclamationCircleIcon },
     { name: t('nav.supportCards'), href: '/panel/client/support-cards', icon: QrCodeIcon },
     { name: t('nav.team'), href: '/panel/client/team', icon: UserGroupIcon },

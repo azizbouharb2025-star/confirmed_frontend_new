@@ -47,9 +47,20 @@ interface AnalyzeResult {
   previewRows: PreviewRow[]
 }
 
+/** Shape of the response from POST /api/orders/import/confirm */
+interface ImportConfirmResult {
+  success: boolean
+  fileName: string
+  totalDetected: number
+  totalImported: number
+  totalRejected: number
+  totalDuplicates: number
+}
+
 interface ImportOrdersModalProps {
   isOpen: boolean
   onClose: () => void
+  onImportSuccess?: () => void
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -323,15 +334,17 @@ function RowDetailPanel({ row, onClose, onSave }: RowDetailPanelProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModalProps) {
+export default function ImportOrdersModal({ isOpen, onClose, onImportSuccess }: ImportOrdersModalProps) {
   const { t } = useLanguage()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [result, setResult] = useState<AnalyzeResult | null>(null)
+  const [importResult, setImportResult] = useState<ImportConfirmResult | null>(null)
   // local editable copy of preview rows (survives edits without re-fetching)
   const [previewRows, setPreviewRows] = useState<PreviewRow[]>([])
   // currently selected row for detail panel
@@ -346,11 +359,13 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
     setFileError(null)
     setApiError(null)
     setResult(null)
+    setImportResult(null)
     setPreviewRows([])
     setSelectedRow(null)
     setUserMapping({})
     setRawRows([])
     setLoading(false)
+    setImporting(false)
     setIsDragging(false)
   }, [])
 
@@ -490,6 +505,47 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
       return next
     })
   }, [rawRows])
+
+  // ── Step 2: actually import after user confirms the preview ───────────────
+  const handleConfirmImport = useCallback(async () => {
+    if (!file) return
+    setImporting(true)
+    setApiError(null)
+
+    try {
+      const token = getAuthToken()
+      const form = new FormData()
+      form.append('file', file)
+
+      const response = await fetch(`${API_BASE_URL}/api/orders/import/confirm`, {
+        method: 'POST',
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: form,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Erreur ${response.status}`)
+      }
+
+      setImportResult({
+        success: data.success ?? true,
+        fileName: data.fileName ?? file.name,
+        totalDetected: data.totalDetected ?? 0,
+        totalImported: data.totalImported ?? 0,
+        totalRejected: data.totalRejected ?? 0,
+        totalDuplicates: data.totalDuplicates ?? 0,
+      })
+
+      // Notify parent so the orders list can refresh
+      onImportSuccess?.()
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Erreur inattendue')
+    } finally {
+      setImporting(false)
+    }
+  }, [file, onImportSuccess])
 
   if (!isOpen) return null
 
@@ -792,6 +848,129 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
               )}
             </div>
           )}
+
+          {/* ── Import success summary (shown after confirm) ───────────────── */}
+          {importResult && (
+            <div className="space-y-5">
+              {/* Success banner */}
+              <div className="flex items-center gap-3 px-4 py-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-semibold text-green-600 dark:text-green-400 text-sm">
+                    {t('import.success')}
+                  </p>
+                  <p className="text-xs dark:text-slate-400 text-gray-500 mt-0.5 truncate">
+                    {importResult.fileName}
+                  </p>
+                </div>
+              </div>
+
+              {/* Summary cards */}
+              <div>
+                <h3 className="text-sm font-semibold dark:text-white text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Résumé de l&apos;import
+                </h3>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <SummaryCard
+                    label="Commandes détectées"
+                    value={importResult.totalDetected}
+                    color="dark:bg-slate-800 bg-gray-50 dark:border-slate-700 border-gray-200 dark:text-white text-gray-900"
+                  />
+                  <SummaryCard
+                    label="Commandes importées"
+                    value={importResult.totalImported}
+                    color="dark:bg-green-500/10 bg-green-50 dark:border-green-500/20 border-green-200 text-green-600 dark:text-green-400"
+                  />
+                  <SummaryCard
+                    label="Commandes rejetées"
+                    value={importResult.totalRejected}
+                    color="dark:bg-red-500/10 bg-red-50 dark:border-red-500/20 border-red-200 text-red-600 dark:text-red-400"
+                  />
+                  <SummaryCard
+                    label="Doublons détectés"
+                    value={importResult.totalDuplicates}
+                    color="dark:bg-yellow-500/10 bg-yellow-50 dark:border-yellow-500/20 border-yellow-200 text-yellow-600 dark:text-yellow-400"
+                  />
+                </div>
+              </div>
+
+              {/* Report download buttons */}
+              <div>
+                <h3 className="text-sm font-semibold dark:text-white text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Télécharger le rapport
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {/* PDF report — disabled, not yet available */}
+                  <div className="relative group">
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg border dark:border-slate-600 border-gray-300 dark:bg-slate-800 bg-gray-50 dark:text-slate-500 text-gray-400 cursor-not-allowed opacity-60 font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      Télécharger rapport PDF
+                      <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 dark:text-slate-400 text-gray-500 font-normal">
+                        Bientôt
+                      </span>
+                    </button>
+                    {/* Tooltip */}
+                    <span
+                      className={clsx(
+                        'pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50',
+                        'w-max max-w-[200px] rounded-lg px-3 py-2 text-xs leading-snug shadow-xl',
+                        'dark:bg-slate-700 bg-gray-800 text-white',
+                        'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+                      )}
+                      role="tooltip"
+                    >
+                      Génération PDF bientôt disponible
+                    </span>
+                  </div>
+
+                  {/* Excel report — disabled, not yet available */}
+                  <div className="relative group">
+                    <button
+                      disabled
+                      aria-disabled="true"
+                      className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg border dark:border-slate-600 border-gray-300 dark:bg-slate-800 bg-gray-50 dark:text-slate-500 text-gray-400 cursor-not-allowed opacity-60 font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Télécharger rapport Excel
+                      <span className="ml-1 text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 dark:text-slate-400 text-gray-500 font-normal">
+                        Bientôt
+                      </span>
+                    </button>
+                    {/* Tooltip */}
+                    <span
+                      className={clsx(
+                        'pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-50',
+                        'w-max max-w-[200px] rounded-lg px-3 py-2 text-xs leading-snug shadow-xl',
+                        'dark:bg-slate-700 bg-gray-800 text-white',
+                        'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+                      )}
+                      role="tooltip"
+                    >
+                      Export Excel bientôt disponible
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -800,24 +979,60 @@ export default function ImportOrdersModal({ isOpen, onClose }: ImportOrdersModal
             onClick={handleClose}
             className="flex-1 px-4 py-2.5 dark:bg-slate-800 bg-white dark:text-white text-gray-700 border dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity font-medium text-sm"
           >
-            {t('orders.cancel')}
+            {importResult ? 'Fermer' : t('orders.cancel')}
           </button>
-          <button
-            onClick={result ? reset : handleAnalyze}
-            disabled={!file || loading}
-            className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                {t('import.analyzing')}
-              </>
-            ) : result ? (
-              t('import.btnBack')
-            ) : (
-              t('import.btnPreview')
-            )}
-          </button>
+
+          {/* Show nothing extra once import is done */}
+          {!importResult && (
+            <>
+              {result ? (
+                /* After preview: show "Back" + "Confirm Import" */
+                <>
+                  <button
+                    onClick={reset}
+                    className="flex-1 px-4 py-2.5 dark:bg-slate-800 bg-white dark:text-white text-gray-700 border dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity font-medium text-sm"
+                  >
+                    {t('import.btnBack')}
+                  </button>
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={importing}
+                    className="flex-1 px-4 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center justify-center gap-2"
+                  >
+                    {importing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        {t('import.importing')}
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {t('import.btnConfirm')}
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                /* Initial state: show "Analyze File" */
+                <button
+                  onClick={handleAnalyze}
+                  disabled={!file || loading}
+                  className="flex-1 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {t('import.analyzing')}
+                    </>
+                  ) : (
+                    t('import.btnPreview')
+                  )}
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
