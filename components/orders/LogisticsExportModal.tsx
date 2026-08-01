@@ -4,8 +4,8 @@
  * LogisticsExportModal
  *
  * Allows the user to export selected orders to a logistics provider format.
- * Supported:  generic, intigo
- * Coming soon: aramex, rapid_poste, custom
+ * Supported:  generic, intigo, aramex
+ * Coming soon: rapid_poste, custom
  */
 
 import React, { useState } from 'react'
@@ -27,7 +27,7 @@ interface ProviderOption {
 const PROVIDERS: ProviderOption[] = [
   { id: 'generic',     label: 'Generic',      enabled: true  },
   { id: 'intigo',      label: 'Intigo',        enabled: true  },
-  { id: 'aramex',      label: 'Aramex',        enabled: false },
+  { id: 'aramex',      label: 'Aramex',        enabled: true  },
   { id: 'rapid_poste', label: 'Rapid Poste',   enabled: false },
   { id: 'custom',      label: 'Custom',        enabled: false },
 ]
