@@ -4,7 +4,7 @@
  * LogisticsExportModal
  *
  * Allows the user to export selected orders to a logistics provider format.
- * Supported:  generic, intigo, aramex, rapid_poste
+ * Supported:  generic, intigo, aramex, rapid_poste, yalidine
  * Coming soon: custom
  */
 
@@ -13,7 +13,7 @@ import { orderService } from '@/services/orderService'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Provider = 'generic' | 'intigo' | 'aramex' | 'rapid_poste' | 'custom'
+type Provider = 'generic' | 'intigo' | 'aramex' | 'rapid_poste' | 'yalidine' | 'custom'
 type FileType = 'csv' | 'xlsx'
 
 interface ProviderOption {
@@ -29,6 +29,7 @@ const PROVIDERS: ProviderOption[] = [
   { id: 'intigo',      label: 'Intigo',        enabled: true  },
   { id: 'aramex',      label: 'Aramex',        enabled: true  },
   { id: 'rapid_poste', label: 'Rapid Poste',   enabled: true  },
+  { id: 'yalidine',    label: 'Yalidine',       enabled: true  },
   { id: 'custom',      label: 'Custom',        enabled: false },
 ]
 
