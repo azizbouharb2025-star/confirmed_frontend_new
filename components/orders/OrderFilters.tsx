@@ -3,9 +3,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { clsx } from 'clsx'
 import type { OrderFilters as OrderFiltersType, OrderStatus } from '@/types/order'
-import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
+import { SubscriptionPlan } from '@/types/subscription'
 import { useLanguage } from '@/hooks/useLanguage'
-import AIScoreFilter from '@/components/orders/AIScoreFilter'
 
 /**
  * OrderFilters Component
@@ -18,8 +17,6 @@ export interface OrderFiltersProps {
   subscriptionPlan: SubscriptionPlan
   filters: OrderFiltersType
   onFiltersChange: (filters: OrderFiltersType) => void
-  availableRegions?: string[]
-  availableCouriers?: string[]
   className?: string
 }
 
@@ -121,56 +118,8 @@ export function filterByDateRange<T extends { createdAt: string }>(
 }
 
 /**
- * Filter orders by AI score range (Pro+ feature)
- */
-export function filterByAiScoreRange<T extends { aiRiskScore?: number }>(
-  orders: T[],
-  aiScoreRange: { min: number; max: number } | undefined
-): T[] {
-  if (!aiScoreRange) {
-    return orders
-  }
-  
-  return orders.filter((order) => {
-    if (order.aiRiskScore === undefined) {
-      return false
-    }
-    return order.aiRiskScore >= aiScoreRange.min && order.aiRiskScore <= aiScoreRange.max
-  })
-}
-
-/**
- * Filter orders by region (Business+ feature)
- */
-export function filterByRegion<T extends { region?: string }>(
-  orders: T[],
-  region: string | undefined
-): T[] {
-  if (!region || region === '') {
-    return orders
-  }
-  
-  return orders.filter((order) => order.region === region)
-}
-
-/**
- * Filter orders by courier (Business+ feature)
- */
-export function filterByCourier<T extends { courierAssignment?: string }>(
-  orders: T[],
-  courier: string | undefined
-): T[] {
-  if (!courier || courier === '') {
-    return orders
-  }
-  
-  return orders.filter((order) => order.courierAssignment === courier)
-}
-
-
-/**
  * Apply all filters with AND logic
- * 
+ *
  * Property 5: Multiple filters combine with AND logic
  * Validates: Requirements 2.6
  */
@@ -179,9 +128,6 @@ export function applyAllFilters<T extends {
   clientInfo: { name: string; phone: string }
   status: OrderStatus
   createdAt: string
-  aiRiskScore?: number
-  region?: string
-  courierAssignment?: string
 }>(
   orders: T[],
   filters: OrderFiltersType
@@ -196,21 +142,6 @@ export function applyAllFilters<T extends {
   
   // Apply date range filter
   result = filterByDateRange(result, filters.dateRange)
-  
-  // Apply AI score range filter (Pro+)
-  if (filters.aiScoreRange) {
-    result = filterByAiScoreRange(result, filters.aiScoreRange)
-  }
-  
-  // Apply region filter (Business+)
-  if (filters.region) {
-    result = filterByRegion(result, filters.region)
-  }
-  
-  // Apply courier filter (Business+)
-  if (filters.courier) {
-    result = filterByCourier(result, filters.courier)
-  }
   
   return result
 }
@@ -264,8 +195,6 @@ export default function OrderFilters({
   subscriptionPlan,
   filters,
   onFiltersChange,
-  availableRegions = [],
-  availableCouriers = [],
   className,
 }: OrderFiltersProps) {
   const { t } = useLanguage()
@@ -282,10 +211,6 @@ export default function OrderFilters({
       onFiltersChange({ ...filters, search: debouncedSearch })
     }
   }, [debouncedSearch, filters, onFiltersChange])
-  
-  // Check feature access
-  const hasProAccess = hasFeatureAccess(subscriptionPlan, 'pro')
-  const hasBusinessAccess = hasFeatureAccess(subscriptionPlan, 'business')
   
   // Handle search input change
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,24 +253,6 @@ export default function OrderFilters({
     }
   }, [filters, onFiltersChange])
   
-  // Handle AI score range changes (Pro+)
-  const handleAiScoreRangeChange = useCallback((min: number, max: number) => {
-    onFiltersChange({
-      ...filters,
-      aiScoreRange: { min, max }
-    })
-  }, [filters, onFiltersChange])
-  
-  // Handle region change (Business+)
-  const handleRegionChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFiltersChange({ ...filters, region: e.target.value || undefined })
-  }, [filters, onFiltersChange])
-  
-  // Handle courier change (Business+)
-  const handleCourierChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFiltersChange({ ...filters, courier: e.target.value || undefined })
-  }, [filters, onFiltersChange])
-  
   // Clear all filters
   const handleClearFilters = useCallback(() => {
     setSearchInput('')
@@ -353,9 +260,6 @@ export default function OrderFilters({
       search: '',
       status: 'all',
       dateRange: null,
-      aiScoreRange: undefined,
-      region: undefined,
-      courier: undefined,
     })
   }, [onFiltersChange])
   
@@ -364,10 +268,7 @@ export default function OrderFilters({
     return (
       filters.search !== '' ||
       filters.status !== 'all' ||
-      filters.dateRange !== null ||
-      filters.aiScoreRange !== undefined ||
-      filters.region !== undefined ||
-      filters.courier !== undefined
+      filters.dateRange !== null
     )
   }, [filters])
 
