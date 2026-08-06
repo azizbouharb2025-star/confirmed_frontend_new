@@ -549,7 +549,6 @@ export default function ImportOrdersModal({ isOpen, onClose, onImportSuccess }: 
 
   if (!isOpen) return null
 
-  const mappedFields = result?.columnMapping ? Object.keys(result.columnMapping) : []
 
   return (
     <div
