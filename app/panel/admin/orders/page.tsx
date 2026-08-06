@@ -665,7 +665,6 @@ export default function AdminOrdersPage() {
 
           {/* Filters */}
           <OrderFilters
-            subscriptionPlan={subscriptionPlan}
             filters={filters}
             onFiltersChange={handleFiltersChange}
           />

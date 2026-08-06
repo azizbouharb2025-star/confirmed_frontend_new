@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { clsx } from 'clsx'
 import type { OrderFilters as OrderFiltersType, OrderStatus } from '@/types/order'
-import { SubscriptionPlan } from '@/types/subscription'
 import { useLanguage } from '@/hooks/useLanguage'
 
 /**
@@ -14,7 +13,6 @@ import { useLanguage } from '@/hooks/useLanguage'
  */
 
 export interface OrderFiltersProps {
-  subscriptionPlan: SubscriptionPlan
   filters: OrderFiltersType
   onFiltersChange: (filters: OrderFiltersType) => void
   className?: string
@@ -165,15 +163,6 @@ const _CalendarIcon = () => (
 )
 
 /**
- * Lock Icon Component for disabled features
- */
-const LockIcon = () => (
-  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-  </svg>
-)
-
-/**
  * Format date for input value
  */
 function formatDateForInput(date: Date | null): string {
@@ -192,7 +181,6 @@ function parseDateFromInput(value: string): Date | null {
 
 
 export default function OrderFilters({
-  subscriptionPlan,
   filters,
   onFiltersChange,
   className,
@@ -285,8 +273,6 @@ export default function OrderFilters({
     inputBaseStyles,
     'appearance-none cursor-pointer'
   )
-  
-  const disabledStyles = 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-slate-900'
 
   return (
     <div className={clsx('space-y-4', className)}>
@@ -381,106 +367,6 @@ export default function OrderFilters({
             Clear Filters
           </button>
         )}
-      </div>
-
-      
-      {/* Tier-based filters row */}
-      <div className="flex flex-wrap gap-4 items-end">
-        {/* AI Score Range Filter (Pro+) */}
-        <div className="relative w-[280px]">
-          {hasProAccess ? (
-            <AIScoreFilter
-              minScore={filters.aiScoreRange?.min ?? 0}
-              maxScore={filters.aiScoreRange?.max ?? 100}
-              onChange={handleAiScoreRangeChange}
-            />
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                {t('orders.aiScoreRange')}
-                <LockIcon />
-              </label>
-              <div className="flex gap-2 items-center opacity-50">
-                <input
-                  type="number"
-                  disabled
-                  placeholder="Min"
-                  className={clsx(inputBaseStyles, 'w-[80px]', disabledStyles)}
-                />
-                <span className="text-gray-500 dark:text-slate-400">-</span>
-                <input
-                  type="number"
-                  disabled
-                  placeholder="Max"
-                  className={clsx(inputBaseStyles, 'w-[80px]', disabledStyles)}
-                />
-              </div>
-              <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
-                {t('orders.upgradeProAiScore')}
-              </p>
-            </div>
-          )}
-        </div>
-        
-        {/* Region Filter (Business+) */}
-        <div className="relative w-[180px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-            {t('orders.region')}
-            {!hasBusinessAccess && <LockIcon />}
-          </label>
-          <select
-            value={filters.region || ''}
-            onChange={handleRegionChange}
-            disabled={!hasBusinessAccess}
-            className={clsx(
-              selectBaseStyles,
-              !hasBusinessAccess && disabledStyles
-            )}
-            data-testid="region-filter"
-          >
-            <option value="">{t('orders.allRegions')}</option>
-            {availableRegions.map((region) => (
-              <option key={region} value={region}>
-                {region}
-              </option>
-            ))}
-          </select>
-          {!hasBusinessAccess && (
-            <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
-              {t('orders.upgradeBusinessRegion')}
-            </p>
-          )}
-        </div>
-        
-        {/* Courier Filter (Business+) */}
-        <div className="relative w-[180px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-            {t('orders.courier')}
-            {!hasBusinessAccess && <LockIcon />}
-          </label>
-          <select
-            value={filters.courier || ''}
-            onChange={handleCourierChange}
-            disabled={!hasBusinessAccess}
-            className={clsx(
-              selectBaseStyles,
-              !hasBusinessAccess && disabledStyles
-            )}
-            data-testid="courier-filter"
-          >
-            <option value="">{t('orders.allCouriers')}</option>
-            {availableCouriers.map((courier) => (
-              <option key={courier} value={courier}>
-                {courier}
-              </option>
-            ))}
-          </select>
-          {!hasBusinessAccess && (
-            <p className="text-xs text-gray-500 dark:text-slate-500 mt-1">
-              {t('orders.upgradeBusinessCourier')}
-            </p>
-          )}
-        </div>
       </div>
     </div>
   )
