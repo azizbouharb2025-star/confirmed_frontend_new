@@ -15,6 +15,29 @@ import {
   ImportHistoryResponse,
 } from '@/types/order';
 
+// ─── Export Template types ────────────────────────────────────────────────────
+
+export interface ExportTemplate {
+  _id:        string
+  name:       string
+  columns:    string[]
+  isDefault:  boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface CreateExportTemplatePayload {
+  name:      string
+  columns:   string[]
+  isDefault?: boolean
+}
+
+export interface UpdateExportTemplatePayload {
+  name?:     string
+  columns?:  string[]
+  isDefault?: boolean
+}
+
 /**
  * Build query string from GetOrdersParams
  */
@@ -280,6 +303,39 @@ export const orderService = {
     const qs = parts.length ? `?${parts.join('&')}` : ''
     const response = await api.get(`/api/orders/import/history${qs}`)
     return response.data as ImportHistoryResponse
+  },
+
+  // ─── Export Template CRUD ──────────────────────────────────────────────────
+
+  /** Fetch all saved custom-export templates for the authenticated shop. */
+  async getExportTemplates(): Promise<ExportTemplate[]> {
+    const response = await api.get('/api/orders/export/templates')
+    const data = response.data as { success: boolean; templates: ExportTemplate[] }
+    return data.templates ?? []
+  },
+
+  /** Create a new named custom-export template. */
+  async createExportTemplate(
+    payload: CreateExportTemplatePayload
+  ): Promise<ExportTemplate> {
+    const response = await api.post('/api/orders/export/templates', payload)
+    const data = response.data as { success: boolean; template: ExportTemplate }
+    return data.template
+  },
+
+  /** Update an existing template by ID (name, columns, isDefault). */
+  async updateExportTemplate(
+    id: string,
+    payload: UpdateExportTemplatePayload
+  ): Promise<ExportTemplate> {
+    const response = await api.put(`/api/orders/export/templates/${id}`, payload)
+    const data = response.data as { success: boolean; template: ExportTemplate }
+    return data.template
+  },
+
+  /** Delete a template by ID. */
+  async deleteExportTemplate(id: string): Promise<void> {
+    await api.delete(`/api/orders/export/templates/${id}`)
   },
 };
 
