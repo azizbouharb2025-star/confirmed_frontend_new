@@ -163,10 +163,6 @@ const _CalendarIcon = () => (
 )
 
 /**
- * Lock Icon Component for disabled features
- */
-
-/**
  * Format date for input value
  */
 function formatDateForInput(date: Date | null): string {

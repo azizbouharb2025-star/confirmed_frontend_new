@@ -17,6 +17,7 @@ import {
 import { useLanguage } from '@/hooks/useLanguage'
 import ProductImageDisplay from './ProductImageDisplay'
 import type { ProductPerformance } from '@/types/productPerformance'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 interface ProductPerformanceTableProps {
   products: ProductPerformance[]
@@ -222,7 +223,7 @@ export default function ProductPerformanceTable({
 
                 {/* Revenue */}
                 <td className="px-4 py-3 text-right font-medium text-blue-500">
-                  ${product.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(product.revenue)}
                 </td>
 
                 {/* Return Rate */}

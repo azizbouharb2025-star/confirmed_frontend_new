@@ -12,6 +12,7 @@ import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianG
 import WidgetContainer from '../WidgetContainer';
 import { useLanguage } from '@/hooks/useLanguage';
 import type { TranslationKey } from '@/lib/i18n';
+import { formatCurrency } from '@/lib/formatCurrency';
 
 export type ViewMode = 'cumulative' | 'daily';
 
@@ -51,29 +52,17 @@ const VIEW_OPTIONS: { value: ViewMode; labelKey: TranslationKey }[] = [
 
 
 /**
- * Format currency value
- */
-function formatCurrency(value: number, _currency: string): string {
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-  }).format(value);
-}
-
-/**
  * Custom tooltip for the area chart
  */
 function ChartTooltip({ 
   active, 
   payload, 
   label,
-  currency = 'TND',
   t,
 }: { 
   active?: boolean; 
   payload?: Array<{ value: number; dataKey: string }>; 
   label?: string;
-  currency?: string;
   t: (key: TranslationKey) => string;
 }) {
   if (active && payload && payload.length) {
@@ -82,7 +71,7 @@ function ChartTooltip({
         <p className="text-xs text-slate-400 mb-1">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm text-green-400">
-            {entry.dataKey === 'cumulative' ? t('widget.chart.total') : t('widget.chart.revenue')}: {formatCurrency(entry.value, currency)}
+            {entry.dataKey === 'cumulative' ? t('widget.chart.total') : t('widget.chart.revenue')}: {formatCurrency(entry.value)}
           </p>
         ))}
       </div>
@@ -157,7 +146,7 @@ export function RevenueChartWidget({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold text-green-400">
-                {formatCurrency(totalRevenue, currency)}
+                {formatCurrency(totalRevenue)}
               </p>
               <div className="flex items-center gap-1 text-sm">
                 {isPositiveGrowth ? (
@@ -213,7 +202,7 @@ export function RevenueChartWidget({
                   tickLine={{ stroke: '#475569' }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}k TND`}
                 />
-                <Tooltip content={<ChartTooltip currency={currency} t={t} />} />
+                <Tooltip content={<ChartTooltip t={t} />} />
                 <Area 
                   type="monotone" 
                   dataKey={dataKey}

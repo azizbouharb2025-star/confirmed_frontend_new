@@ -8,6 +8,7 @@ import StatusBadge, { getTranslatedStatusLabels } from '@/components/ui/StatusBa
 import { useLanguage } from '@/hooks/useLanguage'
 import type { TranslationKey } from '@/lib/i18n'
 import FeedbackDisplay from './FeedbackDisplay'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 /**
  * OrderDetailPanel Component
@@ -22,16 +23,6 @@ export interface OrderDetailPanelProps {
   order: Order | null
   isOpen: boolean
   onClose: () => void
-}
-
-/**
- * Format currency value
- */
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-  }).format(amount)
 }
 
 /**
