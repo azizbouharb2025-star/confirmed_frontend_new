@@ -14,23 +14,13 @@ import api from '@/lib/api';
 import { useLanguage } from '@/hooks/useLanguage';
 import type { TranslationKey } from '@/lib/i18n';
 import type { Order } from '@/types/order';
+import { formatCurrency } from '@/lib/formatCurrency';
 
 export interface RecentOrdersWidgetProps {
   /** Maximum number of orders to display (default: 10) */
   maxOrders?: number;
   /** Optional class name for styling */
   className?: string;
-}
-
-/**
- * Format currency value
- */
-function formatCurrency(amount: number | undefined | null): string {
-  const value = typeof amount === 'number' && !isNaN(amount) ? amount : 0;
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-  }).format(value);
 }
 
 /**
@@ -195,7 +185,7 @@ export function RecentOrdersWidget({
                     <StatusBadge status={order.status} size="sm" />
                   </td>
                   <td className="py-3 px-2 text-right font-medium">
-                    {formatCurrency(order.totalAmount ?? (order as unknown as { total?: number }).total ?? (order as unknown as { amount?: number }).amount)}
+                    {formatCurrency(order.totalAmount ?? (order as unknown as { total?: number }).total ?? (order as unknown as { amount?: number }).amount ?? 0)}
                   </td>
                 </tr>
               ))}

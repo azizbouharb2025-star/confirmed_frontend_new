@@ -10,6 +10,7 @@ import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { getAIScore } from '@/services/aiScoreService'
 import { useLanguage } from '@/hooks/useLanguage'
 import { TranslationKey } from '@/lib/i18n'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 /**
  * OrdersTable Component
@@ -46,17 +47,6 @@ export interface ColumnConfig {
   render: (order: Order) => React.ReactNode
   className?: string
 }
-
-/**
- * Format currency value
- */
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('fr-TN', {
-    style: 'currency',
-    currency: 'TND',
-  }).format(amount)
-}
-
 
 /**
  * Get visible columns based on subscription plan
