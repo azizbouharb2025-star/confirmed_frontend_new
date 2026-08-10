@@ -88,11 +88,6 @@ export default function ClientOrdersPage() {
     estimatedDate: '',
     trackingNumber: '',
     carrier: '',
-    secondaryPhone: '',
-    packageCount: 1,
-    comment: '',
-    weight: 0,
-    colissimoType: '',
   })
   const [manualFormErrors, setManualFormErrors] = useState<Record<string, string>>({})
 
@@ -102,8 +97,6 @@ export default function ClientOrdersPage() {
       street: '', city: '', state: '', zipCode: '', country: '',
       items: [{ name: '', quantity: 1, price: 0, sku: '' }],
       estimatedDate: '', trackingNumber: '', carrier: '',
-      secondaryPhone: '', packageCount: 1, comment: '',
-      weight: 0, colissimoType: '',
     })
     setManualFormErrors({})
     setManualError(null)
@@ -135,13 +128,13 @@ export default function ClientOrdersPage() {
           name: manualForm.clientName,
           phone: manualForm.clientPhone,
           ...(manualForm.clientEmail && { email: manualForm.clientEmail }),
-          ...((manualForm.street || manualForm.city || manualForm.state || manualForm.zipCode || manualForm.country) && {
+          ...((manualForm.street || manualForm.city) && {
             address: {
-              ...(manualForm.street && { street: manualForm.street }),
-              ...(manualForm.city && { city: manualForm.city }),
-              ...(manualForm.state && { state: manualForm.state }),
-              ...(manualForm.zipCode && { zipCode: manualForm.zipCode }),
-              ...(manualForm.country && { country: manualForm.country }),
+              street: manualForm.street,
+              city: manualForm.city,
+              state: manualForm.state,
+              zipCode: manualForm.zipCode,
+              country: manualForm.country,
             }
           }),
         },
@@ -152,37 +145,11 @@ export default function ClientOrdersPage() {
           ...(i.sku && { sku: i.sku }),
         })),
         totalAmount,
-        ...((manualForm.estimatedDate ||
-             manualForm.trackingNumber ||
-             manualForm.carrier ||
-             manualForm.secondaryPhone ||
-             manualForm.comment ||
-             manualForm.weight > 0 ||
-             manualForm.colissimoType) && {
+        ...((manualForm.estimatedDate || manualForm.trackingNumber || manualForm.carrier) && {
           deliveryInfo: {
-            ...(manualForm.estimatedDate && {
-              estimatedDate: new Date(manualForm.estimatedDate).toISOString()
-            }),
-            ...(manualForm.trackingNumber && {
-              trackingNumber: manualForm.trackingNumber
-            }),
-            ...(manualForm.carrier && {
-              carrier: manualForm.carrier
-            }),
-            ...(manualForm.secondaryPhone && {
-              secondaryPhone: manualForm.secondaryPhone
-            }),
-            ...(manualForm.colissimoType && {
-              packageCount: manualForm.packageCount,
-              colissimoType: manualForm.colissimoType as
-                'VO' | 'VM' | 'GV' | 'EXP' | 'FIX' | 'ONP' | 'BLK' | 'SMD'
-            }),
-            ...(manualForm.comment && {
-              comment: manualForm.comment
-            }),
-            ...(manualForm.weight > 0 && {
-              weight: manualForm.weight
-            }),
+            ...(manualForm.estimatedDate && { estimatedDate: new Date(manualForm.estimatedDate).toISOString() }),
+            ...(manualForm.trackingNumber && { trackingNumber: manualForm.trackingNumber }),
+            ...(manualForm.carrier && { carrier: manualForm.carrier }),
           }
         }),
       }
@@ -544,66 +511,6 @@ export default function ClientOrdersPage() {
                     <input type="date" placeholder={t('orders.deliveryEstDate')} value={manualForm.estimatedDate} onChange={e => setManualForm(p => ({ ...p, estimatedDate: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
                     <input type="text" placeholder={t('orders.carrier')} value={manualForm.carrier} onChange={e => setManualForm(p => ({ ...p, carrier: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
                     <input type="text" placeholder={t('orders.trackingNumber')} value={manualForm.trackingNumber} onChange={e => setManualForm(p => ({ ...p, trackingNumber: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all col-span-2" />
-
-                    <input
-                      type="text"
-                      placeholder="Téléphone 2"
-                      value={manualForm.secondaryPhone}
-                      onChange={e => setManualForm(p => ({ ...p, secondaryPhone: e.target.value }))}
-                      className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all"
-                    />
-
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Nombre de colis"
-                      value={manualForm.packageCount}
-                      onChange={e => setManualForm(p => ({
-                        ...p,
-                        packageCount: Math.max(1, parseInt(e.target.value) || 1)
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all"
-                    />
-
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="Poids (kg)"
-                      value={manualForm.weight || ''}
-                      onChange={e => setManualForm(p => ({
-                        ...p,
-                        weight: parseFloat(e.target.value) || 0
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all"
-                    />
-
-                    <select
-                      value={manualForm.colissimoType}
-                      onChange={e => setManualForm(p => ({
-                        ...p,
-                        colissimoType: e.target.value
-                      }))}
-                      className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all"
-                    >
-                      <option value="">Type Colissimo</option>
-                      <option value="VO">VO</option>
-                      <option value="VM">VM</option>
-                      <option value="GV">GV</option>
-                      <option value="EXP">EXP</option>
-                      <option value="FIX">FIX</option>
-                      <option value="ONP">ONP</option>
-                      <option value="BLK">BLK</option>
-                      <option value="SMD">SMD</option>
-                    </select>
-
-                    <textarea
-                      placeholder="Commentaire Colissimo"
-                      value={manualForm.comment}
-                      onChange={e => setManualForm(p => ({ ...p, comment: e.target.value }))}
-                      rows={2}
-                      className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all col-span-2 resize-none"
-                    />
                   </div>
                 </div>
               </div>

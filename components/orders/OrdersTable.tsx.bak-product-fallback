@@ -2,8 +2,6 @@
 
 import React, { useCallback, useMemo } from 'react'
 import { clsx } from 'clsx'
-import { Package } from 'lucide-react'
-import Image from 'next/image'
 import type { Order } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import StatusBadge from '@/components/ui/StatusBadge'
@@ -34,9 +32,6 @@ export interface OrdersTableProps {
   onOrderSelect: (order: Order) => void
   onSelectionChange: (selectedIds: string[]) => void
   onPageChange: (page: number) => void
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-  onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void
   onRetry?: () => void
   className?: string
 }
@@ -299,23 +294,6 @@ function getShopName(order: Order): string {
 }
 
 /**
- * Display a short order ID.
- */
-function getShortOrderId(orderId: string): string {
-  if (/^\d+$/.test(orderId)) {
-    return `#${orderId}`
-  }
-
-  const match = orderId.match(/(\d+)$/)
-  if (match) {
-    return `#${match[1]}`
-  }
-
-  return `#${orderId.slice(-6)}`
-}
-
-
-/**
  * Clean imported product names before displaying them in the table.
  */
 function cleanProductName(name?: string): string {
@@ -345,7 +323,7 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       minPlan: null,
       render: (order) => (
         <span className="font-medium text-gray-900 dark:text-white">
-          {getShortOrderId(order.orderId)}
+          {order.orderId}
         </span>
       ),
     },
@@ -385,17 +363,28 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
                 >
                   <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
                     {imageUrl ? (
-                      <Image
+                      <img
                         src={imageUrl}
                         alt={productName}
-                        width={40}
-                        height={40}
                         className="h-full w-full object-cover"
-                        unoptimized
+                        loading="lazy"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-300">
-                        <Package className="h-5 w-5" aria-hidden="true" />
+                      <div className="flex h-full w-full items-center justify-center text-gray-400 dark:text-slate-500">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.8}
+                            d="M20 13V7a2 2 0 00-2-2h-3.172a2 2 0 01-1.414-.586l-.828-.828A2 2 0 0011.172 3H6a2 2 0 00-2 2v8m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0l-4.586-4.586a2 2 0 00-2.828 0L8 13m0 0l-1.586-1.586a2 2 0 00-2.828 0L4 12"
+                          />
+                        </svg>
                       </div>
                     )}
                   </div>
@@ -460,21 +449,8 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       label: t('orders.aiScore'),
       minPlan: null,
       render: (order) => {
-        if (order.aiScore === undefined || order.aiScore === null) {
-          return (
-            <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
-              —
-            </span>
-          )
-        }
-
-        return (
-          <AIScoreColumn
-            score={order.aiScore}
-            showDetails={true}
-            size="sm"
-          />
-        )
+        const score = getAIScore(order, true) // Use mock fallback
+        return <AIScoreColumn score={score} showDetails={true} size="sm" />
       },
     },
     {
@@ -611,9 +587,6 @@ export default function OrdersTable({
   onOrderSelect,
   onSelectionChange,
   onPageChange,
-  sortBy,
-  sortOrder,
-  onSortChange,
   onRetry,
   className,
 }: OrdersTableProps) {
@@ -706,56 +679,18 @@ export default function OrdersTable({
                 />
               </th>
               {/* Data columns */}
-              {visibleColumns.map((column) => {
-                const sortableFields: Record<string, string> = {
-                  orderId: 'orderId',
-                  status: 'status',
-                  aiScore: 'aiScore',
-                  value: 'totalAmount',
-                }
-
-                const apiSortField = sortableFields[column.key]
-                const isSortable = Boolean(apiSortField)
-                const isActive = sortBy === apiSortField
-
-                const handleHeaderClick = () => {
-                  if (!apiSortField) return
-
-                  onSortChange(
-                    apiSortField,
-                    isActive && sortOrder === 'asc' ? 'desc' : 'asc'
-                  )
-                }
-
-                return (
-                  <th
-                    key={column.key}
-                    className={clsx(
-                      'px-4 py-3 text-left text-xs font-medium',
-                      'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
-                      isSortable && 'cursor-pointer select-none hover:text-gray-800 dark:hover:text-white',
-                      column.className
-                    )}
-                    onClick={handleHeaderClick}
-                    aria-sort={
-                      isActive
-                        ? sortOrder === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : undefined
-                    }
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {column.label}
-                      {isSortable && (
-                        <span className="text-[10px]">
-                          {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
-                        </span>
-                      )}
-                    </span>
-                  </th>
-                )
-              })}
+              {visibleColumns.map((column) => (
+                <th
+                  key={column.key}
+                  className={clsx(
+                    'px-4 py-3 text-left text-xs font-medium',
+                    'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
+                    column.className
+                  )}
+                >
+                  {column.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-slate-700">

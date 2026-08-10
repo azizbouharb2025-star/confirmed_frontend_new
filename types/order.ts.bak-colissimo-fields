@@ -104,13 +104,6 @@ export interface DeliveryInfo {
   trackingNumber?: string;
   estimatedDelivery?: string;
   address: Address;
-
-  // Colissimo-specific delivery fields
-  secondaryPhone?: string;
-  packageCount?: number;
-  comment?: string;
-  weight?: number;
-  colissimoType?: 'VO' | 'VM' | 'GV' | 'EXP' | 'FIX' | 'ONP' | 'BLK' | 'SMD';
 }
 
 /**

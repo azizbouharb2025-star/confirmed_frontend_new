@@ -460,21 +460,8 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       label: t('orders.aiScore'),
       minPlan: null,
       render: (order) => {
-        if (order.aiScore === undefined || order.aiScore === null) {
-          return (
-            <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
-              —
-            </span>
-          )
-        }
-
-        return (
-          <AIScoreColumn
-            score={order.aiScore}
-            showDetails={true}
-            size="sm"
-          />
-        )
+        const score = getAIScore(order, true) // Use mock fallback
+        return <AIScoreColumn score={score} showDetails={true} size="sm" />
       },
     },
     {

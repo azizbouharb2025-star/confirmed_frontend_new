@@ -2,8 +2,6 @@
 
 import React, { useCallback, useMemo } from 'react'
 import { clsx } from 'clsx'
-import { Package } from 'lucide-react'
-import Image from 'next/image'
 import type { Order } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import StatusBadge from '@/components/ui/StatusBadge'
@@ -34,9 +32,6 @@ export interface OrdersTableProps {
   onOrderSelect: (order: Order) => void
   onSelectionChange: (selectedIds: string[]) => void
   onPageChange: (page: number) => void
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-  onSortChange: (sortBy: string, sortOrder: 'asc' | 'desc') => void
   onRetry?: () => void
   className?: string
 }
@@ -299,41 +294,6 @@ function getShopName(order: Order): string {
 }
 
 /**
- * Display a short order ID.
- */
-function getShortOrderId(orderId: string): string {
-  if (/^\d+$/.test(orderId)) {
-    return `#${orderId}`
-  }
-
-  const match = orderId.match(/(\d+)$/)
-  if (match) {
-    return `#${match[1]}`
-  }
-
-  return `#${orderId.slice(-6)}`
-}
-
-
-/**
- * Clean imported product names before displaying them in the table.
- */
-function cleanProductName(name?: string): string {
-  if (!name || name.trim().toLowerCase() === 'null') {
-    return 'Produit sans nom'
-  }
-
-  return name
-    .replace(
-      /\s*\(?[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\)?/gi,
-      ''
-    )
-    .replace(/\s+x\s*\d+\s*$/i, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-/**
  * Define all available columns with their tier requirements
  */
 function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key: TranslationKey) => string): ColumnConfig[] {
@@ -345,76 +305,8 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       minPlan: null,
       render: (order) => (
         <span className="font-medium text-gray-900 dark:text-white">
-          {getShortOrderId(order.orderId)}
+          {order.orderId}
         </span>
-      ),
-    },
-    {
-      key: 'products',
-      label: t('orders.products'),
-      minPlan: null,
-      render: (order) => (
-        <div className="w-[240px] space-y-2">
-          {order.items?.length ? (
-            order.items.map((item, index) => {
-              const quantity =
-                Number.isFinite(item.quantity) && item.quantity > 0
-                  ? item.quantity
-                  : 1
-
-              const populatedProduct =
-                typeof item.productId === 'object'
-                  ? item.productId
-                  : null
-
-              const imageUrl = populatedProduct?.imageUrl
-              const productName = cleanProductName(
-                item.name || populatedProduct?.name
-              )
-
-              const productKey =
-                typeof item.productId === 'string'
-                  ? item.productId
-                  : item.productId?._id || `product-${index}`
-
-              return (
-                <div
-                  key={`${productKey}-${index}`}
-                  className="flex items-center gap-3"
-                  title={productName}
-                >
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={productName}
-                        width={40}
-                        height={40}
-                        className="h-full w-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-300">
-                        <Package className="h-5 w-5" aria-hidden="true" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-gray-700 dark:text-slate-300">
-                      {productName}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-slate-400">
-                      ×{quantity}
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          ) : (
-            <span className="text-gray-500 dark:text-slate-400">-</span>
-          )}
-        </div>
       ),
     },
     {
@@ -460,21 +352,8 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       label: t('orders.aiScore'),
       minPlan: null,
       render: (order) => {
-        if (order.aiScore === undefined || order.aiScore === null) {
-          return (
-            <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
-              —
-            </span>
-          )
-        }
-
-        return (
-          <AIScoreColumn
-            score={order.aiScore}
-            showDetails={true}
-            size="sm"
-          />
-        )
+        const score = getAIScore(order, true) // Use mock fallback
+        return <AIScoreColumn score={score} showDetails={true} size="sm" />
       },
     },
     {
@@ -611,9 +490,6 @@ export default function OrdersTable({
   onOrderSelect,
   onSelectionChange,
   onPageChange,
-  sortBy,
-  sortOrder,
-  onSortChange,
   onRetry,
   className,
 }: OrdersTableProps) {
@@ -706,56 +582,18 @@ export default function OrdersTable({
                 />
               </th>
               {/* Data columns */}
-              {visibleColumns.map((column) => {
-                const sortableFields: Record<string, string> = {
-                  orderId: 'orderId',
-                  status: 'status',
-                  aiScore: 'aiScore',
-                  value: 'totalAmount',
-                }
-
-                const apiSortField = sortableFields[column.key]
-                const isSortable = Boolean(apiSortField)
-                const isActive = sortBy === apiSortField
-
-                const handleHeaderClick = () => {
-                  if (!apiSortField) return
-
-                  onSortChange(
-                    apiSortField,
-                    isActive && sortOrder === 'asc' ? 'desc' : 'asc'
-                  )
-                }
-
-                return (
-                  <th
-                    key={column.key}
-                    className={clsx(
-                      'px-4 py-3 text-left text-xs font-medium',
-                      'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
-                      isSortable && 'cursor-pointer select-none hover:text-gray-800 dark:hover:text-white',
-                      column.className
-                    )}
-                    onClick={handleHeaderClick}
-                    aria-sort={
-                      isActive
-                        ? sortOrder === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : undefined
-                    }
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {column.label}
-                      {isSortable && (
-                        <span className="text-[10px]">
-                          {isActive ? (sortOrder === 'asc' ? '▲' : '▼') : '↕'}
-                        </span>
-                      )}
-                    </span>
-                  </th>
-                )
-              })}
+              {visibleColumns.map((column) => (
+                <th
+                  key={column.key}
+                  className={clsx(
+                    'px-4 py-3 text-left text-xs font-medium',
+                    'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
+                    column.className
+                  )}
+                >
+                  {column.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-slate-700">

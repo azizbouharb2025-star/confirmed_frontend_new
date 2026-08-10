@@ -437,8 +437,6 @@ export default function AdminOrdersPage() {
   const [shops, setShops] = useState<Shop[]>([])
   const [operators, setOperators] = useState<Operator[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [sortBy, setSortBy] = useState<string>('createdAt')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
   const [selectedShopId, setSelectedShopId] = useState<string>('')
 
@@ -488,8 +486,8 @@ export default function AdminOrdersPage() {
         page: currentPage,
         limit: pageSize,
         filters: filtersWithShop,
-        sortBy,
-        sortOrder,
+        sortBy: 'createdAt',
+        sortOrder: 'desc',
       })
       
       setOrders(response.orders)
@@ -500,16 +498,7 @@ export default function AdminOrdersPage() {
     } finally {
       setLoading(false)
     }
-  }, [currentPage, pageSize, filters, selectedShopId, sortBy, sortOrder, setOrders, setPagination, setLoading, setError])
-
-  const handleSortChange = useCallback(
-    (field: string, order: 'asc' | 'desc') => {
-      setSortBy(field)
-      setSortOrder(order)
-      setCurrentPage(1)
-    },
-    [setCurrentPage]
-  )
+  }, [currentPage, pageSize, filters, selectedShopId, setOrders, setPagination, setLoading, setError])
 
   // Fetch data on mount
   useEffect(() => {
@@ -703,9 +692,6 @@ export default function AdminOrdersPage() {
             onOrderSelect={handleOrderSelect}
             onSelectionChange={setSelectedIds}
             onPageChange={handlePageChange}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onSortChange={handleSortChange}
             onRetry={handleRetry}
           />
 

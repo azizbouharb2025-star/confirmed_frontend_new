@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { clsx } from 'clsx'
 import {
   getScoreColorClass,
@@ -28,19 +28,8 @@ export default function AIScoreColumn({
 }: AIScoreColumnProps) {
   const { t } = useLanguage()
   const [showTooltip, setShowTooltip] = useState(false)
-  const [animatedScore, setAnimatedScore] = useState(0)
 
   const normalizedScore = Math.max(0, Math.min(100, Math.round(score)))
-
-  useEffect(() => {
-    setAnimatedScore(0)
-
-    const animationFrame = requestAnimationFrame(() => {
-      setAnimatedScore(normalizedScore)
-    })
-
-    return () => cancelAnimationFrame(animationFrame)
-  }, [normalizedScore])
   const riskLevel = getRiskLevel(normalizedScore)
   const colorClass = getScoreColorClass(normalizedScore)
 
@@ -110,11 +99,8 @@ export default function AIScoreColumn({
           aria-label={`${t('orders.aiScore')} ${normalizedScore}%`}
         >
           <div
-            className={clsx(
-              'h-full rounded-full transition-[width] duration-700 ease-out',
-              progressColor
-            )}
-            style={{ width: `${animatedScore}%` }}
+            className={clsx('h-full rounded-full', progressColor)}
+            style={{ width: `${normalizedScore}%` }}
           />
         </div>
       </div>
