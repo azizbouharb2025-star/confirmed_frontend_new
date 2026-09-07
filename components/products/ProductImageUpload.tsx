@@ -1,221 +1,182 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { PhotoIcon, XMarkIcon, ArrowUpTrayIcon } from '@heroicons/react/24/outline'
-import { useLanguage } from '@/hooks/useLanguage'
+import { useEffect, useRef, useState } from 'react'
+import {
+  ArrowUpTrayIcon,
+  PhotoIcon,
+  XMarkIcon
+} from '@heroicons/react/24/outline'
 import ProductImageDisplay from './ProductImageDisplay'
 
 interface ProductImageUploadProps {
   currentImageUrl?: string
   productName: string
-  onUpload: (imageUrl: string) => Promise<void>
-  onRemove: () => Promise<void>
+  selectedFile: File | null
+  removalPending?: boolean
+  onFileSelect: (file: File | null) => void
+  onRemoveCurrent: () => void
 }
 
-/**
- * ProductImageUpload Component
- * 
- * Provides image upload functionality with:
- * - URL input for image upload (MVP approach)
- * - Image format validation (JPEG, PNG, WebP, GIF)
- * - Preview before upload
- * - Remove image functionality
- * - Validates: Requirements 4.6, 4.7
- */
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+const ACCEPTED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp'
+]
+
 export default function ProductImageUpload({
   currentImageUrl,
   productName,
-  onUpload,
-  onRemove
+  selectedFile,
+  removalPending = false,
+  onFileSelect,
+  onRemoveCurrent
 }: ProductImageUploadProps) {
-  const { t } = useLanguage()
-  const [imageUrl, setImageUrl] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [removing, setRemoving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const validateImageUrl = (url: string): boolean => {
-    // Validate URL format
-    try {
-      new URL(url)
-    } catch {
-      setError(t('products.invalidImageUrl'))
-      return false
-    }
-
-    // Validate image format
-    const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
-    const urlLower = url.toLowerCase()
-    const hasValidExtension = validExtensions.some(ext => urlLower.includes(ext))
-    
-    if (!hasValidExtension) {
-      setError(t('products.invalidImageFormat'))
-      return false
-    }
-
-    return true
-  }
-
-  const handlePreview = () => {
-    setError(null)
-    if (!imageUrl.trim()) {
-      setError(t('products.imageUrlRequired'))
-      return
-    }
-
-    if (validateImageUrl(imageUrl)) {
-      setPreviewUrl(imageUrl)
-    }
-  }
-
-  const handleUpload = async () => {
-    if (!previewUrl) {
-      setError(t('products.previewFirst'))
-      return
-    }
-
-    setUploading(true)
-    setError(null)
-
-    try {
-      await onUpload(previewUrl)
-      setImageUrl('')
+  useEffect(() => {
+    if (!selectedFile) {
       setPreviewUrl(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('products.uploadFailed'))
-    } finally {
-      setUploading(false)
+      return
     }
-  }
 
-  const handleRemove = async () => {
-    if (!confirm(t('products.confirmRemoveImage'))) return
+    const objectUrl = URL.createObjectURL(selectedFile)
+    setPreviewUrl(objectUrl)
 
-    setRemoving(true)
+    return () => {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [selectedFile])
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
     setError(null)
 
-    try {
-      await onRemove()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('products.removeFailed'))
-    } finally {
-      setRemoving(false)
+    if (!file) return
+
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError('Format non autorisé. Utilisez une image JPG, JPEG, PNG ou WEBP.')
+      event.target.value = ''
+      return
     }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError('L’image ne doit pas dépasser 5 Mo.')
+      event.target.value = ''
+      return
+    }
+
+    onFileSelect(file)
   }
 
-  const handleCancelPreview = () => {
-    setPreviewUrl(null)
-    setImageUrl('')
-    setError(null)
+  const clearSelectedFile = () => {
+    onFileSelect(null)
+
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
   }
 
   return (
-    <div className="space-y-4">
-      {/* Current Image Display */}
-      {currentImageUrl && !previewUrl && (
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold dark:text-white light:text-gray-900">
-            {t('products.currentImage')}
-          </label>
-          <div className="relative">
-            <ProductImageDisplay
-              imageUrl={currentImageUrl}
-              productName={productName}
-              size="medium"
-            />
-            <button
-              onClick={handleRemove}
-              disabled={removing}
-              className="absolute top-2 right-2 p-2 bg-red-500/80 hover:bg-red-500 rounded-lg transition-colors disabled:opacity-50"
-              title={t('products.removeImage')}
-            >
-              {removing ? (
-                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-              ) : (
-                <XMarkIcon className="w-4 h-4 text-white" />
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="space-y-3">
+      <label className="block text-sm font-semibold dark:text-white light:text-gray-900">
+        Image du produit
+      </label>
 
-      {/* Preview Display */}
-      {previewUrl && (
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold dark:text-white light:text-gray-900">
-            {t('products.imagePreview')}
-          </label>
+      {previewUrl ? (
+        <div className="space-y-3">
           <div className="relative">
             <ProductImageDisplay
               imageUrl={previewUrl}
-              productName={productName}
+              productName={productName || 'Produit'}
               size="medium"
             />
-            <button
-              onClick={handleCancelPreview}
-              className="absolute top-2 right-2 p-2 bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors"
-              title={t('common.cancel')}
-            >
-              <XMarkIcon className="w-4 h-4 text-white" />
-            </button>
-          </div>
-          <button
-            onClick={handleUpload}
-            disabled={uploading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-          >
-            {uploading ? (
-              <>
-                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                {t('products.uploading')}
-              </>
-            ) : (
-              <>
-                <ArrowUpTrayIcon className="w-5 h-5" />
-                {t('products.uploadImage')}
-              </>
-            )}
-          </button>
-        </div>
-      )}
 
-      {/* Upload Form */}
-      {!previewUrl && (
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold dark:text-white light:text-gray-900">
-            {currentImageUrl ? t('products.changeImage') : t('products.uploadImage')}
-          </label>
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="url"
-              value={imageUrl}
-              onChange={(e) => {
-                setImageUrl(e.target.value)
-                setError(null)
-              }}
-              placeholder="https://example.com/image.jpg"
-              className="flex-1 px-4 py-3 rounded-lg dark:bg-slate-800 light:bg-gray-50 border-2 dark:border-slate-600 light:border-gray-300 focus:border-blue-500 dark:text-white light:text-gray-900 placeholder:opacity-50 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-            />
             <button
-              onClick={handlePreview}
-              disabled={!imageUrl.trim()}
-              className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              onClick={clearSelectedFile}
+              className="absolute top-2 right-2 p-2 bg-red-500/90 hover:bg-red-500 text-white rounded-lg transition-colors"
+              title="Supprimer l’image sélectionnée"
             >
-              <PhotoIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs dark:text-slate-400 light:text-gray-600">
-            {t('products.supportedFormats')}: JPEG, PNG, WebP, GIF
+
+          <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+            <PhotoIcon className="w-5 h-5" />
+            <span className="truncate">{selectedFile?.name}</span>
+          </div>
+        </div>
+      ) : currentImageUrl ? (
+        <div className="space-y-3">
+          <div className="relative">
+            <ProductImageDisplay
+              imageUrl={currentImageUrl}
+              productName={productName || 'Produit'}
+              size="medium"
+            />
+
+            <button
+              type="button"
+              onClick={onRemoveCurrent}
+              className="absolute top-2 right-2 p-2 bg-red-500/90 hover:bg-red-500 text-white rounded-lg transition-colors"
+              title="Supprimer l’image actuelle"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border-2 border-dashed dark:border-slate-600 light:border-gray-300 p-6 text-center">
+          <PhotoIcon className="w-12 h-12 mx-auto mb-3 dark:text-slate-500 light:text-gray-400" />
+
+          <p className="text-sm dark:text-slate-300 light:text-gray-700">
+            Aucune image sélectionnée
+          </p>
+
+          <p className="text-xs mt-1 dark:text-slate-500 light:text-gray-500">
+            Une image par défaut sera affichée si aucune image n’est ajoutée.
           </p>
         </div>
       )}
 
-      {/* Error Message */}
+      {removalPending && !selectedFile && (
+        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-sm text-amber-600 dark:text-amber-400">
+          L’image actuelle sera supprimée lors de l’enregistrement.
+        </div>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 dark:border-slate-600 light:border-gray-300 dark:hover:bg-slate-800 light:hover:bg-gray-50 transition-colors font-medium"
+      >
+        <ArrowUpTrayIcon className="w-5 h-5" />
+        {currentImageUrl && !selectedFile
+          ? 'Remplacer l’image'
+          : selectedFile
+            ? 'Choisir une autre image'
+            : 'Importer une image'}
+      </button>
+
+      <p className="text-xs dark:text-slate-400 light:text-gray-600">
+        Formats acceptés : JPG, JPEG, PNG, WEBP — 5 Mo maximum.
+      </p>
+
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
           {error}
         </div>
       )}

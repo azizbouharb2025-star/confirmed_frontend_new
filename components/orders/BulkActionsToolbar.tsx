@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react'
 import { clsx } from 'clsx'
 import type { OrderStatus, BulkResult, Order } from '@/types/order'
 import { getTranslatedStatusLabels } from '@/components/ui/StatusBadge'
-import logger from '@/lib/logger'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { TranslationKey } from '@/lib/i18n'
 
@@ -34,12 +33,8 @@ export interface BulkActionsToolbarProps {
  * Available statuses for bulk update
  */
 const BULK_UPDATE_STATUSES: OrderStatus[] = [
-  'pending',
-  'assigned',
-  'in_progress',
-  'confirmed',
-  'rejected',
-  'cancelled',
+  'delivered',
+  'failed_delivery',
 ]
 
 /**
@@ -363,15 +358,14 @@ function StatusDropdown({
 export default function BulkActionsToolbar({
   selectedCount,
   selectedIds,
-  selectedOrders,
+  selectedOrders: _selectedOrders,
   onBulkStatusUpdate,
-  onBulkExport,
+  onBulkExport: _onBulkExport,
   onClearSelection,
   className,
 }: BulkActionsToolbarProps) {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
   const [progress, setProgress] = useState<{ current: number; total: number } | null>(null)
   const [result, setResult] = useState<BulkResult | null>(null)
   const { t } = useLanguage()
@@ -416,22 +410,6 @@ export default function BulkActionsToolbar({
       setProgress(null)
     }
   }, [selectedIds, onBulkStatusUpdate])
-
-  /**
-   * Handle bulk export
-   * Requirements: 3.5
-   * Property 8: Bulk export contains all selected orders
-   */
-  const handleExport = useCallback(async () => {
-    setIsExporting(true)
-    try {
-      await onBulkExport(selectedOrders)
-    } catch (error) {
-      logger.error('Export failed:', error, 'BulkActions')
-    } finally {
-      setIsExporting(false)
-    }
-  }, [selectedOrders, onBulkExport])
 
   /**
    * Dismiss result summary
@@ -489,34 +467,9 @@ export default function BulkActionsToolbar({
             isOpen={isStatusDropdownOpen}
             onToggle={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
             onSelect={handleStatusUpdate}
-            disabled={isProcessing || isExporting}
+            disabled={isProcessing}
             t={t}
           />
-
-          {/* Export button */}
-          <button
-            onClick={handleExport}
-            disabled={isProcessing || isExporting}
-            className={clsx(
-              'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium',
-              'border border-gray-300 dark:border-slate-600',
-              'bg-white dark:bg-slate-800',
-              'text-gray-700 dark:text-slate-300',
-              'hover:bg-gray-50 dark:hover:bg-slate-700',
-              'transition-colors duration-200',
-              (isProcessing || isExporting) && 'opacity-50 cursor-not-allowed'
-            )}
-            data-testid="bulk-export-button"
-          >
-            {isExporting ? (
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            )}
-            {t('bulk.export')}
-          </button>
         </>
       )}
 

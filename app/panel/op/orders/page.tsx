@@ -8,9 +8,11 @@ import { useLanguage } from '@/hooks/useLanguage'
 import type { TranslationKey } from '@/lib/i18n'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 interface Order {
   _id: string
+  confirmedId: number
   orderId: string
   clientInfo: { name: string; phone: string }
   totalAmount: number
@@ -64,8 +66,10 @@ export default function OrdersReception() {
   }
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.clientInfo.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const normalizedSearch = searchTerm.trim().replace(/^#/, '')
+    const matchesSearch =
+      String(order.confirmedId ?? '').includes(normalizedSearch) ||
+      order.clientInfo.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -144,7 +148,7 @@ export default function OrdersReception() {
                     {filteredOrders.map((order) => (
                       <tr key={order._id} className="dark:hover:bg-slate-800/50 light:hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <span className="font-medium text-sm">#{order.orderId}</span>
+                          <span className="font-medium text-sm">#{order.confirmedId}</span>
                         </td>
                         <td className="px-4 py-3">
                           <div>
@@ -153,7 +157,7 @@ export default function OrdersReception() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="font-semibold text-green-500">${order.totalAmount.toFixed(2)}</span>
+                          <span className="font-semibold text-green-500">{formatCurrency(order.totalAmount)}</span>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>

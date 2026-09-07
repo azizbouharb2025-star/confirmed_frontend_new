@@ -45,6 +45,11 @@ export const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; bord
     text: 'text-yellow-800 dark:text-yellow-300',
     border: 'border-yellow-200 dark:border-yellow-800',
   },
+  postponed: {
+    bg: 'bg-blue-100 dark:bg-blue-900/30',
+    text: 'text-blue-800 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-800',
+  },
   in_progress: {
     bg: 'bg-blue-100 dark:bg-blue-900/30',
     text: 'text-blue-800 dark:text-blue-300',
@@ -97,6 +102,11 @@ const StatusIcons: Record<OrderStatus, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
+  postponed: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
   in_progress: (
     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -133,31 +143,33 @@ const StatusIcons: Record<OrderStatus, React.ReactNode> = {
  * Display labels for each status
  */
 export const STATUS_LABELS: Record<OrderStatus, string> = {
-  confirmed: 'Confirmed',
-  rejected: 'Rejected',
-  pending: 'Pending',
-  in_progress: 'In Progress',
-  assigned: 'Assigned',
-  cancelled: 'Cancelled',
-  shipped: 'Shipped',
-  delivered: 'Delivered',
-  failed_delivery: 'Failed Delivery',
+  confirmed: 'Confirmé',
+  rejected: 'Annulé',
+  pending: 'En attente',
+  postponed: 'Reporté',
+  in_progress: 'Tentative',
+  assigned: 'Tentative',
+  cancelled: 'Annulé',
+  shipped: 'Expédiée',
+  delivered: 'Livrée',
+  failed_delivery: 'Retournée',
 }
 
 /**
  * Get translated status labels
  */
-export function getTranslatedStatusLabels(t: (key: TranslationKey) => string): Record<OrderStatus, string> {
+export function getTranslatedStatusLabels(_t: (key: TranslationKey) => string): Record<OrderStatus, string> {
   return {
-    confirmed: t('status.confirmed'),
-    rejected: t('status.rejected'),
-    pending: t('status.pending'),
-    in_progress: t('status.inProgress'),
-    assigned: t('status.assigned'),
-    cancelled: t('status.cancelled'),
-    shipped: 'Shipped',
-    delivered: 'Delivered',
-    failed_delivery: 'Failed Delivery',
+    confirmed: 'Confirmé',
+    rejected: 'Annulé',
+    pending: 'En attente',
+    postponed: 'Reporté',
+    in_progress: 'Tentative',
+    assigned: 'Tentative',
+    cancelled: 'Annulé',
+    shipped: 'Expédiée',
+    delivered: 'Livrée',
+    failed_delivery: 'Retournée',
   }
 }
 
@@ -188,6 +200,7 @@ export function getStatusColorCategory(status: OrderStatus): 'green' | 'red' | '
     confirmed: 'green',
     rejected: 'red',
     pending: 'yellow',
+    postponed: 'blue',
     in_progress: 'blue',
     assigned: 'purple',
     cancelled: 'gray',

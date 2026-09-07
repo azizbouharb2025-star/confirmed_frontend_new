@@ -7,6 +7,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import MetricCard from '@/components/dashboard/MetricCard'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 interface DashboardData {
   overview?: {
@@ -138,15 +139,15 @@ export default function Analytics() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.totalRevenue')}</p>
-                  <p className="text-2xl font-semibold text-green-500">{revenue.overview?.totalRevenue?.toFixed(2) || 0} TND</p>
+                  <p className="text-2xl font-semibold text-green-500">{formatCurrency(revenue.overview?.totalRevenue || 0)}</p>
                 </div>
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.monthlyRevenue')}</p>
-                  <p className="text-2xl font-semibold">{revenue.overview?.monthlyRevenue?.toFixed(2) || 0} TND</p>
+                  <p className="text-2xl font-semibold">{formatCurrency(revenue.overview?.monthlyRevenue || 0)}</p>
                 </div>
                 <div>
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">{t('metric.mrr')}</p>
-                  <p className="text-2xl font-semibold">{revenue.subscriptionRevenue?.monthlyRecurringRevenue?.toFixed(2) || 0} TND</p>
+                  <p className="text-2xl font-semibold">{formatCurrency(revenue.subscriptionRevenue?.monthlyRecurringRevenue || 0)}</p>
                 </div>
               </div>
             </div>

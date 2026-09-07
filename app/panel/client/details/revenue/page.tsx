@@ -13,6 +13,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import WidgetDetailPage from '@/components/dashboard/WidgetDetailPage';
 import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import api from '@/lib/api';
+import { formatCurrency } from '@/lib/formatCurrency';
 
 interface Order {
   _id: string;
@@ -165,7 +166,7 @@ export default function RevenueDetailPage() {
                 <div>
                   <p className="text-sm text-slate-500 dark:text-slate-400">Total Revenue</p>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    ${totalRevenue.toFixed(2)}
+                    {formatCurrency(totalRevenue)}
                   </p>
                 </div>
               </div>
@@ -181,7 +182,7 @@ export default function RevenueDetailPage() {
             <div className="card p-6">
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Avg Order Value</p>
-                <p className="text-2xl font-bold">${avgOrderValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(avgOrderValue)}</p>
               </div>
             </div>
           </div>
@@ -224,13 +225,13 @@ export default function RevenueDetailPage() {
                           {product.productName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">
-                          ${product.revenue.toFixed(2)}
+                          {formatCurrency(product.revenue)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {product.orderCount}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          ${(product.revenue / product.orderCount).toFixed(2)}
+                          {formatCurrency(product.revenue / product.orderCount)}
                         </td>
                       </tr>
                     ))}

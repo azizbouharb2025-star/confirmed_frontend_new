@@ -10,6 +10,7 @@ import { WalletIcon, ClockIcon, CheckCircleIcon, GiftIcon } from '@heroicons/rea
 import WidgetContainer from '../WidgetContainer';
 import { useLanguage } from '@/hooks/useLanguage';
 import { TranslationKey } from '@/lib/i18n';
+import { formatCurrency } from '@/lib/formatCurrency'
 
 /**
  * Recent reward entry
@@ -43,9 +44,7 @@ export interface RewardsWalletWidgetProps {
 /**
  * Format currency value
  */
-function formatCurrency(amount: number, currency: string = 'TND '): string {
-  return `${currency}${amount.toFixed(2)}`;
-}
+
 
 /**
  * Format date to relative or short format
@@ -74,12 +73,10 @@ function formatDate(dateString: string): string {
 function BalanceDisplay({ 
   balance, 
   pendingRewards, 
-  currency,
   t 
 }: { 
   balance: number; 
   pendingRewards: number; 
-  currency: string;
   t: (key: TranslationKey) => string;
 }): JSX.Element {
   return (
@@ -90,7 +87,7 @@ function BalanceDisplay({
           {t('widget.rewardsWallet.availableBalance')}
         </p>
         <p className="text-3xl font-bold text-green-500" data-testid="wallet-balance">
-          {formatCurrency(balance, currency)}
+          {formatCurrency(balance)}
         </p>
       </div>
       
@@ -102,7 +99,7 @@ function BalanceDisplay({
             {t('widget.rewardsWallet.pending')}:
           </span>
           <span className="font-medium text-amber-500" data-testid="pending-rewards">
-            {formatCurrency(pendingRewards, currency)}
+            {formatCurrency(pendingRewards)}
           </span>
         </div>
       )}
@@ -113,7 +110,7 @@ function BalanceDisplay({
 /**
  * Single reward entry row
  */
-function RewardRow({ reward, currency }: { reward: RewardEntry; currency: string }): JSX.Element {
+function RewardRow({ reward }: { reward: RewardEntry }): JSX.Element {
   return (
     <div 
       className="flex items-center gap-3 py-2 border-b border-slate-700/50 dark:border-slate-700/50 light:border-gray-100 last:border-0"
@@ -132,7 +129,7 @@ function RewardRow({ reward, currency }: { reward: RewardEntry; currency: string
       
       <div className="text-right">
         <span className="font-medium text-green-500">
-          +{formatCurrency(reward.amount, currency)}
+          +{formatCurrency(reward.amount)}
         </span>
       </div>
     </div>
@@ -172,7 +169,6 @@ export function RewardsWalletWidget({
   balance,
   pendingRewards,
   recentRewards,
-  currency = 'TND ',
   isLoading = false,
   error,
   onRetry,
@@ -191,7 +187,6 @@ export function RewardsWalletWidget({
       <BalanceDisplay 
         balance={balance} 
         pendingRewards={pendingRewards} 
-        currency={currency}
         t={t} 
       />
       
@@ -206,7 +201,7 @@ export function RewardsWalletWidget({
         ) : (
           <div className="space-y-1" data-testid="rewards-list">
             {recentRewards.slice(0, 5).map((reward) => (
-              <RewardRow key={reward.id} reward={reward} currency={currency} />
+              <RewardRow key={reward.id} reward={reward} />
             ))}
           </div>
         )}

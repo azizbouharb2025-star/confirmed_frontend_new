@@ -9,6 +9,32 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api';
 
+export type DashboardPeriod = '7d' | '30d' | '90d';
+
+export interface DashboardKpiMetric {
+  value: number;
+  change: number | null;
+}
+
+export interface DashboardAiScoreMetric {
+  value: number | null;
+  change: number | null;
+  scoredOrders: number;
+}
+
+export interface DashboardKpis {
+  period: DashboardPeriod;
+  startDate: string;
+  endDate: string;
+  previousStartDate: string;
+  previousEndDate: string;
+  ordersReceived: DashboardKpiMetric;
+  ordersConfirmed: DashboardKpiMetric;
+  confirmationRate: DashboardKpiMetric;
+  averageAiScore: DashboardAiScoreMetric;
+  potentialRevenue: DashboardKpiMetric;
+}
+
 /**
  * Dashboard metrics data structure
  */
@@ -25,6 +51,7 @@ export interface DashboardMetrics {
   revenue: number;
   revenueChange: number;
   averageOrderValue: number;
+  dashboardKpis: DashboardKpis | null;
 }
 
 /**
@@ -80,7 +107,10 @@ function checkIsStale(lastUpdated: Date | null): boolean {
  * if (error) return <ErrorState error={error} onRetry={refetch} />;
  * if (isStale) return <StaleIndicator onRefresh={refetch} />;
  */
-export function useDashboardData(initialAutoRefresh = false): UseDashboardDataReturn {
+export function useDashboardData(
+  initialAutoRefresh = false,
+  period: DashboardPeriod = '7d'
+): UseDashboardDataReturn {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +142,9 @@ export function useDashboardData(initialAutoRefresh = false): UseDashboardDataRe
     setError(null);
 
     try {
-      const response = await api.get('/api/analytics/dashboard');
+      const response = await api.get(
+        `/api/analytics/dashboard?period=${period}`
+      );
       
       if (!isMountedRef.current) return;
 
@@ -131,6 +163,11 @@ export function useDashboardData(initialAutoRefresh = false): UseDashboardDataRe
           revenue: response.data.revenue ?? 0,
           revenueChange: response.data.revenueChange ?? 0,
           averageOrderValue: response.data.averageOrderValue ?? 0,
+          dashboardKpis:
+            response.data.dashboardKpis &&
+            typeof response.data.dashboardKpis === 'object'
+              ? response.data.dashboardKpis
+              : null,
         };
         
         setMetrics(metricsData);
@@ -151,7 +188,7 @@ export function useDashboardData(initialAutoRefresh = false): UseDashboardDataRe
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [period]);
 
   /**
    * Manual refetch function

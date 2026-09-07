@@ -13,6 +13,9 @@ export interface Product {
   images?: string[] // Legacy field for multiple images
   imageUrl?: string // NEW: Single primary image URL
   imageUploadedAt?: string // NEW: Timestamp of image upload
+  productLink?: string
+  sellerNotes?: string
+  deliveryFee?: number
   url?: string
   platform: string
   isActive: boolean

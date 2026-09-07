@@ -42,11 +42,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is active
-    if (!user.isActive) {
+    const resolvedAccountStatus =
+      user.accountStatus === 'pending'
+        ? 'pending'
+        : (
+            user.accountStatus === 'disabled' ||
+            user.isActive === false
+              ? 'disabled'
+              : 'active'
+          );
+
+    if (resolvedAccountStatus === 'pending') {
       return NextResponse.json(
-        { error: 'Account is inactive' },
+        { error: 'Account is pending activation' },
         { status: 403 }
+      );
+    }
+
+    if (resolvedAccountStatus === 'disabled') {
+      return NextResponse.json(
+        { error: 'Account is deactivated' },
+        { status: 401 }
       );
     }
 

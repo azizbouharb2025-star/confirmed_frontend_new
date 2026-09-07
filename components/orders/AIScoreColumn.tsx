@@ -44,12 +44,6 @@ export default function AIScoreColumn({
   const riskLevel = getRiskLevel(normalizedScore)
   const colorClass = getScoreColorClass(normalizedScore)
 
-  const progressColor =
-    normalizedScore < 50
-      ? 'bg-red-500'
-      : normalizedScore < 80
-        ? 'bg-orange-500'
-        : 'bg-green-500'
 
   const sizeClasses = {
     sm: {
@@ -70,10 +64,13 @@ export default function AIScoreColumn({
   }
 
   const riskLabels = {
-    high: t('orders.highRisk'),
-    medium: t('orders.mediumRisk'),
-    low: t('orders.lowRisk'),
+    critical: t('orders.riskCritical'),
+    high: t('orders.riskHigh'),
+    medium: t('orders.riskModerate'),
+    low: t('orders.riskLow'),
+    very_low: t('orders.riskVeryLow'),
   }
+
 
   return (
     <div
@@ -110,12 +107,12 @@ export default function AIScoreColumn({
           aria-label={`${t('orders.aiScore')} ${normalizedScore}%`}
         >
           <div
-            className={clsx(
-              'h-full rounded-full transition-[width] duration-700 ease-out',
-              progressColor
-            )}
-            style={{ width: `${animatedScore}%` }}
-          />
+        className="h-full rounded-full transition-[width] duration-700 ease-out"
+        style={{
+          width: `${animatedScore}%`,
+          backgroundColor: `hsl(${normalizedScore * 1.2}, 78%, 45%)`,
+        }}
+      />
         </div>
       </div>
 

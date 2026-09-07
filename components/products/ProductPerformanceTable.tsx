@@ -244,7 +244,7 @@ export default function ProductPerformanceTable({
                 {/* AI Score */}
                 <td className="px-4 py-3 text-right">
                   <span className={`font-medium ${getAIScoreColor(product.avgAIScore)}`}>
-                    {product.avgAIScore ? product.avgAIScore.toFixed(0) : 'N/A'}
+                    {product.avgAIScore ? product.avgAIScore.toFixed(0) : 'N/D'}
                   </span>
                 </td>
 
@@ -264,7 +264,7 @@ export default function ProductPerformanceTable({
                         title={t('products.topPerforming')}
                       >
                         <TrophyIcon className="w-3 h-3" />
-                        <span className="hidden sm:inline">Top</span>
+                        <span className="hidden sm:inline">Meilleur</span>
                       </div>
                     )}
                     {product.isUnderperforming && (

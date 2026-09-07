@@ -75,6 +75,14 @@ function buildQueryString(params: GetOrdersParams): string {
     queryParts.push(`aiScoreMax=${filters.aiScoreRange.max}`);
   }
 
+  if (filters.aiDecision && filters.aiDecision !== 'all') {
+    queryParts.push(`aiDecision=${filters.aiDecision}`);
+  }
+
+  if (filters.riskLevel && filters.riskLevel !== 'all') {
+    queryParts.push(`riskLevel=${filters.riskLevel}`);
+  }
+
   if (filters.region) {
     queryParts.push(`region=${encodeURIComponent(filters.region)}`);
   }
@@ -125,7 +133,6 @@ export const orderService = {
    * Create a new order manually
    */
   async createOrder(data: {
-    orderId: string
     clientInfo: {
       name: string
       phone: string

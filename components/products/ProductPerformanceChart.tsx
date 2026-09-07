@@ -9,6 +9,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { useLanguage } from '@/hooks/useLanguage'
 import type { ProductPerformance } from '@/types/productPerformance'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 interface ProductPerformanceChartProps {
   products: ProductPerformance[]
@@ -121,7 +122,7 @@ export default function ProductPerformanceChart({
             }}
             formatter={(value: number) => {
               if (metric === 'revenue') {
-                return `$${value.toFixed(2)}`
+                return formatCurrency(Number(value))
               }
               if (metric === 'returns') {
                 return `${value.toFixed(1)}%`

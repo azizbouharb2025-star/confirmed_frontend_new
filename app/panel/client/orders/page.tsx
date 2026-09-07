@@ -15,6 +15,7 @@ import ImportOrdersModal from '@/components/orders/ImportOrdersModal'
 import LogisticsExportModal from '@/components/orders/LogisticsExportModal'
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult } from '@/types/order'
 import type { SubscriptionPlan } from '@/types/subscription'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 /**
  * Seller Orders Page
@@ -75,13 +76,13 @@ export default function ClientOrdersPage() {
   const [manualError, setManualError] = useState<string | null>(null)
   const [manualSuccess, setManualSuccess] = useState<string | null>(null)
   const [manualForm, setManualForm] = useState({
-    orderId: '',
     clientName: '',
     clientPhone: '',
     clientEmail: '',
     street: '',
     city: '',
     state: '',
+    district: '',
     zipCode: '',
     country: '',
     items: [{ name: '', quantity: 1, price: 0, sku: '' }] as { name: string; quantity: number; price: number; sku: string }[],
@@ -98,8 +99,8 @@ export default function ClientOrdersPage() {
 
   const resetManualForm = () => {
     setManualForm({
-      orderId: '', clientName: '', clientPhone: '', clientEmail: '',
-      street: '', city: '', state: '', zipCode: '', country: '',
+      clientName: '', clientPhone: '', clientEmail: '',
+      street: '', city: '', state: '', district: '', zipCode: '', country: '',
       items: [{ name: '', quantity: 1, price: 0, sku: '' }],
       estimatedDate: '', trackingNumber: '', carrier: '',
       secondaryPhone: '', packageCount: 1, comment: '',
@@ -111,7 +112,6 @@ export default function ClientOrdersPage() {
 
   const validateManualForm = (): boolean => {
     const errors: Record<string, string> = {}
-    if (!manualForm.orderId.trim()) errors.orderId = t('orders.orderIdRequired')
     if (!manualForm.clientName.trim()) errors.clientName = t('orders.customerNameRequired')
     if (!manualForm.clientPhone.trim()) errors.clientPhone = t('orders.customerPhoneRequired')
     const validItems = manualForm.items.filter(i => i.name.trim() && i.quantity > 0 && i.price > 0)
@@ -130,16 +130,16 @@ export default function ClientOrdersPage() {
       const totalAmount = validItems.reduce((sum, i) => sum + i.quantity * i.price, 0)
 
       const payload: Parameters<typeof orderService.createOrder>[0] = {
-        orderId: manualForm.orderId,
         clientInfo: {
           name: manualForm.clientName,
           phone: manualForm.clientPhone,
           ...(manualForm.clientEmail && { email: manualForm.clientEmail }),
-          ...((manualForm.street || manualForm.city || manualForm.state || manualForm.zipCode || manualForm.country) && {
+          ...((manualForm.street || manualForm.city || manualForm.state || manualForm.district || manualForm.zipCode || manualForm.country) && {
             address: {
               ...(manualForm.street && { street: manualForm.street }),
               ...(manualForm.city && { city: manualForm.city }),
               ...(manualForm.state && { state: manualForm.state }),
+              ...(manualForm.district && { district: manualForm.district }),
               ...(manualForm.zipCode && { zipCode: manualForm.zipCode }),
               ...(manualForm.country && { country: manualForm.country }),
             }
@@ -252,12 +252,29 @@ export default function ClientOrdersPage() {
   }, [fetchOrders])
 
   /**
+   * Refresh the current orders view immediately after a successful import.
+   * Keeps the current filters, sorting and pagination unchanged.
+   */
+  const handleImportSuccess = useCallback(async () => {
+    await fetchOrders()
+  }, [fetchOrders])
+
+  /**
    * Handle order row click - opens detail panel
    * Requirements: 4.1 - Display slide-over panel with complete order details
    */
-  const handleOrderSelect = useCallback((order: Order) => {
+  const handleOrderSelect = useCallback(async (order: Order) => {
+    // Open immediately with the row data for responsiveness
     setSelectedOrder(order)
     setIsDetailPanelOpen(true)
+
+    try {
+      // Then replace it with the complete order detail from the API
+      const fullOrder = await orderService.getOrderById(order._id)
+      setSelectedOrder(fullOrder)
+    } catch (error) {
+      console.error('Failed to load complete order details:', error)
+    }
   }, [])
 
   /**
@@ -367,7 +384,7 @@ export default function ClientOrdersPage() {
               className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg shadow-green-500/25"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               {t('import.button')}
             </button>
@@ -376,7 +393,7 @@ export default function ClientOrdersPage() {
               className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/25"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
               Export Logistique
             </button>
@@ -450,6 +467,7 @@ export default function ClientOrdersPage() {
         <ImportOrdersModal
           isOpen={showImportModal}
           onClose={() => setShowImportModal(false)}
+          onImportSuccess={handleImportSuccess}
         />
 
         {/* Logistics Export Modal */}
@@ -476,11 +494,6 @@ export default function ClientOrdersPage() {
                 )}
 
                 {/* Order ID */}
-                <div>
-                  <label className="block text-sm font-medium mb-1 dark:text-white text-gray-900">{t('orders.orderId')} *</label>
-                  <input type="text" value={manualForm.orderId} onChange={e => setManualForm(p => ({ ...p, orderId: e.target.value }))} placeholder="ORDER-001" className={`w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 ${manualFormErrors.orderId ? 'border-red-500' : 'dark:border-slate-600 border-gray-300 focus:border-blue-500'} dark:text-white text-gray-900 outline-none transition-all`} />
-                  {manualFormErrors.orderId && <p className="text-red-500 text-xs mt-1">{manualFormErrors.orderId}</p>}
-                </div>
 
                 {/* Client Info */}
                 <div className="grid grid-cols-2 gap-3">
@@ -505,8 +518,9 @@ export default function ClientOrdersPage() {
                   <label className="block text-sm font-medium mb-2 dark:text-white text-gray-900">{t('orders.addressSection')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <input type="text" placeholder={t('orders.street')} value={manualForm.street} onChange={e => setManualForm(p => ({ ...p, street: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all col-span-2" />
-                    <input type="text" placeholder={t('orders.city')} value={manualForm.city} onChange={e => setManualForm(p => ({ ...p, city: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
-                    <input type="text" placeholder={t('orders.state')} value={manualForm.state} onChange={e => setManualForm(p => ({ ...p, state: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
+                    <input type="text" placeholder="Ville / Localité" value={manualForm.city} onChange={e => setManualForm(p => ({ ...p, city: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
+                    <input type="text" placeholder="Gouvernorat" value={manualForm.state} onChange={e => setManualForm(p => ({ ...p, state: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
+                    <input type="text" placeholder="Délégation" value={manualForm.district} onChange={e => setManualForm(p => ({ ...p, district: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
                     <input type="text" placeholder={t('orders.zipCode')} value={manualForm.zipCode} onChange={e => setManualForm(p => ({ ...p, zipCode: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
                     <input type="text" placeholder={t('orders.country')} value={manualForm.country} onChange={e => setManualForm(p => ({ ...p, country: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
                   </div>
@@ -533,7 +547,7 @@ export default function ClientOrdersPage() {
                     ))}
                   </div>
                   <div className="mt-2 text-sm dark:text-slate-400 text-gray-500">
-                    Total: {manualForm.items.reduce((s, i) => s + i.quantity * i.price, 0).toFixed(2)}
+                    Total: {formatCurrency(manualForm.items.reduce((s, i) => s + i.quantity * i.price, 0))}
                   </div>
                 </div>
 

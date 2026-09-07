@@ -51,17 +51,32 @@ const api = {
   
   post: async <T = unknown>(url: string, data: T) => {
     const token = getAuthToken()
+
+    const isFormData =
+      typeof FormData !== 'undefined' &&
+      data instanceof FormData
+
     const response = await fetchWithRetry(`${API_BASE_URL}${url}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        ...(!isFormData && { 'Content-Type': 'application/json' }),
         ...(token && { 'Authorization': `Bearer ${token}` })
       },
-      body: JSON.stringify(data)
+      body: isFormData
+        ? data
+        : JSON.stringify(data)
     })
+
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      const errorData = await response.json().catch(() => null)
+
+      throw new Error(
+        errorData?.error ||
+        errorData?.message ||
+        `HTTP ${response.status}: ${response.statusText}`
+      )
     }
+
     return { data: await response.json() }
   },
   

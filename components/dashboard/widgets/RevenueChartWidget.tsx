@@ -112,7 +112,6 @@ export function RevenueChartWidget({
   onViewModeChange,
   totalRevenue = 0,
   growthPercent = 0,
-  currency = 'TND',
   isLoading = false,
   error,
   onRetry,

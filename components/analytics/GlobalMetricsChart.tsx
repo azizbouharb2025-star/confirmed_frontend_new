@@ -3,6 +3,7 @@
 import { GlobalMetrics } from '@/types/analytics'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
+import { formatCurrency } from '@/lib/formatCurrency'
 import {
   ShoppingBagIcon,
   CheckCircleIcon,
@@ -40,7 +41,7 @@ export default function GlobalMetricsChart({ metrics }: GlobalMetricsChartProps)
     },
     {
       label: 'Total Revenue',
-      value: `${metrics.totalRevenue.toLocaleString()} TND`,
+      value: formatCurrency(metrics.totalRevenue),
       icon: CurrencyDollarIcon,
       color: 'purple',
       bgColor: isDark ? 'bg-purple-500/20' : 'bg-purple-100',
@@ -48,7 +49,7 @@ export default function GlobalMetricsChart({ metrics }: GlobalMetricsChartProps)
     },
     {
       label: 'Avg Order Value',
-      value: `${metrics.averageOrderValue.toFixed(2)} TND`,
+      value: formatCurrency(metrics.averageOrderValue),
       icon: CurrencyDollarIcon,
       color: 'indigo',
       bgColor: isDark ? 'bg-indigo-500/20' : 'bg-indigo-100',

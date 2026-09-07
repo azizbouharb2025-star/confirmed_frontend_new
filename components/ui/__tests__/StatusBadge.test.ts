@@ -27,6 +27,7 @@ const EXPECTED_COLOR_MAPPING: Record<OrderStatus, 'green' | 'red' | 'yellow' | '
   confirmed: 'green',
   rejected: 'red',
   pending: 'yellow',
+  postponed: 'blue',
   in_progress: 'blue',
   assigned: 'purple',
   cancelled: 'gray',

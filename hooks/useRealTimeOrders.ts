@@ -7,6 +7,7 @@ import logger from '@/lib/logger'
 
 interface Order {
   _id: string
+  confirmedId: number
   orderId: string
   status: string
   clientInfo: {

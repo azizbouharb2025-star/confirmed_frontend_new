@@ -13,6 +13,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import WidgetDetailPage from '@/components/dashboard/WidgetDetailPage';
 import { ShoppingBagIcon } from '@heroicons/react/24/outline';
 import api from '@/lib/api';
+import { formatCurrency } from '@/lib/formatCurrency';
 
 interface Order {
   _id: string;
@@ -146,7 +147,7 @@ export default function OrdersReceivedDetailPage() {
                           {order.customerPhone}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${

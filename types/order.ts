@@ -4,8 +4,18 @@
  */
 
 // Order Status Types
-export type OrderStatus = 'pending' | 'assigned' | 'in_progress' | 'confirmed' | 'rejected' | 'cancelled' | 'shipped' | 'delivered' | 'failed_delivery';
-export type OrderPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type OrderStatus = 'pending' | 'assigned' | 'in_progress' | 'confirmed' | 'rejected' | 'cancelled' | 'postponed' | 'shipped' | 'delivered' | 'failed_delivery';
+/**
+ * Priorités backend actuelles : low / medium / high.
+ * normal / urgent sont conservées temporairement pour
+ * compatibilité avec d'anciennes commandes.
+ */
+export type OrderPriority =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'normal'
+  | 'urgent';
 
 // NEW: Cancellation reason types
 export type CancellationReason = 
@@ -16,13 +26,31 @@ export type CancellationReason =
   | 'fake_number'
   | 'not_available'
   | 'courier_failed'
-  | 'customer_rejected_at_door';
+  | 'customer_rejected_at_door'
+  | 'unreachable_after_3_attempts';
 
 // NEW: Risk level types
-export type RiskLevel = 'high' | 'medium' | 'low';
+export type RiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'very_low';
 
 // Call-related Types
-export type CallResult = 'confirmed' | 'rejected' | 'no_answer' | 'busy' | 'voicemail';
+export type CallResult =
+  | 'confirmed'
+  | 'rejected'
+  | 'no_answer'
+  | 'busy'
+  | 'unreachable'
+  | 'callback_requested'
+  | 'interrupted'
+  | 'other'
+  | 'voicemail';
+
+export type CallAttemptReason =
+  | 'no_answer'
+  | 'busy'
+  | 'unreachable'
+  | 'callback_requested'
+  | 'interrupted'
+  | 'other';
 export type CallType = 'human' | 'ai';
 export type CustomerTone = 'positive' | 'neutral' | 'negative';
 export type PriceSensitivity = 'low' | 'medium' | 'high';
@@ -45,10 +73,27 @@ export interface CallFeedback {
  * Record of a call attempt for an order
  */
 export interface CallHistoryEntry {
-  operatorId: string;
+  operatorId:
+    | string
+    | {
+        _id: string;
+        name?: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+      };
   operatorName?: string;
   callType: CallType;
-  result: CallResult;
+
+  /**
+   * Certaines tentatives peuvent être enregistrées
+   * sans motif, donc result est optionnel.
+   */
+  result?: CallResult;
+
+  attemptNumber?: 1 | 2 | 3;
+  attemptReason?: CallAttemptReason;
+
   notes?: string;
   feedback?: CallFeedback;
   timestamp: string;
@@ -73,6 +118,13 @@ export interface Address {
 export interface ClientInfo {
   name: string;
   phone: string;
+
+  /**
+   * Numéros supplémentaires saisis ou corrigés
+   * pendant le travail de confirmation.
+   */
+  additionalPhones?: string[];
+
   email?: string;
   address?: Address;
 }
@@ -84,15 +136,33 @@ export interface ClientInfo {
 export interface PopulatedOrderProduct {
   _id: string;
   name?: string;
+
+  // Valeurs catalogue
   price?: number;
+  deliveryFee?: number;
+
+  // Données nécessaires au poste opérateur
   imageUrl?: string;
+  productLink?: string;
+  description?: string;
+  sellerNotes?: string;
 }
 
 export interface OrderItem {
+  /**
+   * Identifiant MongoDB du sous-document.
+   * Optionnel dans le type pour conserver la compatibilité
+   * avec certains anciens mocks/tests.
+   */
+  _id?: string;
+
   productId: string | PopulatedOrderProduct;
   name: string;
   quantity: number;
   price: number;
+
+  sku?: string;
+  url?: string;
   variant?: string;
 }
 
@@ -162,10 +232,18 @@ export interface OperatorFeedbackData {
  */
 export interface Order {
   _id: string;
+  confirmedId: number;
   orderId: string;
+  externalOrderId?: string;
   shopId: string | ShopRef;
   clientInfo: ClientInfo;
   items: OrderItem[];
+
+  /**
+   * Frais de livraison propres à cette commande.
+   */
+  deliveryFee?: number;
+
   totalAmount: number;
   status: OrderStatus;
   priority: OrderPriority;
@@ -187,9 +265,83 @@ export interface Order {
       applied: boolean;
     }>;
   };
+  customerHistory?: {
+    totalOrders: number;
+    successfulDeliveries: number;
+    failedDeliveries: number;
+    successRate: number | null;
+    isNewCustomer: boolean;
+    isRepeatCustomer: boolean;
+    customerSince: string | null;
+    lastOrderAt: string | null;
+    lastDeliveryAt: string | null;
+  };
+  aiSummary?: {
+    introduction: string;
+    positiveFactors: Array<{
+      key: string;
+      label: string;
+      value: string | number | boolean | null;
+      impact: number;
+    }>;
+    warningFactors: Array<{
+      key: string;
+      label: string;
+      value: string | number | boolean | null;
+      impact: number;
+    }>;
+    conclusion: string;
+    recommendation: string;
+  };
+  addressFindings?: Array<{
+    key: string;
+    level: 'positive' | 'neutral' | 'alert';
+    description: string;
+    impact: 'positive' | 'neutral' | 'negative';
+  }>;
+  regionFindings?: Array<{
+    key: string;
+    level: 'positive' | 'neutral' | 'alert';
+    description: string;
+    impact: 'positive' | 'neutral' | 'negative';
+  }>;
+  customerFindings?: Array<{
+    key: string;
+    level: 'positive' | 'neutral' | 'alert';
+    description: string;
+    impact: 'positive' | 'neutral' | 'negative';
+  }>;
+  orderValueFindings?: Array<{
+    key: string;
+    level: 'positive' | 'neutral' | 'alert';
+    description: string;
+    impact: 'positive' | 'neutral' | 'negative';
+  }>;
+  orderTimeFindings?: Array<{
+    key: string;
+    level: 'positive' | 'neutral' | 'alert';
+    description: string;
+    impact: 'positive' | 'neutral' | 'negative';
+  }>;
   deliverySuccessProbability?: number;           // Probability of successful delivery (0-100%)
   
   // NEW: Cancellation tracking
+  postponement?: {
+    date?: string;
+    time?: string;
+    scheduledFor?: string;
+    note?: string;
+    postponedAt?: string;
+    postponedByOperatorId?:
+      | string
+      | {
+          _id: string;
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+        };
+  };
+
   cancellationReason?: CancellationReason;
   cancellationReasonDetails?: string;
   cancelledBy?: 'customer' | 'operator' | 'system' | 'courier';
@@ -236,10 +388,11 @@ export interface OrderFilters {
   status: OrderStatus | 'all';
   dateRange: { start: Date; end: Date } | null;
   aiScoreRange?: { min: number; max: number };  // Pro+
+  aiDecision?: 'accept' | 'review' | 'reject' | 'all';
+  riskLevel?: RiskLevel | 'all';
   region?: string;                               // Business+
   courier?: string;                              // Business+
   hasComplaint?: boolean;                        // Business+ - NEW
-  riskLevel?: RiskLevel | 'all';                 // Pro+ - NEW
   shopId?: string;                               // Admin only
 }
 

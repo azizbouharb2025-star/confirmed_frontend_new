@@ -12,6 +12,9 @@ export interface AdminKPIs {
   totalUsersChange: number;
   totalOrders: number;
   totalOrdersChange: number;
+  confirmedOrders: number;
+  cancelledOrders: number;
+  confirmationRate: number;
   revenue: number;
   revenueChange: number;
   activeShops: number;

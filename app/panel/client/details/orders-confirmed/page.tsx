@@ -13,6 +13,7 @@ import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import WidgetDetailPage from '@/components/dashboard/WidgetDetailPage';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import api from '@/lib/api';
+import { formatCurrency } from '@/lib/formatCurrency';
 
 interface Order {
   _id: string;
@@ -89,14 +90,14 @@ export default function OrdersConfirmedDetailPage() {
             <div className="card p-6">
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Total Revenue</p>
-                <p className="text-2xl font-bold">${totalRevenue.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
               </div>
             </div>
             
             <div className="card p-6">
               <div>
                 <p className="text-sm text-slate-500 dark:text-slate-400">Avg Order Value</p>
-                <p className="text-2xl font-bold">${avgOrderValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(avgOrderValue)}</p>
               </div>
             </div>
           </div>
@@ -148,7 +149,7 @@ export default function OrdersConfirmedDetailPage() {
                           {order.customerPhone}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600 dark:text-green-400">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                           {new Date(order.confirmedAt || order.createdAt).toLocaleDateString()}

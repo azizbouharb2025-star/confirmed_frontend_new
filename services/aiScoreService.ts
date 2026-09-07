@@ -150,13 +150,11 @@ function calculateTimeOfDayScore(order: Order): number {
  * Property 17: AI score color coding
  */
 export function getRiskLevel(score: number): RiskLevel {
-  if (score < 40) {
-    return 'high'
-  }
-  if (score <= 70) {
-    return 'medium'
-  }
-  return 'low'
+  if (score <= 20) return 'critical'
+  if (score <= 40) return 'high'
+  if (score <= 60) return 'medium'
+  if (score <= 80) return 'low'
+  return 'very_low'
 }
 
 /**
@@ -165,14 +163,18 @@ export function getRiskLevel(score: number): RiskLevel {
  */
 export function getScoreColorClass(score: number): string {
   const riskLevel = getRiskLevel(score)
-  
+
   switch (riskLevel) {
+    case 'critical':
+      return 'text-red-800 dark:text-red-300'
     case 'high':
       return 'text-red-600 dark:text-red-400'
     case 'medium':
       return 'text-orange-600 dark:text-orange-400'
     case 'low':
-      return 'text-green-600 dark:text-green-400'
+      return 'text-lime-600 dark:text-lime-400'
+    case 'very_low':
+      return 'text-green-700 dark:text-green-400'
   }
 }
 
@@ -181,13 +183,17 @@ export function getScoreColorClass(score: number): string {
  */
 export function getScoreBgColorClass(score: number): string {
   const riskLevel = getRiskLevel(score)
-  
+
   switch (riskLevel) {
+    case 'critical':
+      return 'bg-red-200 dark:bg-red-950/40'
     case 'high':
       return 'bg-red-100 dark:bg-red-900/20'
     case 'medium':
       return 'bg-orange-100 dark:bg-orange-900/20'
     case 'low':
+      return 'bg-lime-100 dark:bg-lime-900/20'
+    case 'very_low':
       return 'bg-green-100 dark:bg-green-900/20'
   }
 }

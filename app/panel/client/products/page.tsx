@@ -8,6 +8,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import Link from 'next/link'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
+import { formatCurrency } from '@/lib/formatCurrency'
 import ProductImageDisplay from '@/components/products/ProductImageDisplay'
 import ProductImageUpload from '@/components/products/ProductImageUpload'
 import ProductPerformanceTab from '@/components/products/ProductPerformanceTab'
@@ -17,13 +18,15 @@ interface Product {
   name: string
   description: string
   price: number
+    deliveryFee?: number
   sku: string
   category: string
   images: string[]
   imageUrl?: string // NEW: Primary image URL
   imageUploadedAt?: string // NEW: Image upload timestamp
   url: string
-  platform: string
+  platform?: string
+    syncMethod?: 'manual' | 'auto_sync'
   isActive: boolean
   inventory?: { quantity: number; inStock: boolean }
 }
@@ -38,6 +41,7 @@ interface FormData {
   name: string
   description: string
   price: string
+    deliveryFee: string
   sku: string
   category: string
   images: string[]
@@ -48,6 +52,7 @@ const initialFormData: FormData = {
   name: '',
   description: '',
   price: '',
+    deliveryFee: '',
   sku: '',
   category: '',
   images: [''],
@@ -71,6 +76,10 @@ export default function ProductsPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
+  const [removeCurrentImage, setRemoveCurrentImage] = useState(false)
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [deletingProduct, setDeletingProduct] = useState(false)
 
   useEffect(() => {
     fetchShops()
@@ -123,50 +132,126 @@ export default function ProductsPage() {
     const errors: Record<string, string> = {}
     if (!formData.name.trim()) errors.name = t('products.nameRequired')
     if (!formData.price || parseFloat(formData.price) <= 0) errors.price = t('products.priceRequired')
+
+    if (
+      formData.deliveryFee === '' ||
+      Number.isNaN(parseFloat(formData.deliveryFee)) ||
+      parseFloat(formData.deliveryFee) < 0
+    ) {
+      errors.deliveryFee = 'Les frais de livraison sont obligatoires et doivent être supérieurs ou égaux à 0.'
+    }
+
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async () => {
     if (!validateForm()) return
+
     setSaving(true)
     setError(null)
 
     try {
       const payload = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.name.trim(),
+        description: formData.description.trim(),
         price: parseFloat(formData.price),
-        sku: formData.sku,
-        category: formData.category,
-        images: formData.images.filter(img => img.trim()),
-        url: formData.url,
-        shopId: selectedShop
+        deliveryFee: parseFloat(formData.deliveryFee),
+        sku: formData.sku.trim(),
+        category: formData.category.trim(),
+        productLink: formData.url.trim()
       }
 
       let response
+
       if (editingProduct) {
-        response = await api.patch(`/api/products/${editingProduct._id}`, payload)
+        response = await api.put(
+          `/api/products/shop/${selectedShop}/product/${editingProduct._id}`,
+          payload
+        )
       } else {
-        response = await api.post(`/api/products/shop/${selectedShop}`, payload)
+        response = await api.post(
+          `/api/products/shop/${selectedShop}`,
+          payload
+        )
       }
 
-      if (response.data._id || response.data.id) {
-        if (editingProduct) {
-          setProducts(prev => prev.map(p => p._id === editingProduct._id ? response.data : p))
-          setSuccess(t('products.updateSuccess'))
-        } else {
-          setProducts(prev => [...prev, response.data])
-          setSuccess(t('products.createSuccess'))
-        }
-        closeModal()
-        setTimeout(() => setSuccess(null), 3000)
-      } else if (response.data.error || response.data.message) {
-        setError(response.data.error || response.data.message)
+      let savedProduct = response.data
+      const productId = savedProduct._id || savedProduct.id
+
+      if (!productId) {
+        throw new Error('Identifiant du produit introuvable.')
       }
-    } catch {
-      const errorMsg = t('products.failedSave')
-      setError(errorMsg)
+
+      // Nouvelle image ou remplacement
+      if (selectedImageFile) {
+        const imageData = new window.FormData()
+        imageData.append('image', selectedImageFile)
+
+        const imageResponse = await api.post(
+          `/api/products/shop/${selectedShop}/product/${productId}/image`,
+          imageData
+        )
+
+        savedProduct = {
+          ...savedProduct,
+          imageUrl: imageResponse.data.imageUrl,
+          imageUploadedAt: imageResponse.data.uploadedAt
+        }
+      }
+      // Suppression de l'image existante
+      else if (
+        editingProduct &&
+        removeCurrentImage &&
+        editingProduct.imageUrl
+      ) {
+        await api.delete(
+          `/api/products/shop/${selectedShop}/product/${productId}/image`
+        )
+
+        savedProduct = {
+          ...savedProduct,
+          imageUrl: undefined,
+          imageUploadedAt: undefined
+        }
+      }
+
+      if (editingProduct) {
+        setProducts(prev =>
+          prev.map(product =>
+            product._id === editingProduct._id
+              ? savedProduct
+              : product
+          )
+        )
+
+        setSuccess('Produit mis à jour avec succès.')
+      } else {
+        setProducts(prev => [savedProduct, ...prev])
+        setSuccess('Produit ajouté avec succès.')
+      }
+
+      closeModal()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      const requestError = err as {
+        message?: string
+        response?: {
+          data?: {
+            error?: string
+          }
+        }
+      }
+
+      setError(
+        requestError.response?.data?.error ||
+        requestError.message ||
+        'Impossible d’enregistrer le produit.'
+      )
+
+      // Synchroniser l'interface si la création/modification a réussi
+      // mais que l'upload d'image a échoué.
+      await fetchProducts()
     } finally {
       setSaving(false)
     }
@@ -184,7 +269,10 @@ export default function ProductsPage() {
       })
       
       if (response.data.syncResults || response.data.message) {
-        setSuccess(`Synced ${response.data.syncResults?.newProducts || 0} new products`)
+        const newProducts = response.data.syncResults?.newProducts || 0
+        setSuccess(
+          `${newProducts} produit${newProducts > 1 ? 's' : ''} synchronisé${newProducts > 1 ? 's' : ''} avec succès.`
+        )
         fetchProducts()
         setTimeout(() => setSuccess(null), 3000)
       } else if (response.data.error) {
@@ -197,70 +285,49 @@ export default function ProductsPage() {
     }
   }
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm(t('products.confirmDelete'))) return
-    
-    try {
-      await api.post(`/api/products/${productId}`, { _method: 'DELETE' })
-      setProducts(prev => prev.filter(p => p._id !== productId))
-      setSuccess(t('products.deleteSuccess'))
-      setTimeout(() => setSuccess(null), 3000)
-    } catch (err) {
-      const error = err as { message?: string }
-      setError(error.message || t('products.failedDelete'))
-    }
+  const handleDelete = (product: Product) => {
+    setProductToDelete(product)
   }
 
-  const handleImageUpload = async (imageUrl: string) => {
-    if (!editingProduct) return
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return
+
+    setDeletingProduct(true)
+    setError(null)
 
     try {
-      const response = await api.post(`/api/products/${editingProduct._id}/image`, { imageUrl })
-      
-      if (response.data.imageUrl) {
-        // Update the product in state
-        setProducts(prev => prev.map(p => 
-          p._id === editingProduct._id 
-            ? { ...p, imageUrl: response.data.imageUrl, imageUploadedAt: response.data.uploadedAt }
-            : p
-        ))
-        setEditingProduct(prev => prev ? { ...prev, imageUrl: response.data.imageUrl, imageUploadedAt: response.data.uploadedAt } : null)
-        setSuccess(t('products.imageUploaded'))
-        setTimeout(() => setSuccess(null), 3000)
-      }
-    } catch (err) {
-      const error = err as { message?: string }
-      throw new Error(error.message || t('products.imageUploadFailed'))
-    }
-  }
+      await api.delete(
+        `/api/products/shop/${selectedShop}/product/${productToDelete._id}`
+      )
 
-  const handleImageRemove = async () => {
-    if (!editingProduct) return
+      setProducts(prev =>
+        prev.filter(product => product._id !== productToDelete._id)
+      )
 
-    try {
-      await api.delete(`/api/products/${editingProduct._id}/image`)
-      
-      // Update the product in state
-      setProducts(prev => prev.map(p => 
-        p._id === editingProduct._id 
-          ? { ...p, imageUrl: undefined, imageUploadedAt: undefined }
-          : p
-      ))
-      setEditingProduct(prev => prev ? { ...prev, imageUrl: undefined, imageUploadedAt: undefined } : null)
-      setSuccess(t('products.imageUploaded'))
+      setProductToDelete(null)
+      setSuccess('Produit supprimé avec succès.')
       setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      const error = err as { message?: string }
-      throw new Error(error.message || t('products.imageUploadFailed'))
+      const requestError = err as { message?: string }
+
+      setError(
+        requestError.message ||
+        'Impossible de supprimer le produit.'
+      )
+    } finally {
+      setDeletingProduct(false)
     }
   }
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product)
+    setSelectedImageFile(null)
+    setRemoveCurrentImage(false)
     setFormData({
       name: product.name,
       description: product.description || '',
       price: product.price.toString(),
+      deliveryFee: (product.deliveryFee ?? 0).toString(),
       sku: product.sku || '',
       category: product.category || '',
       images: product.images?.length ? product.images : [''],
@@ -272,13 +339,15 @@ export default function ProductsPage() {
   const closeModal = () => {
     setShowModal(false)
     setEditingProduct(null)
+    setSelectedImageFile(null)
+    setRemoveCurrentImage(false)
     setFormData(initialFormData)
     setFormErrors({})
   }
 
   const filteredProducts = products.filter(p => {
-    if (filter === 'manual') return p.platform === 'manual'
-    if (filter === 'synced') return p.platform !== 'manual'
+    if (filter === 'manual') return p.syncMethod === 'manual'
+    if (filter === 'synced') return p.syncMethod === 'auto_sync'
     return true
   })
 
@@ -446,46 +515,130 @@ export default function ProductsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {filteredProducts.map((product) => (
-                    <div key={product._id} className="card overflow-hidden group">
-                      {/* Product Image */}
-                      <div className="relative h-48">
-                        <ProductImageDisplay
-                          imageUrl={product.imageUrl || product.images?.[0]}
-                          productName={product.name}
-                          size="medium"
-                        />
-                        {/* Actions Overlay */}
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                          <button onClick={() => openEditModal(product)} className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                            <PencilIcon className="w-5 h-5 text-white" />
-                          </button>
-                          <button onClick={() => handleDelete(product._id)} className="p-2 bg-red-500/50 rounded-lg hover:bg-red-500/70 transition-colors">
-                            <TrashIcon className="w-5 h-5 text-white" />
-                          </button>
+                    <div
+                      key={product._id}
+                      className="card p-4"
+                    >
+                      <div className="flex gap-4">
+
+                        {/* Miniature du produit */}
+                        <div className="shrink-0">
+                          <ProductImageDisplay
+                            imageUrl={
+                              product.imageUrl ||
+                              product.images?.[0]
+                            }
+                            productName={product.name}
+                            size="small"
+                          />
                         </div>
-                      </div>
-                      
-                      {/* Product Info */}
-                      <div className="p-4">
-                        <h3 className="font-semibold mb-1 truncate">{product.name}</h3>
-                        <p className="text-sm dark:text-slate-400 light:text-gray-600 mb-3 line-clamp-2">{product.description || t('products.noDescription')}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg font-bold text-blue-500">{product.price.toFixed(2)} TND</span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            product.platform === 'manual' 
-                              ? 'bg-purple-500/10 text-purple-500' 
-                              : 'bg-green-500/10 text-green-500'
-                          }`}>
-                            {product.platform === 'manual' ? t('products.manual') : t('products.synced')}
-                          </span>
-                        </div>
-                        {product.inventory && (
-                          <div className="mt-2 text-xs dark:text-slate-400 light:text-gray-500">
-                            {t('products.stock')}: {product.inventory.quantity} {product.inventory.inStock ? '✓' : '✗'}
+
+                        {/* Informations */}
+                        <div className="min-w-0 flex-1">
+
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="font-semibold truncate dark:text-white light:text-gray-900">
+                                {product.name}
+                              </h3>
+
+                              <p className="mt-1 text-sm line-clamp-2 dark:text-slate-400 light:text-gray-600">
+                                {product.description ||
+                                  t('products.noDescription')}
+                              </p>
+                            </div>
+
+                            {/* Actions toujours visibles */}
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openEditModal(product)
+                                }
+                                title="Modifier"
+                                className="p-2 rounded-lg dark:bg-slate-800 light:bg-gray-100 hover:text-blue-500 transition-colors"
+                              >
+                                <PencilIcon className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDelete(product)
+                                }
+                                title="Supprimer"
+                                className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                        )}
+
+                          {/* Badges */}
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${
+                                product.syncMethod === 'manual'
+                                  ? 'bg-purple-500/10 text-purple-500'
+                                  : 'bg-green-500/10 text-green-500'
+                              }`}
+                            >
+                              {product.syncMethod === 'manual'
+                                ? t('products.manual')
+                                : t('products.synced')}
+                            </span>
+
+                            {product.category && (
+                              <span className="text-xs px-2 py-1 rounded-full dark:bg-slate-800 light:bg-gray-100 dark:text-slate-300 light:text-gray-600">
+                                {product.category}
+                              </span>
+                            )}
+
+                            {product.sku && (
+                              <span className="text-xs px-2 py-1 rounded-full dark:bg-slate-800 light:bg-gray-100 dark:text-slate-400 light:text-gray-500">
+                                SKU : {product.sku}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Prix et livraison */}
+                          <div className="mt-4 pt-3 border-t dark:border-slate-700 light:border-gray-200 flex items-end justify-between gap-4">
+                            <div>
+                              <p className="text-xs dark:text-slate-400 light:text-gray-500">
+                                Prix
+                              </p>
+
+                              <p className="text-lg font-bold text-blue-500">
+                                {formatCurrency(product.price)}
+                              </p>
+                            </div>
+
+                            <div className="text-right">
+                              <p className="text-xs dark:text-slate-400 light:text-gray-500">
+                                Frais de livraison
+                              </p>
+
+                              <p className="text-sm font-semibold dark:text-white light:text-gray-900">
+                                {formatCurrency(
+                                  product.deliveryFee ?? 0
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          {product.inventory && (
+                            <div className="mt-2 text-xs dark:text-slate-400 light:text-gray-500">
+                              {t('products.stock')} :{' '}
+                              {product.inventory.quantity}{' '}
+                              {product.inventory.inStock
+                                ? '✓'
+                                : '✗'}
+                            </div>
+                          )}
+
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -520,7 +673,7 @@ export default function ProductsPage() {
                       value={formData.name}
                       onChange={(e) => { setFormData(prev => ({ ...prev, name: e.target.value })); setFormErrors(prev => ({ ...prev, name: '' })) }}
                       className={inputClass('name')}
-                      placeholder="Wireless Headphones"
+                      placeholder="Ex. Souris sans fil"
                     />
                     {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
                   </div>
@@ -533,21 +686,38 @@ export default function ProductsPage() {
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       className={inputClass('description')}
-                      placeholder="High-quality wireless headphones..."
+                      placeholder="Décrivez brièvement le produit..."
                     />
                   </div>
 
-                  {/* Product Image Upload (only for editing existing products) */}
-                  {editingProduct && (
-                    <div>
-                      <ProductImageUpload
-                        currentImageUrl={editingProduct.imageUrl}
-                        productName={editingProduct.name}
-                        onUpload={handleImageUpload}
-                        onRemove={handleImageRemove}
-                      />
-                    </div>
-                  )}
+                  {/* Product Image */}
+                  <div>
+                    <ProductImageUpload
+                      currentImageUrl={
+                        removeCurrentImage
+                          ? undefined
+                          : editingProduct?.imageUrl
+                      }
+                      productName={
+                        formData.name ||
+                        editingProduct?.name ||
+                        'Produit'
+                      }
+                      selectedFile={selectedImageFile}
+                      removalPending={removeCurrentImage}
+                      onFileSelect={(file) => {
+                        setSelectedImageFile(file)
+
+                        if (file) {
+                          setRemoveCurrentImage(false)
+                        }
+                      }}
+                      onRemoveCurrent={() => {
+                        setSelectedImageFile(null)
+                        setRemoveCurrentImage(true)
+                      }}
+                    />
+                  </div>
 
                   {/* Price & SKU */}
                   <div className="grid grid-cols-2 gap-4">
@@ -575,6 +745,30 @@ export default function ProductsPage() {
                     </div>
                   </div>
 
+                  {/* Delivery Fee */}
+                  <div>
+                    <label className="block text-sm font-semibold mb-2 dark:text-white light:text-gray-900">
+                      Frais de livraison (DT) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.001"
+                      value={formData.deliveryFee}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, deliveryFee: e.target.value }))
+                        setFormErrors(prev => ({ ...prev, deliveryFee: '' }))
+                      }}
+                      className={inputClass('deliveryFee')}
+                      placeholder="8.000"
+                    />
+                    {formErrors.deliveryFee && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {formErrors.deliveryFee}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Category */}
                   <div>
                     <label className="block text-sm font-semibold mb-2 dark:text-white light:text-gray-900">{t('products.category')}</label>
@@ -583,19 +777,7 @@ export default function ProductsPage() {
                       value={formData.category}
                       onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                       className={inputClass('category')}
-                      placeholder="Electronics"
-                    />
-                  </div>
-
-                  {/* Image URL */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-2 dark:text-white light:text-gray-900">{t('products.imageUrl')}</label>
-                    <input
-                      type="url"
-                      value={formData.images[0] || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, images: [e.target.value] }))}
-                      className={inputClass('images')}
-                      placeholder="https://example.com/image.jpg"
+                      placeholder="Ex. Informatique"
                     />
                   </div>
 
@@ -607,7 +789,7 @@ export default function ProductsPage() {
                       value={formData.url}
                       onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                       className={inputClass('url')}
-                      placeholder="https://mystore.com/products/..."
+                      placeholder="https://monsite.tn/produit/..."
                     />
                   </div>
                 </div>
@@ -634,6 +816,64 @@ export default function ProductsPage() {
               </div>
             </div>
           )}
+          {productToDelete && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+              <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl overflow-hidden">
+
+                <div className="p-6">
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10">
+                    <TrashIcon className="h-6 w-6 text-red-500" />
+                  </div>
+
+                  <h2 className="text-xl font-semibold text-white">
+                    Supprimer ce produit ?
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-6 text-slate-400">
+                    Cette action est définitive et supprimera ce produit de votre catalogue.
+                  </p>
+
+                  <div className="mt-5 rounded-xl border border-slate-700 bg-slate-800 p-4">
+                    <p className="truncate font-medium text-white">
+                      {productToDelete.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 border-t border-slate-700 p-6">
+                  <button
+                    type="button"
+                    onClick={() => setProductToDelete(null)}
+                    disabled={deletingProduct}
+                    className="flex-1 rounded-lg border border-slate-600 px-4 py-3 font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    Annuler
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={confirmDeleteProduct}
+                    disabled={deletingProduct}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-3 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {deletingProduct ? (
+                      <>
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Suppression...
+                      </>
+                    ) : (
+                      <>
+                        <TrashIcon className="h-5 w-5" />
+                        Supprimer
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
         </div>
       </DashboardLayout>
     </ProtectedRoute>

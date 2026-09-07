@@ -13,6 +13,7 @@ import { generateOrdersCSV } from '@/components/orders/BulkActionsToolbar'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
+import { formatCurrency } from '@/lib/formatCurrency'
 import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult, ShopRef, OperatorRef } from '@/types/order'
 import { clsx } from 'clsx'
 
@@ -58,6 +59,7 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
       averageProcessingTime: 0,
       statusDistribution: {
         pending: 0,
+        postponed: 0,
         assigned: 0,
         in_progress: 0,
         confirmed: 0,
@@ -74,6 +76,7 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
   // Calculate status distribution
   const statusDistribution: Record<OrderStatus, number> = {
     pending: 0,
+    postponed: 0,
     assigned: 0,
     in_progress: 0,
     confirmed: 0,
@@ -266,7 +269,7 @@ function AdminOrderDetailPanel({
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Order {order.orderId}
+                  Commande #{order.confirmedId}
                 </h2>
                 <p className="text-sm text-gray-500 dark:text-slate-400">Shop: {shopName}</p>
                 <div className="mt-1">
@@ -304,7 +307,7 @@ function AdminOrderDetailPanel({
                 <div className="flex justify-between">
                   <dt className="text-sm text-gray-500 dark:text-slate-400">Total</dt>
                   <dd className="text-sm font-medium text-green-600 dark:text-green-400">
-                    ${order.totalAmount.toFixed(2)}
+                    {formatCurrency(order.totalAmount)}
                   </dd>
                 </div>
               </dl>

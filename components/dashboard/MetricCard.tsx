@@ -17,6 +17,10 @@ export interface MetricCardProps {
   title: string;
   /** Current metric value */
   value: number;
+  /** Optional pre-formatted value */
+  formattedValue?: string;
+  /** Optional secondary label */
+  secondaryLabel?: string;
   /** Previous value for comparison (used to calculate change if change not provided) */
   previousValue?: number;
   /** Percentage change from previous period */
@@ -118,6 +122,8 @@ function TrendIndicator({
 export default function MetricCard({ 
   title, 
   value, 
+  formattedValue,
+  secondaryLabel,
   previousValue,
   change, 
   icon, 
@@ -204,18 +210,30 @@ export default function MetricCard({
             }}
             transition={{ duration: 0.6 }}
           >
-            {prefix}
-            <CountUp 
-              end={value} 
-              duration={1} 
-              decimals={decimals} 
-              preserveValue 
-              separator=","
-            />
-            {suffix}
+            {formattedValue !== undefined ? (
+              formattedValue
+            ) : (
+              <>
+                {prefix}
+                <CountUp
+                  end={value}
+                  duration={1}
+                  decimals={decimals}
+                  preserveValue
+                  separator=","
+                />
+                {suffix}
+              </>
+            )}
           </motion.span>
         </motion.div>
         
+        {secondaryLabel && (
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 light:text-gray-500">
+            {secondaryLabel}
+          </p>
+        )}
+
         {/* Animated trend indicator - Requirements: 6.4 */}
         <AnimatePresence mode="wait">
           {determinedTrend && displayTrendValue !== undefined && (

@@ -23,6 +23,10 @@ export interface WidgetGateProps {
   children: ReactNode;
   /** Optional callback when upgrade is clicked */
   onUpgradeClick?: () => void;
+  /** Force a static locked premium preview regardless of current plan */
+  previewOnly?: boolean;
+  /** Label displayed on static premium preview */
+  previewLabel?: string;
 }
 
 /**
@@ -48,7 +52,21 @@ export function WidgetGate({
   featureDescription,
   children,
   onUpgradeClick,
+  previewOnly = false,
+  previewLabel,
 }: WidgetGateProps): JSX.Element {
+  if (previewOnly) {
+    return (
+      <LockedWidget
+        featureName={featureName}
+        featureDescription={featureDescription}
+        requiredPlan={requiredPlan}
+        previewOnly
+        previewLabel={previewLabel}
+      />
+    );
+  }
+
   // Check if user's plan has access to the required plan level
   const hasAccess = canAccessPlan(currentPlan, requiredPlan);
 

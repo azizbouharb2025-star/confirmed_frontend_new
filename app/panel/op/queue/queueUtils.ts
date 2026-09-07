@@ -12,9 +12,10 @@ import type { Order, OrderPriority, CallFeedback, CallHistoryEntry, OrderStatus 
  * Higher weight = higher priority in queue
  */
 export const PRIORITY_WEIGHTS: Record<OrderPriority, number> = {
-  urgent: 4,
+  urgent: 4, // compatibilité historique
   high: 3,
-  normal: 2,
+  medium: 2,
+  normal: 2, // compatibilité historique
   low: 1,
 }
 
@@ -28,13 +29,35 @@ export const PRIORITY_WEIGHTS: Record<OrderPriority, number> = {
  */
 export function sortQueueOrders(orders: Order[]): Order[] {
   return [...orders].sort((a, b) => {
-    // First sort by priority (higher weight first)
-    const priorityDiff = PRIORITY_WEIGHTS[b.priority] - PRIORITY_WEIGHTS[a.priority]
-    if (priorityDiff !== 0) return priorityDiff
-    
-    // Then sort by AI risk score (higher score first, treat undefined as 0)
-    const aScore = a.aiRiskScore ?? 0
-    const bScore = b.aiRiskScore ?? 0
+    const aPriority =
+      PRIORITY_WEIGHTS[a.priority] ??
+      PRIORITY_WEIGHTS.medium
+
+    const bPriority =
+      PRIORITY_WEIGHTS[b.priority] ??
+      PRIORITY_WEIGHTS.medium
+
+    const priorityDiff =
+      bPriority - aPriority
+
+    if (priorityDiff !== 0) {
+      return priorityDiff
+    }
+
+    /*
+     * Score IA actuel en priorité.
+     * aiRiskScore reste un fallback historique.
+     */
+    const aScore =
+      a.aiScore ??
+      a.aiRiskScore ??
+      0
+
+    const bScore =
+      b.aiScore ??
+      b.aiRiskScore ??
+      0
+
     return bScore - aScore
   })
 }
@@ -167,6 +190,7 @@ export function getPriorityColor(priority: OrderPriority): string {
   switch (priority) {
     case 'urgent': return 'bg-red-500 text-white'
     case 'high': return 'bg-orange-500 text-white'
+    case 'medium': return 'bg-blue-500 text-white'
     case 'normal': return 'bg-blue-500 text-white'
     case 'low': return 'bg-gray-500 text-white'
     default: return 'bg-gray-500 text-white'

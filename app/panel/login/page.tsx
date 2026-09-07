@@ -33,6 +33,11 @@ export default function LoginPage() {
     try {
       // Call real backend API
       const data = await api.auth.login(formData.email, formData.password)
+
+      if (data.error === 'Account is pending activation') {
+        window.location.href = '/panel/account-pending'
+        return
+      }
       
       if (data.user && data.token) {
         // Login user with real data from backend

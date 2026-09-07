@@ -191,9 +191,9 @@ export default function RegisterPage() {
         } else {
           toast.error(errorMsg)
         }
-      } else if (response.token) {
-        toast.success('Registration successful! Please login.')
-        window.location.href = '/panel/login'
+      } else if (response.accountStatus === 'pending') {
+        toast.success('Votre compte a bien été créé.')
+        window.location.href = '/panel/account-pending'
       } else {
         toast.error('Registration failed. Please try again.')
       }

@@ -7,9 +7,7 @@ import Image from 'next/image'
 import type { Order } from '@/types/order'
 import { SubscriptionPlan, hasFeatureAccess } from '@/types/subscription'
 import StatusBadge from '@/components/ui/StatusBadge'
-import RepeatBuyerBadge from '@/components/ui/RepeatBuyerBadge'
 import AIScoreColumn from '@/components/orders/AIScoreColumn'
-import { getAIScore } from '@/services/aiScoreService'
 import { useLanguage } from '@/hooks/useLanguage'
 import { TranslationKey } from '@/lib/i18n'
 import { formatCurrency } from '@/lib/formatCurrency'
@@ -279,33 +277,6 @@ function Pagination({
 
 
 /**
- * Get shop name from order
- */
-function getShopName(order: Order): string {
-  if (typeof order.shopId === 'string') {
-    return order.shopId
-  }
-  return (order.shopId as { _id: string; name: string })?.name || '-'
-}
-
-/**
- * Display a short order ID.
- */
-function getShortOrderId(orderId: string): string {
-  if (/^\d+$/.test(orderId)) {
-    return `#${orderId}`
-  }
-
-  const match = orderId.match(/(\d+)$/)
-  if (match) {
-    return `#${match[1]}`
-  }
-
-  return `#${orderId.slice(-6)}`
-}
-
-
-/**
  * Clean imported product names before displaying them in the table.
  */
 function cleanProductName(name?: string): string {
@@ -326,16 +297,15 @@ function cleanProductName(name?: string): string {
 /**
  * Define all available columns with their tier requirements
  */
-function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key: TranslationKey) => string): ColumnConfig[] {
-  const columns: ColumnConfig[] = [
-    // Base columns (Starter - available to all)
+function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[] {
+  return [
     {
       key: 'orderId',
       label: t('orders.orderId'),
       minPlan: null,
       render: (order) => (
         <span className="font-medium text-gray-900 dark:text-white">
-          {getShortOrderId(order.orderId)}
+          {order.confirmedId ? `#${order.confirmedId}` : '—'}
         </span>
       ),
     },
@@ -417,17 +387,6 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
         </span>
       ),
     },
-    // Shop column - only visible for admin users (Requirements: 6.1)
-    ...(userRole === 'admin' ? [{
-      key: 'shop',
-      label: t('orders.shop'),
-      minPlan: null as SubscriptionPlan | null,
-      render: (order: Order) => (
-        <span className="text-gray-600 dark:text-slate-400">
-          {getShopName(order)}
-        </span>
-      ),
-    }] : []),
     {
       key: 'phone',
       label: t('orders.phone'),
@@ -444,7 +403,6 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       minPlan: null,
       render: (order) => <StatusBadge status={order.status} size="sm" />,
     },
-    // Pro+ columns
     {
       key: 'aiScore',
       label: t('orders.aiScore'),
@@ -478,118 +436,12 @@ function createColumnConfigs(userRole: 'seller' | 'operator' | 'admin', t: (key:
       ),
       className: 'text-right',
     },
-    {
-      key: 'operatorFeedback',
-      label: t('orders.operatorFeedback'),
-      minPlan: 'pro',
-      render: (order) => (
-        <span className="text-gray-600 dark:text-slate-400 truncate max-w-[150px] block">
-          {typeof order.operatorFeedback === 'string' 
-            ? order.operatorFeedback 
-            : order.operatorFeedback?.confidence || '-'}
-        </span>
-      ),
-    },
-    // Business+ columns
-    {
-      key: 'courier',
-      label: t('orders.courier'),
-      minPlan: 'business',
-      render: (order) => (
-        <span className="text-gray-600 dark:text-slate-400">
-          {order.courierAssignment || '-'}
-        </span>
-      ),
-    },
-    {
-      key: 'region',
-      label: t('orders.region'),
-      minPlan: 'business',
-      render: (order) => (
-        <span className="text-gray-600 dark:text-slate-400">
-          {order.region || '-'}
-        </span>
-      ),
-    },
-    {
-      key: 'riskPercentage',
-      label: t('orders.riskPercentage'),
-      minPlan: 'business',
-      render: (order) => {
-        const aiScore = getAIScore(order, true)
-        const riskPercentage = 100 - aiScore
-        const getRiskColor = (risk: number) => {
-          if (risk >= 70) return 'bg-red-500'
-          if (risk >= 40) return 'bg-yellow-500'
-          return 'bg-green-500'
-        }
-        const getRiskTextColor = (risk: number) => {
-          if (risk >= 70) return 'text-red-600 dark:text-red-400'
-          if (risk >= 40) return 'text-yellow-600 dark:text-yellow-400'
-          return 'text-green-600 dark:text-green-400'
-        }
-        return (
-          <div className="flex items-center gap-2 min-w-[120px]">
-            <span className={`text-sm font-medium ${getRiskTextColor(riskPercentage)}`}>
-              {riskPercentage}%
-            </span>
-            <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div 
-                className={`h-full ${getRiskColor(riskPercentage)} transition-all duration-300`}
-                style={{ width: `${riskPercentage}%` }}
-              />
-            </div>
-          </div>
-        )
-      },
-    },
-    {
-      key: 'complaintFlags',
-      label: t('orders.complaints'),
-      minPlan: 'business',
-      render: (order) => (
-        <span className="text-gray-600 dark:text-slate-400">
-          {order.complaintFlags?.length
-            ? order.complaintFlags.join(', ')
-            : '-'}
-        </span>
-      ),
-    },
-    // Enterprise columns
-    {
-      key: 'repeatBuyer',
-      label: t('orders.repeatBuyer'),
-      minPlan: 'enterprise',
-      render: (order) => (
-        <RepeatBuyerBadge
-          isRepeatBuyer={order.isRepeatBuyer || false}
-          size="sm"
-          showLabel={false}
-        />
-      ),
-    },
-    {
-      key: 'lifetimeValue',
-      label: t('orders.lifetimeValue'),
-      minPlan: 'enterprise',
-      render: (order) => (
-        <span className="font-medium text-gray-900 dark:text-white">
-          {order.customerLifetimeValue !== undefined
-            ? formatCurrency(order.customerLifetimeValue)
-            : '-'}
-        </span>
-      ),
-      className: 'text-right',
-    },
   ]
-
-  return columns
 }
 
 
 export default function OrdersTable({
   orders,
-  userRole,
   subscriptionPlan,
   selectedIds,
   isLoading = false,
@@ -610,7 +462,7 @@ export default function OrdersTable({
   const { t } = useLanguage()
   
   // Get all column configurations
-  const allColumns = useMemo(() => createColumnConfigs(userRole, t), [userRole, t])
+  const allColumns = useMemo(() => createColumnConfigs(t), [t])
 
   // Filter columns based on subscription plan
   const visibleColumns = useMemo(
@@ -698,7 +550,7 @@ export default function OrdersTable({
               {/* Data columns */}
               {visibleColumns.map((column) => {
                 const sortableFields: Record<string, string> = {
-                  orderId: 'orderId',
+                  orderId: 'confirmedId',
                   status: 'status',
                   aiScore: 'aiScore',
                   value: 'totalAmount',
@@ -773,7 +625,7 @@ export default function OrdersTable({
                     <Checkbox
                       checked={selectedSet.has(order._id)}
                       onChange={(checked) => handleRowSelectionChange(order._id, checked)}
-                      aria-label={`${t('orders.selectOrder')} ${order.orderId}`}
+                      aria-label={`${t('orders.selectOrder')} #${order.confirmedId}`}
                     />
                   </td>
                   {/* Data cells */}

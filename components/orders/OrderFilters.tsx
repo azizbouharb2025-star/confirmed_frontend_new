@@ -19,7 +19,15 @@ export interface OrderFiltersProps {
 }
 
 // All valid order statuses for the dropdown
-const _ALL_STATUSES: OrderStatus[] = ['pending', 'assigned', 'in_progress', 'confirmed', 'rejected', 'cancelled']
+const _ALL_STATUSES: OrderStatus[] = [
+  'pending',
+  'confirmed',
+  'cancelled',
+  'postponed',
+  'in_progress',
+  'delivered',
+  'failed_delivery'
+]
 
 /**
  * Custom hook for debounced value
@@ -241,6 +249,42 @@ export default function OrderFilters({
     }
   }, [filters, onFiltersChange])
   
+  // AI decision filter
+  const handleAiDecisionChange = useCallback(
+    (decision: 'accept' | 'review' | 'reject') => {
+      onFiltersChange({
+        ...filters,
+        aiDecision: filters.aiDecision === decision ? 'all' : decision,
+      })
+    },
+    [filters, onFiltersChange]
+  )
+
+  // AI confidence range filter
+  const handleAiScoreRangeChange = useCallback(
+    (min: number, max: number) => {
+      const current = filters.aiScoreRange
+      const isSameRange = current?.min === min && current?.max === max
+
+      onFiltersChange({
+        ...filters,
+        aiScoreRange: isSameRange ? undefined : { min, max },
+      })
+    },
+    [filters, onFiltersChange]
+  )
+
+  // AI risk level filter
+  const handleRiskLevelChange = useCallback(
+    (riskLevel: 'critical' | 'high' | 'medium' | 'low' | 'very_low') => {
+      onFiltersChange({
+        ...filters,
+        riskLevel: filters.riskLevel === riskLevel ? 'all' : riskLevel,
+      })
+    },
+    [filters, onFiltersChange]
+  )
+
   // Clear all filters
   const handleClearFilters = useCallback(() => {
     setSearchInput('')
@@ -248,6 +292,9 @@ export default function OrderFilters({
       search: '',
       status: 'all',
       dateRange: null,
+      aiDecision: 'all',
+      aiScoreRange: undefined,
+      riskLevel: 'all',
     })
   }, [onFiltersChange])
   
@@ -256,7 +303,10 @@ export default function OrderFilters({
     return (
       filters.search !== '' ||
       filters.status !== 'all' ||
-      filters.dateRange !== null
+      filters.dateRange !== null ||
+      (filters.aiDecision !== undefined && filters.aiDecision !== 'all') ||
+      filters.aiScoreRange !== undefined ||
+      (filters.riskLevel !== undefined && filters.riskLevel !== 'all')
     )
   }, [filters])
 
@@ -275,9 +325,9 @@ export default function OrderFilters({
   )
 
   return (
-    <div className={clsx('space-y-4', className)}>
+    <div className={clsx('space-y-3', className)}>
       {/* Main filters row */}
-      <div className="flex flex-wrap gap-4 items-end">
+      <div className="flex flex-wrap gap-3 items-end">
         {/* Search input with debounce */}
         <div className="flex-1 min-w-[200px]">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
@@ -309,13 +359,14 @@ export default function OrderFilters({
             className={selectBaseStyles}
             data-testid="status-filter"
           >
-            <option value="all">{t('orders.allStatuses')}</option>
-            <option value="pending">{t('common.pending')}</option>
-            <option value="assigned">{t('status.active')}</option>
-            <option value="in_progress">{t('action.processing')}</option>
-            <option value="confirmed">{t('common.confirmed')}</option>
-            <option value="rejected">{t('common.rejected')}</option>
-            <option value="cancelled">{t('status.inactive')}</option>
+            <option value="all">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmé</option>
+            <option value="cancelled">Annulé</option>
+            <option value="postponed">Reporté</option>
+            <option value="in_progress">Tentative</option>
+            <option value="delivered">Livrée</option>
+            <option value="failed_delivery">Retournée</option>
           </select>
         </div>
         
@@ -364,9 +415,135 @@ export default function OrderFilters({
             )}
             data-testid="clear-filters-button"
           >
-            Clear Filters
+            {t('orders.clearFilters')}
           </button>
         )}
+      </div>
+
+      {/* AI filters */}
+      <div className="relative grid grid-cols-1 gap-3 rounded-xl border border-gray-200/70 bg-gray-50/30 px-3 pb-2.5 pt-3.5 dark:border-slate-700/70 dark:bg-slate-900/20 lg:grid-cols-[1.2fr_1fr_1fr]">
+        <div className="absolute -top-2.5 left-3 flex items-center gap-1 rounded-full border border-[#ADFF2F]/20 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:bg-slate-900 dark:text-slate-400">
+          <span className="text-[#ADFF2F]">✦</span>
+          Filtres IA
+        </div>
+
+        {/* AI Decision */}
+        <div>
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            {t('orders.aiDecision')}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              ['accept', t('orders.shippingRecommended')],
+              ['review', t('orders.sellerDecision')],
+              ['reject', t('orders.shippingDiscouraged')],
+            ].map(([value, label]) => {
+              const active = filters.aiDecision === value
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    handleAiDecisionChange(
+                      value as 'accept' | 'review' | 'reject'
+                    )
+                  }
+                  className={clsx(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    active
+                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* AI Confidence */}
+        <div>
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            {t('orders.aiConfidenceLevel')}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { label: '95–100 %', min: 95, max: 100 },
+              { label: '90–95 %', min: 90, max: 95 },
+              { label: '80–90 %', min: 80, max: 90 },
+              { label: '70–80 %', min: 70, max: 80 },
+              { label: '< 70 %', min: 0, max: 69 },
+            ].map(({ label, min, max }) => {
+              const active =
+                filters.aiScoreRange?.min === min &&
+                filters.aiScoreRange?.max === max
+
+              return (
+                <button
+                  key={`${min}-${max}`}
+                  type="button"
+                  onClick={() => handleAiScoreRangeChange(min, max)}
+                  className={clsx(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    active
+                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Risk Level */}
+        <div>
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+            {t('orders.riskLevel')}
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              ['very_low', t('orders.riskVeryLow')],
+              ['low', t('orders.riskLow')],
+              ['medium', t('orders.riskModerate')],
+              ['high', t('orders.riskHigh')],
+              ['critical', t('orders.riskCritical')],
+            ].map(([value, label]) => {
+              const active = filters.riskLevel === value
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() =>
+                    handleRiskLevelChange(
+                      value as
+                        | 'critical'
+                        | 'high'
+                        | 'medium'
+                        | 'low'
+                        | 'very_low'
+                    )
+                  }
+                  className={clsx(
+                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    active
+                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
+                  )}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )

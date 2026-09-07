@@ -22,6 +22,10 @@ export interface LockedWidgetProps {
   requiredPlan: SubscriptionPlan;
   /** Optional callback when upgrade is clicked */
   onUpgradeClick?: () => void;
+  /** Static premium preview: locked, visible and non-interactive */
+  previewOnly?: boolean;
+  /** Label displayed for static premium previews */
+  previewLabel?: string;
 }
 
 /**
@@ -39,6 +43,8 @@ export function LockedWidget({
   featureDescription,
   requiredPlan,
   onUpgradeClick,
+  previewOnly = false,
+  previewLabel = 'Bientôt disponible',
 }: LockedWidgetProps): JSX.Element {
   const [showModal, setShowModal] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -46,6 +52,42 @@ export function LockedWidget({
 
   const planDisplayName = getPlanDisplayName(requiredPlan);
   const upgradeUrl = subscriptionService.getUpgradeUrl(requiredPlan);
+
+  if (previewOnly) {
+    return (
+      <div
+        className="card min-h-[220px] cursor-default select-none p-6"
+        aria-disabled="true"
+        data-testid="locked-widget-preview"
+      >
+        <div className="flex h-full min-h-[172px] flex-col">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ADFF2F]/20 bg-[#ADFF2F]/10">
+              <LockClosedIcon className="h-5 w-5 text-[#ADFF2F]" />
+            </div>
+
+            <span className="inline-flex shrink-0 items-center rounded-full border border-[#ADFF2F]/30 bg-[#ADFF2F]/10 px-2.5 py-1 text-[11px] font-semibold text-[#8fdc00]">
+              {previewLabel}
+            </span>
+          </div>
+
+          <div className="flex flex-1 flex-col">
+            <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+              {featureName}
+            </h3>
+
+            <p className="mb-5 text-sm leading-6 text-gray-600 dark:text-slate-400">
+              {featureDescription}
+            </p>
+
+            <div className="mt-auto border-t border-gray-200 pt-3 text-xs font-medium text-gray-500 dark:border-slate-800 dark:text-slate-500">
+              Fonctionnalité premium CONFIRMED
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleUpgradeClick = () => {
     if (onUpgradeClick) {

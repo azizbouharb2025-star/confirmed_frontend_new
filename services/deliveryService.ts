@@ -66,6 +66,8 @@ export function mapOrderStatusToDeliveryStatus(
 ): DeliveryStatus {
   const statusMap: Record<OrderStatus, DeliveryStatus> = {
     pending: 'pending_pickup',
+
+    postponed: 'pending_pickup',
     assigned: 'pending_pickup',
     in_progress: 'pending_pickup',
     confirmed: 'pending_pickup',

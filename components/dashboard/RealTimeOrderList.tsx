@@ -41,7 +41,7 @@ export default function RealTimeOrderList() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {order.orderId}
+                    {order.confirmedId ? `#${order.confirmedId}` : '—'}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {order.clientInfo.name} • {order.clientInfo.phone}

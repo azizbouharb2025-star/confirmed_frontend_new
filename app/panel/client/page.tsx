@@ -7,10 +7,17 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { ShoppingBagIcon, CheckCircleIcon, ClockIcon, TruckIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  ShoppingBagIcon,
+  CheckCircleIcon,
+  TruckIcon,
+  XMarkIcon,
+  ChartBarIcon,
+  SparklesIcon,
+  BanknotesIcon
+} from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import MetricCard from '@/components/dashboard/MetricCard'
-import ClickableWidget from '@/components/dashboard/ClickableWidget'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import RecentOrdersWidget from '@/components/dashboard/widgets/RecentOrdersWidget'
 import RiskScoreWidget, { RiskScoreData } from '@/components/dashboard/widgets/RiskScoreWidget'
@@ -20,16 +27,22 @@ import CourierPerformanceWidget from '@/components/dashboard/widgets/CourierPerf
 import PredictiveAnalyticsWidget from '@/components/dashboard/widgets/PredictiveAnalyticsWidget'
 import AutomationRecommendationsWidget, { Recommendation } from '@/components/dashboard/widgets/AutomationRecommendationsWidget'
 import CancelledOrdersWidget from '@/components/dashboard/CancelledOrdersWidget'
+
+const SHOW_CANCELLED_ORDERS_WIDGET = false
+const SHOW_DASHBOARD_QUICK_LINKS = false
 import WidgetGate from '@/components/dashboard/WidgetGate'
 import StaleDataIndicator from '@/components/dashboard/StaleDataIndicator'
 import { useLanguage } from '@/hooks/useLanguage'
-import { useDashboardData } from '@/hooks/useDashboardData'
+import { useDashboardData, type DashboardPeriod } from '@/hooks/useDashboardData'
 import { useSubscription } from '@/hooks/useSubscription'
 import { mockAIService } from '@/services/mockAIService'
 import Link from 'next/link'
+import { formatCurrency } from '@/lib/formatCurrency'
 
 export default function ClientDashboard() {
   const { t } = useLanguage()
+  const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('7d')
+
   const { 
     metrics, 
     isLoading, 
@@ -39,8 +52,36 @@ export default function ClientDashboard() {
     lastUpdated,
     autoRefreshEnabled,
     setAutoRefresh 
-  } = useDashboardData()
+  } = useDashboardData(false, selectedPeriod)
+
   const { plan, onPlanChange } = useSubscription()
+
+  const dashboardKpis = metrics?.dashboardKpis
+  const aiScore = dashboardKpis?.averageAiScore.value ?? null
+
+  const aiQualityLabel =
+    aiScore === null
+      ? t('dashboard.insufficientData')
+      : aiScore >= 95
+        ? t('dashboard.aiQualityExcellent')
+        : aiScore >= 90
+          ? t('dashboard.aiQualityVeryGood')
+          : aiScore >= 80
+            ? t('dashboard.aiQualityGood')
+            : aiScore >= 70
+              ? t('dashboard.aiQualityAverage')
+              : aiScore >= 60
+                ? t('dashboard.aiQualityWeak')
+                : t('dashboard.aiQualityCritical')
+
+  const periodOptions: Array<{
+    value: DashboardPeriod
+    label: string
+  }> = [
+    { value: '7d', label: t('dashboard.period7d') },
+    { value: '30d', label: t('dashboard.period30d') },
+    { value: '90d', label: t('dashboard.period90d') }
+  ]
   
   // Track refresh key to force re-render on plan change
   const [_refreshKey, setRefreshKey] = useState(0)
@@ -129,103 +170,105 @@ export default function ClientDashboard() {
             </div>
           )}
 
-          {/* KPI Cards - Plan-specific Requirements */}
-          {/* Starter Plan: 3 cards - Orders Received, Confirmed, Pending */}
-          {/* Pro Plan: 4 cards - Orders Received Today, Confirmed Today, Shipped Today, Delivery Success Rate (7 days) */}
-          {/* Business Plan: 5 cards - Orders Received, Confirmed, Shipped, Delivery Success Rate, Complaint Rate */}
-          {/* Enterprise Plan: 6 cards - Same as Business + Avg Resolution Time */}
-          <div className={`grid grid-cols-1 gap-4 ${
-            plan === 'starter' ? 'md:grid-cols-3' :
-            plan === 'pro' ? 'md:grid-cols-4' :
-            plan === 'business' ? 'md:grid-cols-5' :
-            'md:grid-cols-3 lg:grid-cols-6'
-          }`}>
-            {/* Orders Received - All Plans */}
-            <ClickableWidget
-              title={plan === 'pro' ? t('dashboard.ordersReceivedToday') : t('dashboard.ordersReceived')}
-              value={metrics?.ordersReceived ?? 0}
-              icon={<ShoppingBagIcon className="w-6 h-6" />}
-              isLoading={isLoading}
-              detailPageUrl="/panel/client/details/orders-received"
-            />
-            
-            {/* Orders Confirmed - All Plans */}
-            <ClickableWidget
-              title={plan === 'pro' ? t('dashboard.ordersConfirmedToday') : t('dashboard.ordersConfirmed')}
-              value={metrics?.ordersConfirmed ?? 0}
-              change={metrics?.confirmationRate}
-              icon={<CheckCircleIcon className="w-6 h-6" />}
-              trend={metrics?.confirmationRate && metrics.confirmationRate > 0 ? 'up' : 'neutral'}
-              isLoading={isLoading}
-              detailPageUrl="/panel/client/details/orders-confirmed"
-            />
-            
-            {/* Starter: Orders Pending */}
-            {plan === 'starter' && (
+          {/* Dashboard KPI */}
+          <div className="space-y-3">
+            <div className="flex justify-end">
+              <div
+                className="inline-flex flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
+                role="group"
+                aria-label={t('dashboard.period')}
+              >
+                {periodOptions.map(option => {
+                  const active = selectedPeriod === option.value
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setSelectedPeriod(option.value)}
+                      aria-pressed={active}
+                      className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        active
+                          ? 'bg-[#ADFF2F] text-slate-950'
+                          : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <MetricCard
-                title={t('dashboard.ordersPending')}
-                value={metrics?.ordersPending ?? 0}
-                icon={<ClockIcon className="w-6 h-6" />}
+                title={t('dashboard.ordersReceived')}
+                value={
+                  dashboardKpis?.ordersReceived.value ??
+                  metrics?.ordersReceived ??
+                  0
+                }
+                change={dashboardKpis?.ordersReceived.change ?? undefined}
+                icon={<ShoppingBagIcon className="h-6 w-6" />}
                 isLoading={isLoading}
               />
-            )}
-            
-            {/* Pro+: Orders Shipped Today */}
-            {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
+
               <MetricCard
-                title={plan === 'pro' ? t('dashboard.ordersShippedToday') : t('dashboard.ordersShipped')}
-                value={metrics?.ordersShipped ?? 0}
-                icon={<TruckIcon className="w-6 h-6" />}
+                title={t('dashboard.ordersConfirmed')}
+                value={
+                  dashboardKpis?.ordersConfirmed.value ??
+                  metrics?.ordersConfirmed ??
+                  0
+                }
+                change={dashboardKpis?.ordersConfirmed.change ?? undefined}
+                icon={<CheckCircleIcon className="h-6 w-6" />}
                 isLoading={isLoading}
               />
-            )}
-            
-            {/* Pro+: Delivery Success Rate (last 7 days) */}
-            {(plan === 'pro' || plan === 'business' || plan === 'enterprise') && (
-              <ClickableWidget
-                title={plan === 'pro' ? t('dashboard.deliverySuccessRate7d') : t('dashboard.deliverySuccessRate')}
-                value={metrics?.deliverySuccessRate ?? 0}
+
+              <MetricCard
+                title={t('dashboard.confirmationRate')}
+                value={
+                  dashboardKpis?.confirmationRate.value ??
+                  metrics?.confirmationRate ??
+                  0
+                }
+                change={dashboardKpis?.confirmationRate.change ?? undefined}
                 suffix="%"
                 decimals={1}
-                icon={<CheckCircleIcon className="w-6 h-6" />}
-                trend={metrics?.deliverySuccessRate && metrics.deliverySuccessRate >= 80 ? 'up' : metrics?.deliverySuccessRate && metrics.deliverySuccessRate < 60 ? 'down' : 'neutral'}
+                icon={<ChartBarIcon className="h-6 w-6" />}
                 isLoading={isLoading}
-                detailPageUrl="/panel/client/details/delivery-success"
               />
-            )}
-            
-            {/* Business+: Complaint Rate */}
-            {(plan === 'business' || plan === 'enterprise') && (
+
               <MetricCard
-                title={t('dashboard.complaintRate')}
-                value={metrics?.complaintRate ?? 0}
+                title={t('dashboard.averageAiScore')}
+                value={aiScore ?? 0}
+                formattedValue={aiScore === null ? '—' : undefined}
+                change={dashboardKpis?.averageAiScore.change ?? undefined}
                 suffix="%"
                 decimals={1}
-                icon={<ExclamationCircleIcon className="w-6 h-6" />}
-                trend={metrics?.complaintRate && metrics.complaintRate > 5 ? 'down' : 'up'}
+                secondaryLabel={aiQualityLabel}
+                icon={<SparklesIcon className="h-6 w-6" />}
                 isLoading={isLoading}
               />
-            )}
-            
-            {/* Enterprise: Avg Resolution Time */}
-            {plan === 'enterprise' && (
+
               <MetricCard
-                title={t('dashboard.avgResolutionTime')}
-                value={metrics?.avgResolutionTime ?? 0}
-                suffix="h"
-                decimals={1}
-                icon={<ClockIcon className="w-6 h-6" />}
-                trend={metrics?.avgResolutionTime && metrics.avgResolutionTime < 24 ? 'up' : 'down'}
+                title={t('dashboard.potentialRevenue')}
+                value={dashboardKpis?.potentialRevenue.value ?? 0}
+                formattedValue={formatCurrency(
+                  dashboardKpis?.potentialRevenue.value ?? 0
+                )}
+                change={dashboardKpis?.potentialRevenue.change ?? undefined}
+                icon={<BanknotesIcon className="h-6 w-6" />}
                 isLoading={isLoading}
               />
-            )}
+            </div>
           </div>
 
           {/* Recent Orders Widget - Requirements: 1.2 */}
-          <RecentOrdersWidget maxOrders={10} />
+          <RecentOrdersWidget maxOrders={5} />
 
           {/* Cancelled Orders Widget - Requirements: 9.1, 9.2, 9.6 */}
-          <CancelledOrdersWidget />
+          {SHOW_CANCELLED_ORDERS_WIDGET && <CancelledOrdersWidget />}
 
           {/* Pro Plan Widgets - Requirements: 2.1, 2.4 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -233,8 +276,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="pro"
               currentPlan={plan}
-              featureName="AI Risk Score"
-              featureDescription="View order distribution by AI confidence level to identify high-risk orders"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Analyse du risque IA"
+              featureDescription="Identifiez les commandes à risque grâce au score de confiance de l’IA."
             >
               <RiskScoreWidget
                 data={riskScoreData}
@@ -247,8 +292,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="pro"
               currentPlan={plan}
-              featureName="Operator Feedback"
-              featureDescription="See average ratings and common feedback tags from operator assessments"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Analyse Vocale IA & Feedback Opérateurs"
+              featureDescription="Analysez les retours des opérateurs et les signaux issus des interactions vocales."
             >
               <OperatorFeedbackWidget
                 averageRating={feedbackData.averageRating}
@@ -265,8 +312,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="business"
               currentPlan={plan}
-              featureName="Complaints Analytics"
-              featureDescription="View complaint trends, categories, and resolution rates to improve customer satisfaction"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Analyse des réclamations"
+              featureDescription="Suivez les tendances, les catégories et les taux de résolution des réclamations."
             >
               <ComplaintsAnalyticsWidget
                 totalComplaints={complaintsData.totalComplaints}
@@ -281,8 +330,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="business"
               currentPlan={plan}
-              featureName="Courier Performance"
-              featureDescription="Compare courier delivery success rates and identify top performers"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Performance des sociétés de livraison"
+              featureDescription="Comparez les taux de réussite de livraison et identifiez les partenaires les plus performants."
             >
               <CourierPerformanceWidget
                 couriers={courierData}
@@ -297,8 +348,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="enterprise"
               currentPlan={plan}
-              featureName="Predictive Analytics"
-              featureDescription="View AI-powered forecasts for order volumes and confirmation rates"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Prédiction de l’IA des Commandes"
+              featureDescription="Anticipez les volumes de commandes et les taux de confirmation grâce à l’intelligence artificielle."
             >
               <PredictiveAnalyticsWidget
                 forecastedOrders={predictiveData.forecastedOrders}
@@ -312,8 +365,10 @@ export default function ClientDashboard() {
             <WidgetGate
               requiredPlan="enterprise"
               currentPlan={plan}
-              featureName="Automation Recommendations"
-              featureDescription="Get AI-powered suggestions for workflow optimizations"
+              previewOnly
+              previewLabel="Bientôt disponible"
+              featureName="Recommandations d’Automatisation IA"
+              featureDescription="Recevez des recommandations IA pour automatiser et optimiser vos processus."
             >
               <AutomationRecommendationsWidget
                 recommendations={recommendationsData}
@@ -323,7 +378,8 @@ export default function ClientDashboard() {
             </WidgetGate>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links - conservés mais masqués temporairement */}
+          {SHOW_DASHBOARD_QUICK_LINKS && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Link href="/panel/client/orders" className="card p-6 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-4">
@@ -349,6 +405,7 @@ export default function ClientDashboard() {
               </div>
             </Link>
           </div>
+          )}
         </div>
 
         {/* Risky Orders Modal */}

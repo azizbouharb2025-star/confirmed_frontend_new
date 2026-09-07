@@ -10,7 +10,14 @@
  */
 
 import { useState, useEffect } from 'react'
-import { UsersIcon, ShoppingBagIcon, BanknotesIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
+import {
+  UsersIcon,
+  ShoppingBagIcon,
+  BuildingStorefrontIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ChartBarIcon
+} from '@heroicons/react/24/outline'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
@@ -32,6 +39,9 @@ const defaultKPIs: AdminKPIs = {
   totalUsersChange: 0,
   totalOrders: 0,
   totalOrdersChange: 0,
+  confirmedOrders: 0,
+  cancelledOrders: 0,
+  confirmationRate: 0,
   revenue: 0,
   revenueChange: 0,
   activeShops: 0,
@@ -109,6 +119,33 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersPeriod]);
 
+  // Refresh recent activity without reloading the whole dashboard.
+  // ActivityLog is already sorted newest-first by the backend.
+  useEffect(() => {
+    const refreshActivities = async () => {
+      try {
+        const response = await api.get('/api/admin/activity-feed');
+
+        if (response.data?.activities) {
+          setActivities(response.data.activities);
+        }
+      } catch (err) {
+        logger.error(
+          'Failed to refresh admin activity feed:',
+          err,
+          'Admin'
+        );
+      }
+    };
+
+    const intervalId = window.setInterval(
+      refreshActivities,
+      30000
+    );
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const handleOrdersPeriodChange = (period: TimePeriod) => {
     setOrdersPeriod(period);
   };
@@ -147,34 +184,51 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* KPI Cards - Property 9: Admin dashboard shows system-wide KPIs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-testid="admin-kpi-cards">
+          {/* KPI Cards - global platform metrics */}
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
+            data-testid="admin-kpi-cards"
+          >
             <MetricCard
-              title="Total Users"
+              title="Utilisateurs totaux"
               value={kpis.totalUsers}
-              change={kpis.totalUsersChange}
               icon={<UsersIcon className="w-5 h-5" />}
               isLoading={isLoading}
             />
+
             <MetricCard
-              title="Total Orders"
+              title="Commandes totales"
               value={kpis.totalOrders}
-              change={kpis.totalOrdersChange}
               icon={<ShoppingBagIcon className="w-5 h-5" />}
               isLoading={isLoading}
             />
+
             <MetricCard
-              title="Revenue"
-              value={kpis.revenue}
-              change={kpis.revenueChange}
-              icon={<BanknotesIcon className="w-5 h-5" />}
-              suffix=" TND"
+              title="Commandes confirmées"
+              value={kpis.confirmedOrders}
+              icon={<CheckCircleIcon className="w-5 h-5" />}
               isLoading={isLoading}
             />
+
             <MetricCard
-              title="Active Shops"
+              title="Commandes annulées"
+              value={kpis.cancelledOrders}
+              icon={<XCircleIcon className="w-5 h-5" />}
+              isLoading={isLoading}
+            />
+
+            <MetricCard
+              title="Taux de confirmation"
+              value={kpis.confirmationRate}
+              decimals={1}
+              suffix="%"
+              icon={<ChartBarIcon className="w-5 h-5" />}
+              isLoading={isLoading}
+            />
+
+            <MetricCard
+              title="Boutiques actives"
               value={kpis.activeShops}
-              change={kpis.activeShopsChange}
               icon={<BuildingStorefrontIcon className="w-5 h-5" />}
               isLoading={isLoading}
             />
@@ -204,7 +258,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ActivityFeedWidget
               activities={activities}
-              maxItems={6}
+              maxItems={10}
               isLoading={isLoading}
             />
             <SystemHealthWidget
