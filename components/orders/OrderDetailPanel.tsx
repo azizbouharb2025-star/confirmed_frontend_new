@@ -1201,9 +1201,9 @@ function DeliveryTrackingSection({
                 key={entry.key}
                 className="space-y-1 text-sm"
               >
-                <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
                   <dt className="text-gray-500 dark:text-slate-400">
-                    {t('orderDetail.courier')}
+                    Transporteur
                   </dt>
 
                   <dd className="text-right font-medium text-gray-900 dark:text-white">
@@ -1214,7 +1214,7 @@ function DeliveryTrackingSection({
                 </div>
 
                 {entry.trackingNumber && (
-                  <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
                     <dt className="text-gray-500 dark:text-slate-400">
                       {t('orderDetail.tracking')}
                     </dt>
@@ -1226,7 +1226,7 @@ function DeliveryTrackingSection({
                 )}
 
                 {status && (
-                  <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
                     <dt className="text-gray-500 dark:text-slate-400">
                       Statut transporteur
                     </dt>
@@ -1247,7 +1247,7 @@ function DeliveryTrackingSection({
                 )}
 
                 {entry.lastSyncedAt && (
-                  <div className="grid grid-cols-[140px_1fr] gap-2 items-start">
+                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
                     <dt className="text-gray-500 dark:text-slate-400">
                       Dernière synchronisation
                     </dt>
