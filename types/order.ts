@@ -170,10 +170,19 @@ export interface OrderItem {
  * Delivery information for an order
  */
 export interface DeliveryInfo {
+  /**
+   * Champ canonique utilisé par le backend.
+   */
+  carrier?: string;
+
+  /**
+   * Ancien champ conservé pour compatibilité.
+   */
   courier?: string;
+
   trackingNumber?: string;
   estimatedDelivery?: string;
-  address: Address;
+  address?: Address;
 
   // Colissimo-specific delivery fields
   secondaryPhone?: string;
