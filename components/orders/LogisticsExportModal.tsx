@@ -10,6 +10,9 @@
 
 import React, { useState } from 'react'
 import { orderService } from '@/services/orderService'
+import intigoDeliveryService, {
+  type IntigoDryRunPreview,
+} from '@/services/intigoDeliveryService'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -258,12 +261,36 @@ export default function LogisticsExportModal({
   const [errorMsg,       setErrorMsg]       = useState<string | null>(null)
   const [successMsg,     setSuccessMsg]     = useState<string | null>(null)
 
+  const [intigoPreview, setIntigoPreview] =
+    useState<IntigoDryRunPreview | null>(null)
+
+  const [isIntigoPreviewing, setIsIntigoPreviewing] =
+    useState(false)
+
+  const isIntigo = provider === 'intigo'
+  const isBusy = isLoading || isIntigoPreviewing
+
+  const intigoReady =
+    intigoPreview?.ready || []
+
+  const intigoReview =
+    intigoPreview?.reviewBlocked ||
+    intigoPreview?.review ||
+    []
+
+  const intigoDuplicate =
+    intigoPreview?.duplicate || []
+
+  const intigoInvalid =
+    intigoPreview?.invalid || []
+
   if (!isOpen) return null
 
   const handleClose = () => {
-    if (isLoading) return
+    if (isBusy) return
     setErrorMsg(null)
     setSuccessMsg(null)
+    setIntigoPreview(null)
     onClose()
   }
 
@@ -271,9 +298,39 @@ export default function LogisticsExportModal({
     setProvider(id)
     setErrorMsg(null)
     setSuccessMsg(null)
+    setIntigoPreview(null)
   }
 
   const isCustom = provider === 'custom'
+
+  const handleIntigoPreview = async () => {
+    if (orderIds.length === 0) {
+      setErrorMsg(
+        'Sélectionnez au moins une commande avant l’analyse Intigo.'
+      )
+      return
+    }
+
+    setIsIntigoPreviewing(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    setIntigoPreview(null)
+
+    try {
+      const preview =
+        await intigoDeliveryService.previewOrders(orderIds)
+
+      setIntigoPreview(preview)
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Erreur lors de l'analyse Intigo"
+      )
+    } finally {
+      setIsIntigoPreviewing(false)
+    }
+  }
 
   const handleExport = async () => {
     // Validate custom columns before hitting the API
@@ -358,7 +415,7 @@ export default function LogisticsExportModal({
                 <button
                   key={opt.id}
                   type="button"
-                  disabled={!opt.enabled || isLoading}
+                  disabled={!opt.enabled || isBusy}
                   onClick={() => opt.enabled && handleProviderChange(opt.id)}
                   className={[
                     'flex items-center justify-between w-full px-4 py-3 rounded-lg border-2 text-sm font-medium transition-all',
@@ -385,6 +442,143 @@ export default function LogisticsExportModal({
             </div>
           </div>
 
+
+          {isIntigo && (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                  Connexion API Intigo
+                </p>
+
+                <p className="mt-1 text-xs text-blue-700/80 dark:text-blue-300/80">
+                  Confirmed vérifie les commandes avant tout envoi.
+                  Cette étape ne crée aucun colis chez Intigo.
+                </p>
+              </div>
+
+              {intigoPreview && (
+                <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-slate-700">
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Résultat de l&apos;analyse Intigo
+                    </h3>
+
+                    <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                      {intigoPreview.summary?.selected ?? orderIds.length}
+                      {' '}commande(s) analysée(s)
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-green-500/10 p-3 text-green-600 dark:text-green-400">
+                      <p className="text-xs font-semibold">Prêtes</p>
+                      <p className="mt-1 text-xl font-bold">{intigoReady.length}</p>
+                    </div>
+
+                    <div className="rounded-lg bg-amber-500/10 p-3 text-amber-600 dark:text-amber-400">
+                      <p className="text-xs font-semibold">À vérifier</p>
+                      <p className="mt-1 text-xl font-bold">{intigoReview.length}</p>
+                    </div>
+
+                    <div className="rounded-lg bg-blue-500/10 p-3 text-blue-600 dark:text-blue-400">
+                      <p className="text-xs font-semibold">Déjà envoyées</p>
+                      <p className="mt-1 text-xl font-bold">{intigoDuplicate.length}</p>
+                    </div>
+
+                    <div className="rounded-lg bg-red-500/10 p-3 text-red-600 dark:text-red-400">
+                      <p className="text-xs font-semibold">Invalides</p>
+                      <p className="mt-1 text-xl font-bold">{intigoInvalid.length}</p>
+                    </div>
+                  </div>
+
+                  {intigoReady.map((item, index) => (
+                    <div
+                      key={item.orderId || `ready-${index}`}
+                      className="rounded-lg border border-green-500/20 bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400"
+                    >
+                      <div className="flex justify-between gap-3">
+                        <span className="font-semibold">
+                          Commande #{item.confirmedId ?? '—'}
+                        </span>
+                        <span>Prête</span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {intigoReview.map((item, index) => (
+                    <div
+                      key={item.orderId || `review-${index}`}
+                      className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400"
+                    >
+                      <div className="flex justify-between gap-3">
+                        <span className="font-semibold">
+                          Commande #{item.confirmedId ?? '—'}
+                        </span>
+                        <span>À vérifier</span>
+                      </div>
+
+                      {[...(item.warnings || []), ...(item.errors || [])]
+                        .map((message, i) => (
+                          <p key={`${message}-${i}`} className="mt-1 text-xs">
+                            • {message}
+                          </p>
+                        ))}
+                    </div>
+                  ))}
+
+                  {intigoDuplicate.map((item, index) => (
+                    <div
+                      key={item.orderId || `duplicate-${index}`}
+                      className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 text-sm text-blue-700 dark:text-blue-400"
+                    >
+                      <div className="flex justify-between gap-3">
+                        <span className="font-semibold">
+                          Commande #{item.confirmedId ?? '—'}
+                        </span>
+                        <span>Déjà envoyée</span>
+                      </div>
+
+                      {item.externalId && (
+                        <p className="mt-2 text-xs">
+                          N° de suivi :{' '}
+                          <span className="font-mono font-semibold">
+                            {item.externalId}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  ))}
+
+                  {intigoInvalid.map((item, index) => (
+                    <div
+                      key={item.orderId || `invalid-${index}`}
+                      className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-400"
+                    >
+                      <div className="flex justify-between gap-3">
+                        <span className="font-semibold">
+                          Commande #{item.confirmedId ?? '—'}
+                        </span>
+                        <span>Invalide</span>
+                      </div>
+
+                      {(item.errors || []).map((message, i) => (
+                        <p key={`${message}-${i}`} className="mt-1 text-xs">
+                          • {message}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+
+                  <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-slate-800 dark:text-slate-400">
+                    Aucun colis n&apos;a été créé.
+                    Aucun envoi réel n&apos;a été déclenché.
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Custom column selector — only shown when provider === custom */}
           {isCustom && (
             <div className="p-4 rounded-lg dark:bg-slate-800/50 bg-gray-50 border dark:border-slate-700 border-gray-200">
@@ -405,7 +599,8 @@ export default function LogisticsExportModal({
           )}
 
           {/* File type selection */}
-          <div>
+          {!isIntigo && (
+            <div>
             <label className="block text-sm font-medium mb-2 dark:text-white text-gray-900">
               Format du fichier
             </label>
@@ -429,6 +624,7 @@ export default function LogisticsExportModal({
               ))}
             </div>
           </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -443,22 +639,30 @@ export default function LogisticsExportModal({
           </button>
           <button
             type="button"
-            onClick={handleExport}
-            disabled={isLoading || (isCustom && customColumns.length === 0)}
+            onClick={
+              isIntigo
+                ? handleIntigoPreview
+                : handleExport
+            }
+            disabled={
+              isBusy ||
+              (isIntigo && orderIds.length === 0) ||
+              (isCustom && customColumns.length === 0)
+            }
             className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {isBusy ? (
               <>
                 <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                Export en cours…
+
+                {isIntigo
+                  ? 'Analyse en cours…'
+                  : 'Export en cours…'}
               </>
+            ) : isIntigo ? (
+              <>Analyser pour Intigo</>
             ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Exporter
-              </>
+              <>Exporter</>
             )}
           </button>
         </div>
