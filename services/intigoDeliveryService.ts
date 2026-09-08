@@ -39,14 +39,59 @@ export interface IntigoDryRunPreview {
   invalid?: IntigoPreviewItem[]
 }
 
+export interface IntigoReservationResult {
+  success: boolean
+  provider: 'intigo'
+  reservationOnly: boolean
+  reservationId: string
+  reservationExpiresAt?: string | null
+  allowReview: boolean
+
+  summary?: {
+    selected?: number
+    ready?: number
+    review?: number
+    reserved?: number
+    reviewBlocked?: number
+    duplicate?: number
+    invalid?: number
+  }
+
+  reserved?: IntigoPreviewItem[]
+  reviewBlocked?: IntigoPreviewItem[]
+  duplicate?: IntigoPreviewItem[]
+  invalid?: IntigoPreviewItem[]
+}
+
+export interface IntigoDispatchPreview {
+  success?: boolean
+  provider?: 'intigo'
+  reservationId?: string
+  reservationExpiresAt?: string | null
+
+  summary?: {
+    reserved?: number
+    wouldPost?: number
+    invalid?: number
+  }
+
+  wouldPost?: unknown[]
+  invalid?: IntigoPreviewItem[]
+}
+
 /**
- * Analyse des commandes avant envoi Intigo.
+ * Toutes les fonctions ci-dessous restent AVANT le dispatch réel.
  *
- * IMPORTANT :
- * - dryRun=true obligatoire
- * - aucune création de colis
- * - aucune réservation
- * - aucun dispatch réel
+ * previewOrders:
+ *   analyse uniquement.
+ *
+ * reserveOrders:
+ *   écrit une réservation LOCALE dans Confirmed.
+ *   Aucun colis Intigo créé.
+ *
+ * previewReservation:
+ *   dernier contrôle avant dispatch.
+ *   Aucun colis Intigo créé.
  */
 export const intigoDeliveryService = {
   async previewOrders(
@@ -63,6 +108,36 @@ export const intigoDeliveryService = {
       )
 
     return response.data as IntigoDryRunPreview
+  },
+
+  async reserveOrders(
+    orderIds: string[],
+    allowReview: boolean
+  ): Promise<IntigoReservationResult> {
+    const response =
+      await api.post(
+        '/api/delivery/intigo/reservations',
+        {
+          orderIds,
+          allowReview,
+        }
+      )
+
+    return response.data as IntigoReservationResult
+  },
+
+  async previewReservation(
+    reservationId: string
+  ): Promise<IntigoDispatchPreview> {
+    const response =
+      await api.post(
+        '/api/delivery/intigo/dispatch-preview',
+        {
+          reservationId,
+        }
+      )
+
+    return response.data as IntigoDispatchPreview
   },
 }
 

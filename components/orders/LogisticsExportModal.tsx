@@ -267,8 +267,20 @@ export default function LogisticsExportModal({
   const [isIntigoPreviewing, setIsIntigoPreviewing] =
     useState(false)
 
+  const [isIntigoReserving, setIsIntigoReserving] =
+    useState(false)
+
+  const [intigoReservationId, setIntigoReservationId] =
+    useState<string | null>(null)
+
+  const [intigoFinalPreviewReady, setIntigoFinalPreviewReady] =
+    useState(false)
+
   const isIntigo = provider === 'intigo'
-  const isBusy = isLoading || isIntigoPreviewing
+  const isBusy =
+    isLoading ||
+    isIntigoPreviewing ||
+    isIntigoReserving
 
   const intigoReady =
     intigoPreview?.ready || []
@@ -291,6 +303,8 @@ export default function LogisticsExportModal({
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
+    setIntigoReservationId(null)
+    setIntigoFinalPreviewReady(false)
     onClose()
   }
 
@@ -299,6 +313,8 @@ export default function LogisticsExportModal({
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
+    setIntigoReservationId(null)
+    setIntigoFinalPreviewReady(false)
   }
 
   const isCustom = provider === 'custom'
@@ -329,6 +345,85 @@ export default function LogisticsExportModal({
       )
     } finally {
       setIsIntigoPreviewing(false)
+    }
+  }
+
+  const handleApproveIntigoFallback = async () => {
+    if (
+      orderIds.length !== 1 ||
+      intigoReview.length !== 1 ||
+      intigoReady.length !== 0 ||
+      intigoDuplicate.length !== 0 ||
+      intigoInvalid.length !== 0
+    ) {
+      setErrorMsg(
+        'La validation du fallback est limitée à une seule commande à vérifier.'
+      )
+      return
+    }
+
+    setIsIntigoReserving(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    setIntigoReservationId(null)
+    setIntigoFinalPreviewReady(false)
+
+    try {
+      /*
+       * ETAPE 1 :
+       * réservation locale Confirmed uniquement.
+       */
+      const reservation =
+        await intigoDeliveryService.reserveOrders(
+          orderIds,
+          true
+        )
+
+      if (
+        !reservation.reservationId ||
+        reservation.summary?.reserved !== 1
+      ) {
+        throw new Error(
+          'La réservation locale Intigo n’a pas pu être créée.'
+        )
+      }
+
+      setIntigoReservationId(
+        reservation.reservationId
+      )
+
+      /*
+       * ETAPE 2 :
+       * dernier contrôle du payload.
+       * Toujours aucun POST de création Intigo.
+       */
+      const finalPreview =
+        await intigoDeliveryService.previewReservation(
+          reservation.reservationId
+        )
+
+      if (
+        finalPreview.summary?.wouldPost !== 1 ||
+        (finalPreview.summary?.invalid || 0) !== 0
+      ) {
+        throw new Error(
+          'Le contrôle final Intigo nécessite une vérification.'
+        )
+      }
+
+      setIntigoFinalPreviewReady(true)
+
+      setSuccessMsg(
+        'Fallback validé. Réservation locale créée et contrôle final réussi. Aucun colis Intigo n’a été créé.'
+      )
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : 'Erreur lors de la validation du fallback Intigo'
+      )
+    } finally {
+      setIsIntigoReserving(false)
     }
   }
 
@@ -482,7 +577,7 @@ export default function LogisticsExportModal({
                     </div>
 
                     <div className="rounded-lg bg-blue-500/10 p-3 text-blue-600 dark:text-blue-400">
-                      <p className="text-xs font-semibold">Déjà envoyées</p>
+                      <p className="text-xs font-semibold">Déjà prises en charge</p>
                       <p className="mt-1 text-xl font-bold">{intigoDuplicate.length}</p>
                     </div>
 
@@ -536,7 +631,17 @@ export default function LogisticsExportModal({
                         <span className="font-semibold">
                           Commande #{item.confirmedId ?? '—'}
                         </span>
-                        <span>Déjà envoyée</span>
+                        <span>
+                          {item.externalId || item.state === 'created'
+                            ? 'Déjà envoyée'
+                            : item.state === 'preparing'
+                              ? 'Réservée pour envoi'
+                              : item.state === 'dispatching'
+                                ? 'Envoi en cours'
+                                : item.state === 'reconcile_required'
+                                  ? 'Vérification requise'
+                                  : 'Déjà prise en charge'}
+                        </span>
                       </div>
 
                       {item.externalId && (
@@ -569,6 +674,58 @@ export default function LogisticsExportModal({
                       ))}
                     </div>
                   ))}
+
+                  {intigoReview.length === 1 &&
+                    intigoReady.length === 0 &&
+                    intigoDuplicate.length === 0 &&
+                    intigoInvalid.length === 0 && (
+                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
+                        <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                          Validation requise
+                        </p>
+
+                        <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-300/80">
+                          La délégation est absente.
+                          En validant, vous autorisez Intigo à appliquer son mécanisme de fallback.
+                        </p>
+
+                        <p className="mt-2 text-xs text-gray-600 dark:text-slate-400">
+                          Cette action crée uniquement une réservation locale dans Confirmed.
+                          Aucun colis n&apos;est encore créé chez Intigo.
+                        </p>
+
+                        {!intigoFinalPreviewReady && (
+                          <button
+                            type="button"
+                            onClick={handleApproveIntigoFallback}
+                            disabled={isBusy}
+                            className="mt-3 w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isIntigoReserving
+                              ? 'Validation en cours…'
+                              : 'Valider le fallback'}
+                          </button>
+                        )}
+
+                        {intigoFinalPreviewReady && (
+                          <div className="mt-3 rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                            ✓ Fallback validé
+                            <br />
+                            ✓ Réservation locale créée
+                            <br />
+                            ✓ Contrôle final réussi
+                            <br />
+                            ✓ Aucun colis Intigo créé
+                          </div>
+                        )}
+
+                        {intigoReservationId && (
+                          <p className="mt-2 text-[11px] text-gray-500 dark:text-slate-500">
+                            Réservation Confirmed active.
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                   <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-slate-800 dark:text-slate-400">
                     Aucun colis n&apos;a été créé.
