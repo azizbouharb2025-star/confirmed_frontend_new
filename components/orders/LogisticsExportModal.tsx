@@ -11,6 +11,7 @@
 import React, { useState } from 'react'
 import { orderService } from '@/services/orderService'
 import intigoDeliveryService, {
+  type IntigoCapabilities,
   type IntigoDryRunPreview,
 } from '@/services/intigoDeliveryService'
 
@@ -264,6 +265,9 @@ export default function LogisticsExportModal({
   const [intigoPreview, setIntigoPreview] =
     useState<IntigoDryRunPreview | null>(null)
 
+  const [intigoCapabilities, setIntigoCapabilities] =
+    useState<IntigoCapabilities | null>(null)
+
   const [isIntigoPreviewing, setIsIntigoPreviewing] =
     useState(false)
 
@@ -286,6 +290,9 @@ export default function LogisticsExportModal({
     >(null)
 
   const isIntigo = provider === 'intigo'
+
+  const intigoLiveDispatchEnabled =
+    intigoCapabilities?.liveDispatchEnabled === true
   const isBusy =
     isLoading ||
     isIntigoPreviewing ||
@@ -312,6 +319,7 @@ export default function LogisticsExportModal({
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
+    setIntigoCapabilities(null)
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
@@ -323,6 +331,7 @@ export default function LogisticsExportModal({
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
+    setIntigoCapabilities(null)
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
@@ -344,6 +353,18 @@ export default function LogisticsExportModal({
     setIntigoPreview(null)
 
     try {
+      /*
+       * Vérifie d'abord le verrou serveur.
+       * GET Confirmed uniquement.
+       * Aucun appel de création Intigo.
+       */
+      const capabilities =
+        await intigoDeliveryService.getCapabilities()
+
+      setIntigoCapabilities(
+        capabilities
+      )
+
       const preview =
         await intigoDeliveryService.previewOrders(orderIds)
 
@@ -832,23 +853,57 @@ export default function LogisticsExportModal({
                                 )}
                               </div>
 
-                              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-                                <p className="text-xs font-semibold text-red-600 dark:text-red-400">
-                                  Envoi réel vers Intigo désactivé
+                              <div
+                                className={[
+                                  'rounded-lg border p-3',
+                                  intigoLiveDispatchEnabled
+                                    ? 'border-amber-500/20 bg-amber-500/5'
+                                    : 'border-red-500/20 bg-red-500/5',
+                                ].join(' ')}
+                              >
+                                <p
+                                  className={[
+                                    'text-xs font-semibold',
+                                    intigoLiveDispatchEnabled
+                                      ? 'text-amber-600 dark:text-amber-400'
+                                      : 'text-red-600 dark:text-red-400',
+                                  ].join(' ')}
+                                >
+                                  {intigoLiveDispatchEnabled
+                                    ? 'Envoi réel autorisé par le serveur'
+                                    : 'Envoi réel vers Intigo désactivé par le serveur'}
                                 </p>
 
                                 <p className="mt-1 text-[11px] text-gray-600 dark:text-slate-400">
-                                  Ce contrôle n&apos;a créé aucun colis.
-                                  L&apos;envoi réel sera activé séparément après validation.
+                                  {intigoLiveDispatchEnabled
+                                    ? 'Le serveur autorise le mode live. La confirmation finale sera ajoutée séparément avant tout envoi.'
+                                    : 'Le serveur Confirmed bloque actuellement toute création réelle de colis Intigo.'}
                                 </p>
 
                                 <button
                                   type="button"
-                                  disabled
-                                  className="mt-3 w-full cursor-not-allowed rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400"
+                                  disabled={!intigoLiveDispatchEnabled}
+                                  onClick={() => {
+                                    setSuccessMsg(
+                                      'Le serveur autorise le mode live. Aucun colis n’a été envoyé : la confirmation finale n’est pas encore connectée.'
+                                    )
+                                  }}
+                                  className={[
+                                    'mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold',
+                                    intigoLiveDispatchEnabled
+                                      ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                      : 'cursor-not-allowed bg-gray-300 text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400',
+                                  ].join(' ')}
                                 >
-                                  Confirmer l&apos;envoi — désactivé
+                                  {intigoLiveDispatchEnabled
+                                    ? 'Continuer vers la confirmation'
+                                    : 'Confirmer l’envoi — désactivé'}
                                 </button>
+
+                                <p className="mt-2 text-[10px] text-gray-500 dark:text-slate-500">
+                                  Verrou serveur vérifié.
+                                  Aucun appel POST Intigo n&apos;est connecté à ce bouton.
+                                </p>
                               </div>
                             </div>
                           )}

@@ -1,5 +1,14 @@
 import api from '@/lib/api'
 
+export interface IntigoCapabilities {
+  success: boolean
+  provider: 'intigo'
+  liveDispatchEnabled: boolean
+  requiresExplicitConfirmation: boolean
+  maxLiveOrdersPerDispatch: number
+  remoteCallPerformed?: boolean
+}
+
 export interface IntigoPreviewItem {
   orderId?: string
   confirmedId?: number
@@ -117,6 +126,15 @@ export interface IntigoDispatchPreview {
  *   Aucun colis Intigo créé.
  */
 export const intigoDeliveryService = {
+  async getCapabilities(): Promise<IntigoCapabilities> {
+    const response =
+      await api.get(
+        '/api/delivery/intigo/capabilities'
+      )
+
+    return response.data as IntigoCapabilities
+  },
+
   async previewOrders(
     orderIds: string[]
   ): Promise<IntigoDryRunPreview> {
