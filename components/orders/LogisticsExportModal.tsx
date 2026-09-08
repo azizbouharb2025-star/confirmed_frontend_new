@@ -286,6 +286,9 @@ export default function LogisticsExportModal({
   const [intigoFinalPreviewReady, setIntigoFinalPreviewReady] =
     useState(false)
 
+  const [showIntigoSendConfirmation, setShowIntigoSendConfirmation] =
+    useState(false)
+
   const [intigoFinalPreview, setIntigoFinalPreview] =
     useState<
       Awaited<
@@ -1062,9 +1065,13 @@ export default function LogisticsExportModal({
                                   type="button"
                                   disabled={!intigoLiveDispatchEnabled}
                                   onClick={() => {
-                                    setSuccessMsg(
-                                      'Le serveur autorise le mode live. Aucun colis n’a été envoyé : la confirmation finale n’est pas encore connectée.'
-                                    )
+                                    if (!intigoLiveDispatchEnabled) {
+                                      return
+                                    }
+
+                                    setShowIntigoSendConfirmation(true)
+                                    setErrorMsg(null)
+                                    setSuccessMsg(null)
                                   }}
                                   className={[
                                     'mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold',
@@ -1083,6 +1090,94 @@ export default function LogisticsExportModal({
                                   Aucun appel POST Intigo n&apos;est connecté à ce bouton.
                                 </p>
                               </div>
+
+                              {showIntigoSendConfirmation &&
+                                intigoFinalPreview?.wouldPost?.[0] && (
+                                  <div className="rounded-lg border-2 border-amber-500/30 bg-amber-500/10 p-4">
+                                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                                      Confirmation finale
+                                    </p>
+
+                                    <p className="mt-1 text-xs text-gray-600 dark:text-slate-300">
+                                      Vérifiez une dernière fois les informations avant l&apos;envoi réel.
+                                    </p>
+
+                                    <div className="mt-4 space-y-2 rounded-lg bg-white/50 p-3 text-xs dark:bg-slate-900/40">
+                                      <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500 dark:text-slate-400">
+                                          Commande
+                                        </span>
+                                        <strong>
+                                          #{intigoFinalPreview.wouldPost[0].confirmedId ?? '—'}
+                                        </strong>
+                                      </div>
+
+                                      <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500 dark:text-slate-400">
+                                          Référence
+                                        </span>
+                                        <strong>
+                                          {intigoFinalPreview.wouldPost[0].correlationId || '—'}
+                                        </strong>
+                                      </div>
+
+                                      <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500 dark:text-slate-400">
+                                          Destination
+                                        </span>
+                                        <strong className="text-right">
+                                          {intigoFinalPreview.wouldPost[0].city_name || '—'}
+                                          {' / '}
+                                          {intigoFinalPreview.wouldPost[0].district_name ||
+                                            'Fallback Intigo'}
+                                        </strong>
+                                      </div>
+
+                                      <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500 dark:text-slate-400">
+                                          Montant
+                                        </span>
+                                        <strong>
+                                          {intigoFinalPreview.wouldPost[0].price ?? '—'} DT
+                                        </strong>
+                                      </div>
+                                    </div>
+
+                                    <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
+                                      <p className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                        Attention
+                                      </p>
+
+                                      <p className="mt-1 text-[11px] text-gray-600 dark:text-slate-300">
+                                        Après activation du mode live, la confirmation réelle créera le colis chez Intigo et générera un numéro de suivi.
+                                      </p>
+                                    </div>
+
+                                    <div className="mt-4 flex gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setShowIntigoSendConfirmation(false)
+                                        }
+                                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-700 dark:border-slate-600 dark:text-white"
+                                      >
+                                        Retour
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        disabled
+                                        className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400"
+                                      >
+                                        Confirmer l&apos;envoi réel
+                                      </button>
+                                    </div>
+
+                                    <p className="mt-2 text-center text-[10px] text-gray-500 dark:text-slate-500">
+                                      Bouton réel volontairement non connecté.
+                                    </p>
+                                  </div>
+                                )}
                             </div>
                           )}
 
