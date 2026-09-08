@@ -125,8 +125,31 @@ export interface IntigoDispatchPreview {
   invalid?: IntigoPreviewItem[]
 }
 
+export interface IntigoDispatchResult {
+  success: boolean
+  provider: 'intigo'
+  remoteCreated: boolean
+
+  shipment: {
+    id: string
+    orderId: string
+    confirmedId?: number
+    state: string
+    correlationId?: string | null
+    externalId?: string | null
+  }
+
+  intigo: {
+    nid: string
+    districtName?: string | null
+    districtFallback?: boolean | null
+  }
+
+  orderSyncWarning?: string | null
+}
+
 /**
- * Toutes les fonctions ci-dessous restent AVANT le dispatch réel.
+ * Flux Intigo.
  *
  * previewOrders:
  *   analyse uniquement.
@@ -138,6 +161,11 @@ export interface IntigoDispatchPreview {
  * previewReservation:
  *   dernier contrôle avant dispatch.
  *   Aucun colis Intigo créé.
+ *
+ * dispatchReservation:
+ *   endpoint LIVE réel.
+ *   Le backend conserve le verrou
+ *   INTIGO_LIVE_DISPATCH_ENABLED.
  */
 export const intigoDeliveryService = {
   async getCapabilities(): Promise<IntigoCapabilities> {
@@ -204,6 +232,31 @@ export const intigoDeliveryService = {
       )
 
     return response.data as IntigoDispatchPreview
+  },
+
+  async dispatchReservation(params: {
+    reservationId: string
+    expectedCorrelationId: string
+    expectedPayloadHash: string
+  }): Promise<IntigoDispatchResult> {
+    const response =
+      await api.post(
+        '/api/delivery/intigo/dispatch',
+        {
+          reservationId:
+            params.reservationId,
+
+          expectedCorrelationId:
+            params.expectedCorrelationId,
+
+          expectedPayloadHash:
+            params.expectedPayloadHash,
+
+          confirm: true,
+        }
+      )
+
+    return response.data as IntigoDispatchResult
   },
 }
 

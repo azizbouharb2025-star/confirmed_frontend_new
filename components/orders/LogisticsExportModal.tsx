@@ -277,6 +277,9 @@ export default function LogisticsExportModal({
   const [isIntigoResuming, setIsIntigoResuming] =
     useState(false)
 
+  const [isIntigoDispatching, setIsIntigoDispatching] =
+    useState(false)
+
   const [intigoPreparationResumed, setIntigoPreparationResumed] =
     useState(false)
 
@@ -306,7 +309,8 @@ export default function LogisticsExportModal({
     isLoading ||
     isIntigoPreviewing ||
     isIntigoReserving ||
-    isIntigoResuming
+    isIntigoResuming ||
+    isIntigoDispatching
 
   const intigoReady =
     intigoPreview?.ready || []
@@ -334,6 +338,7 @@ export default function LogisticsExportModal({
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
     setIntigoPreparationResumed(false)
+    setShowIntigoSendConfirmation(false)
     onClose()
   }
 
@@ -346,6 +351,7 @@ export default function LogisticsExportModal({
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
+    setShowIntigoSendConfirmation(false)
   }
 
   const isCustom = provider === 'custom'
@@ -599,6 +605,211 @@ export default function LogisticsExportModal({
     }
   }
 
+  const handleConfirmIntigoDispatch = async () => {
+    if (!intigoLiveDispatchEnabled) {
+      setErrorMsg(
+        'L’envoi réel Intigo est désactivé par le serveur.'
+      )
+      return
+    }
+
+    if (!intigoReservationId) {
+      setErrorMsg(
+        'La réservation Intigo est introuvable. Relancez la préparation.'
+      )
+      return
+    }
+
+    setIsIntigoDispatching(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+
+    try {
+      /*
+       * Vérification serveur immédiatement
+       * avant toute tentative LIVE.
+       */
+      const capabilities =
+        await intigoDeliveryService.getCapabilities()
+
+      setIntigoCapabilities(
+        capabilities
+      )
+
+      if (!capabilities.liveDispatchEnabled) {
+        throw new Error(
+          'L’envoi réel Intigo vient d’être désactivé par le serveur.'
+        )
+      }
+
+      /*
+       * Nouveau contrôle du payload.
+       * On ne réutilise pas aveuglément
+       * un ancien hash.
+       */
+      const freshPreview =
+        await intigoDeliveryService.previewReservation(
+          intigoReservationId
+        )
+
+      const item =
+        freshPreview.wouldPost?.[0]
+
+      if (
+        freshPreview.summary?.wouldPost !== 1 ||
+        (freshPreview.summary?.invalid || 0) !== 0 ||
+        !item?.correlationId ||
+        !item?.payloadHash
+      ) {
+        throw new Error(
+          'Le contrôle final Intigo n’est plus valide. Relancez la préparation.'
+        )
+      }
+
+      if (
+        freshPreview.reservationExpiresAt &&
+        new Date(
+          freshPreview.reservationExpiresAt
+        ).getTime() <= Date.now()
+      ) {
+        throw new Error(
+          'La réservation Intigo a expiré. Relancez la préparation.'
+        )
+      }
+
+      setIntigoFinalPreview(
+        freshPreview
+      )
+
+      /*
+       * UNIQUE appel LIVE.
+       *
+       * Le backend revérifie encore :
+       * - feature flag
+       * - réservation
+       * - expiration
+       * - correlationId
+       * - payloadHash
+       * - confirm=true
+       */
+      const result =
+        await intigoDeliveryService.dispatchReservation({
+          reservationId:
+            intigoReservationId,
+
+          expectedCorrelationId:
+            item.correlationId,
+
+          expectedPayloadHash:
+            item.payloadHash,
+        })
+
+      if (
+        result.remoteCreated !== true ||
+        !result.intigo?.nid
+      ) {
+        throw new Error(
+          'Réponse Intigo inattendue après création.'
+        )
+      }
+
+      /*
+       * Succès.
+       * Supprime l'état de préparation
+       * afin d'empêcher un second clic.
+       */
+      setShowIntigoSendConfirmation(false)
+      setIntigoPreview(null)
+      setIntigoReservationId(null)
+      setIntigoFinalPreviewReady(false)
+      setIntigoFinalPreview(null)
+      setIntigoPreparationResumed(false)
+
+      setSuccessMsg(
+        `Colis Intigo créé avec succès. N° de suivi : ${result.intigo.nid}`
+      )
+
+    } catch (err) {
+
+      const responseData =
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err
+          ? (
+              err as {
+                response?: {
+                  data?: {
+                    error?: string
+                    liveDispatchDisabled?: boolean
+                    shipmentState?: string
+                    remoteCreated?: boolean
+                    nid?: string | null
+                  }
+                }
+              }
+            ).response?.data
+          : null
+
+      /*
+       * CAS SENSIBLE :
+       * un colis peut avoir été créé.
+       * Aucun retry automatique.
+       */
+      if (
+        responseData?.remoteCreated === true ||
+        responseData?.shipmentState ===
+          'reconcile_required'
+      ) {
+        setShowIntigoSendConfirmation(false)
+        setIntigoPreview(null)
+        setIntigoReservationId(null)
+        setIntigoFinalPreviewReady(false)
+        setIntigoFinalPreview(null)
+
+        setErrorMsg(
+          responseData?.nid
+            ? `Intigo a créé le colis ${responseData.nid}, mais Confirmed nécessite une réconciliation. Ne renvoyez pas cette commande.`
+            : 'Le résultat Intigo est incertain. La commande nécessite une réconciliation. Ne relancez pas l’envoi.'
+        )
+
+        return
+      }
+
+      if (responseData?.liveDispatchDisabled) {
+        setIntigoCapabilities(
+          current =>
+            current
+              ? {
+                  ...current,
+                  liveDispatchEnabled:
+                    false,
+                }
+              : current
+        )
+
+        setShowIntigoSendConfirmation(false)
+
+        setErrorMsg(
+          'L’envoi réel Intigo est désactivé par le serveur.'
+        )
+
+        return
+      }
+
+      setErrorMsg(
+        responseData?.error ||
+        (
+          err instanceof Error
+            ? err.message
+            : 'Erreur lors de l’envoi Intigo.'
+        )
+      )
+
+    } finally {
+      setIsIntigoDispatching(false)
+    }
+  }
+
   const handleExport = async () => {
     // Validate custom columns before hitting the API
     if (isCustom && customColumns.length === 0) {
@@ -647,7 +858,7 @@ export default function LogisticsExportModal({
           </div>
           <button
             onClick={handleClose}
-            disabled={isLoading}
+            disabled={isBusy}
             className="p-2 rounded-lg dark:hover:bg-slate-800 hover:bg-gray-100 transition-colors disabled:opacity-50"
             aria-label="Fermer"
           >
@@ -1057,7 +1268,7 @@ export default function LogisticsExportModal({
 
                                 <p className="mt-1 text-[11px] text-gray-600 dark:text-slate-400">
                                   {intigoLiveDispatchEnabled
-                                    ? 'Le serveur autorise le mode live. La confirmation finale sera ajoutée séparément avant tout envoi.'
+                                    ? 'Le serveur autorise le mode live. Une confirmation explicite reste obligatoire avant tout envoi.'
                                     : 'Le serveur Confirmed bloque actuellement toute création réelle de colis Intigo.'}
                                 </p>
 
@@ -1166,15 +1377,27 @@ export default function LogisticsExportModal({
 
                                       <button
                                         type="button"
-                                        disabled
-                                        className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 px-3 py-2.5 text-sm font-semibold text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400"
+                                        onClick={handleConfirmIntigoDispatch}
+                                        disabled={
+                                          !intigoLiveDispatchEnabled ||
+                                          isIntigoDispatching
+                                        }
+                                        className={[
+                                          'flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold',
+                                          intigoLiveDispatchEnabled &&
+                                          !isIntigoDispatching
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : 'cursor-not-allowed bg-gray-300 text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400',
+                                        ].join(' ')}
                                       >
-                                        Confirmer l&apos;envoi réel
+                                        {isIntigoDispatching
+                                          ? 'Envoi en cours…'
+                                          : 'Confirmer l’envoi réel'}
                                       </button>
                                     </div>
 
                                     <p className="mt-2 text-center text-[10px] text-gray-500 dark:text-slate-500">
-                                      Bouton réel volontairement non connecté.
+                                      La création reste soumise au verrou LIVE du serveur.
                                     </p>
                                   </div>
                                 )}
@@ -1251,7 +1474,7 @@ export default function LogisticsExportModal({
           <button
             type="button"
             onClick={handleClose}
-            disabled={isLoading}
+            disabled={isBusy}
             className="flex-1 px-4 py-3 dark:bg-slate-800 bg-white dark:text-white text-gray-700 border-2 dark:border-slate-700 border-gray-300 rounded-lg hover:opacity-80 transition-opacity font-medium disabled:opacity-50"
           >
             Annuler
