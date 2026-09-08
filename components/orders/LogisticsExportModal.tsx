@@ -274,6 +274,9 @@ export default function LogisticsExportModal({
   const [isIntigoReserving, setIsIntigoReserving] =
     useState(false)
 
+  const [isIntigoResuming, setIsIntigoResuming] =
+    useState(false)
+
   const [intigoReservationId, setIntigoReservationId] =
     useState<string | null>(null)
 
@@ -296,7 +299,8 @@ export default function LogisticsExportModal({
   const isBusy =
     isLoading ||
     isIntigoPreviewing ||
-    isIntigoReserving
+    isIntigoReserving ||
+    isIntigoResuming
 
   const intigoReady =
     intigoPreview?.ready || []
@@ -377,6 +381,126 @@ export default function LogisticsExportModal({
       )
     } finally {
       setIsIntigoPreviewing(false)
+    }
+  }
+
+  const handleResumeIntigoPreparation = async (
+    item: {
+      orderId?: string
+      confirmedId?: number
+      state?: string
+      externalId?: string | null
+    }
+  ) => {
+    if (
+      !item.orderId ||
+      item.state !== 'preparing' ||
+      item.externalId
+    ) {
+      setErrorMsg(
+        'Cette préparation Intigo ne peut pas être reprise.'
+      )
+      return
+    }
+
+    setIsIntigoResuming(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    setIntigoReservationId(null)
+    setIntigoFinalPreviewReady(false)
+    setIntigoFinalPreview(null)
+
+    try {
+      /*
+       * Lecture uniquement :
+       * récupère la réservation locale déjà active.
+       */
+      const reservation =
+        await intigoDeliveryService.getActiveReservation(
+          item.orderId
+        )
+
+      if (
+        !reservation.reservationId ||
+        reservation.state !== 'preparing'
+      ) {
+        throw new Error(
+          'La réservation Intigo n’est plus active.'
+        )
+      }
+
+      setIntigoReservationId(
+        reservation.reservationId
+      )
+
+      /*
+       * Contrôle final uniquement.
+       * Aucun POST de création Intigo.
+       */
+      const finalPreview =
+        await intigoDeliveryService.previewReservation(
+          reservation.reservationId
+        )
+
+      if (
+        finalPreview.summary?.wouldPost !== 1 ||
+        (finalPreview.summary?.invalid || 0) !== 0
+      ) {
+        throw new Error(
+          'La préparation Intigo nécessite une nouvelle vérification.'
+        )
+      }
+
+      setIntigoFinalPreview(
+        finalPreview
+      )
+
+      setIntigoFinalPreviewReady(true)
+
+      setSuccessMsg(
+        'Préparation Intigo reprise. Aucun colis n’a été créé.'
+      )
+    } catch (err) {
+      setIntigoReservationId(null)
+      setIntigoFinalPreviewReady(false)
+      setIntigoFinalPreview(null)
+
+      const apiMessage =
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err
+          ? (
+              err as {
+                response?: {
+                  data?: {
+                    error?: string
+                  }
+                }
+              }
+            ).response?.data?.error
+          : null
+
+      if (
+        apiMessage ===
+        'No active Intigo preparation exists for this order'
+      ) {
+        setIntigoPreview(null)
+
+        setErrorMsg(
+          'La réservation Intigo a expiré. Relancez l’analyse pour continuer.'
+        )
+      } else {
+        setErrorMsg(
+          apiMessage ||
+          (
+            err instanceof Error
+              ? err.message
+              : 'Impossible de reprendre la préparation Intigo.'
+          )
+        )
+      }
+    } finally {
+      setIsIntigoResuming(false)
     }
   }
 
@@ -689,6 +813,24 @@ export default function LogisticsExportModal({
                           </span>
                         </p>
                       )}
+
+                      {orderIds.length === 1 &&
+                        intigoDuplicate.length === 1 &&
+                        item.state === 'preparing' &&
+                        !item.externalId && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleResumeIntigoPreparation(item)
+                            }
+                            disabled={isBusy}
+                            className="mt-3 w-full rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {isIntigoResuming
+                              ? 'Reprise en cours…'
+                              : 'Reprendre la préparation'}
+                          </button>
+                        )}
                     </div>
                   ))}
 
@@ -712,23 +854,36 @@ export default function LogisticsExportModal({
                     </div>
                   ))}
 
-                  {intigoReview.length === 1 &&
-                    intigoReady.length === 0 &&
-                    intigoDuplicate.length === 0 &&
-                    intigoInvalid.length === 0 && (
+                  {(
+                    (
+                      intigoReview.length === 1 &&
+                      intigoReady.length === 0 &&
+                      intigoDuplicate.length === 0 &&
+                      intigoInvalid.length === 0
+                    ) ||
+                    (
+                      intigoFinalPreviewReady &&
+                      intigoDuplicate.length === 1 &&
+                      intigoDuplicate[0]?.state === 'preparing'
+                    )
+                  ) && (
                       <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
                         <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                          Validation requise
+                          {intigoFinalPreviewReady
+                            ? 'Préparation Intigo prête'
+                            : 'Validation requise'}
                         </p>
 
                         <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-300/80">
-                          La délégation est absente.
-                          En validant, vous autorisez Intigo à appliquer son mécanisme de fallback.
+                          {intigoFinalPreviewReady
+                            ? 'La réservation locale existante a été reprise et contrôlée.'
+                            : 'La délégation est absente. En validant, vous autorisez Intigo à appliquer son mécanisme de fallback.'}
                         </p>
 
                         <p className="mt-2 text-xs text-gray-600 dark:text-slate-400">
-                          Cette action crée uniquement une réservation locale dans Confirmed.
-                          Aucun colis n&apos;est encore créé chez Intigo.
+                          {intigoFinalPreviewReady
+                            ? 'Aucun colis n’a été créé chez Intigo.'
+                            : 'Cette action crée uniquement une réservation locale dans Confirmed. Aucun colis n’est encore créé chez Intigo.'}
                         </p>
 
                         {!intigoFinalPreviewReady && (

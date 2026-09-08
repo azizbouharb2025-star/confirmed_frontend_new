@@ -9,6 +9,20 @@ export interface IntigoCapabilities {
   remoteCallPerformed?: boolean
 }
 
+export interface IntigoActiveReservation {
+  success: boolean
+  provider: 'intigo'
+  orderId: string
+  state: 'preparing'
+  correlationId?: string | null
+  reservationId: string
+  reservedAt?: string | null
+  reservationExpiresAt?: string | null
+  externalId?: string | null
+  remoteCallPerformed?: boolean
+  databaseMutationPerformed?: boolean
+}
+
 export interface IntigoPreviewItem {
   orderId?: string
   confirmedId?: number
@@ -133,6 +147,17 @@ export const intigoDeliveryService = {
       )
 
     return response.data as IntigoCapabilities
+  },
+
+  async getActiveReservation(
+    orderId: string
+  ): Promise<IntigoActiveReservation> {
+    const response =
+      await api.get(
+        `/api/delivery/intigo/reservations/${orderId}`
+      )
+
+    return response.data as IntigoActiveReservation
   },
 
   async previewOrders(
