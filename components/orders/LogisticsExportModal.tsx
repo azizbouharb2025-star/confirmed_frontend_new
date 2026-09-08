@@ -277,6 +277,9 @@ export default function LogisticsExportModal({
   const [isIntigoResuming, setIsIntigoResuming] =
     useState(false)
 
+  const [intigoPreparationResumed, setIntigoPreparationResumed] =
+    useState(false)
+
   const [intigoReservationId, setIntigoReservationId] =
     useState<string | null>(null)
 
@@ -327,6 +330,7 @@ export default function LogisticsExportModal({
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
+    setIntigoPreparationResumed(false)
     onClose()
   }
 
@@ -355,6 +359,7 @@ export default function LogisticsExportModal({
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
+    setIntigoPreparationResumed(false)
 
     try {
       /*
@@ -409,6 +414,7 @@ export default function LogisticsExportModal({
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
+    setIntigoPreparationResumed(false)
 
     try {
       /*
@@ -456,6 +462,7 @@ export default function LogisticsExportModal({
       )
 
       setIntigoFinalPreviewReady(true)
+      setIntigoPreparationResumed(true)
 
       setSuccessMsg(
         'Préparation Intigo reprise. Aucun colis n’a été créé.'
@@ -524,6 +531,7 @@ export default function LogisticsExportModal({
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
     setIntigoFinalPreview(null)
+    setIntigoPreparationResumed(false)
 
     try {
       /*
@@ -817,7 +825,8 @@ export default function LogisticsExportModal({
                       {orderIds.length === 1 &&
                         intigoDuplicate.length === 1 &&
                         item.state === 'preparing' &&
-                        !item.externalId && (
+                        !item.externalId &&
+                        !intigoFinalPreviewReady && (
                           <button
                             type="button"
                             onClick={() =>
@@ -903,13 +912,27 @@ export default function LogisticsExportModal({
                           intigoFinalPreview?.wouldPost?.[0] && (
                             <div className="mt-4 space-y-3">
                               <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
-                                ✓ Fallback validé
-                                <br />
-                                ✓ Réservation locale créée
-                                <br />
-                                ✓ Contrôle final réussi
-                                <br />
-                                ✓ Aucun colis Intigo créé
+                                {intigoPreparationResumed ? (
+                                  <>
+                                    ✓ Réservation existante reprise
+                                    <br />
+                                    ✓ Aucune nouvelle réservation créée
+                                    <br />
+                                    ✓ Contrôle final réussi
+                                    <br />
+                                    ✓ Aucun colis Intigo créé
+                                  </>
+                                ) : (
+                                  <>
+                                    ✓ Fallback validé
+                                    <br />
+                                    ✓ Réservation locale créée
+                                    <br />
+                                    ✓ Contrôle final réussi
+                                    <br />
+                                    ✓ Aucun colis Intigo créé
+                                  </>
+                                )}
                               </div>
 
                               <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
