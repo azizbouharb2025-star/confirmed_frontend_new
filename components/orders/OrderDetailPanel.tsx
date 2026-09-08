@@ -11,6 +11,7 @@ import CallFeedbackAnalysis from './CallFeedbackAnalysis'
 import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { formatCurrency } from '@/lib/formatCurrency'
 import deliveryTrackingService, {
+  getDeliveryStatusDisplayLabel,
   type DeliveryShipmentTracking,
 } from '@/services/deliveryTrackingService'
 
@@ -1052,10 +1053,8 @@ function formatDeliveryProviderName(
  */
 function DeliveryTrackingSection({
   order,
-  t,
 }: {
   order: Order
-  t: (key: TranslationKey) => string
 }) {
   const [
     tracking,
@@ -1187,13 +1186,10 @@ function DeliveryTrackingSection({
         {displayEntries.map(
           entry => {
             const status =
-              entry.providerStatusLabel ||
-              (
-                entry.providerStatusCode != null
-                  ? String(
-                      entry.providerStatusCode
-                    )
-                  : null
+              getDeliveryStatusDisplayLabel(
+                entry.provider,
+                entry.providerStatusCode,
+                entry.providerStatusLabel
               )
 
             return (
@@ -1216,7 +1212,7 @@ function DeliveryTrackingSection({
                 {entry.trackingNumber && (
                   <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
                     <dt className="text-gray-500 dark:text-slate-400">
-                      {t('orderDetail.tracking')}
+                      N° de suivi
                     </dt>
 
                     <dd className="text-right font-mono text-gray-900 dark:text-white break-all">
@@ -1234,14 +1230,6 @@ function DeliveryTrackingSection({
                     <dd className="text-right font-medium text-gray-900 dark:text-white">
                       {status}
 
-                      {entry.providerStatusLabel &&
-                        entry.providerStatusCode != null && (
-                          <span className="ml-1 text-xs font-normal text-gray-500 dark:text-slate-400">
-                            ({String(
-                              entry.providerStatusCode
-                            )})
-                          </span>
-                        )}
                     </dd>
                   </div>
                 )}
@@ -1539,7 +1527,7 @@ export default function OrderDetailPanel({
                       <CallHistorySection order={order} t={t} />
                       <OrderItemsSection order={order} t={t} />
                       <DeliveryAddressSection order={order} t={t} />
-                      <DeliveryTrackingSection order={order} t={t} />
+                      <DeliveryTrackingSection order={order} />
                       <AIScoreSection order={order} />
                       
                       {/* Retour d'appel structuré */}
