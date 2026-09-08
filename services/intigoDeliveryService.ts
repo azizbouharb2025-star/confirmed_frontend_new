@@ -63,6 +63,29 @@ export interface IntigoReservationResult {
   invalid?: IntigoPreviewItem[]
 }
 
+export interface IntigoDispatchPreviewItem {
+  shipmentId?: string
+  orderId?: string
+  confirmedId?: number
+  correlationId?: string
+
+  currentState?: string
+  proposedState?: string
+
+  request?: {
+    method?: string
+    resource?: string
+  }
+
+  city_name?: string | null
+  district_name?: string | null
+
+  pickupIndex?: number
+  price?: number
+
+  payloadHash?: string
+}
+
 export interface IntigoDispatchPreview {
   success?: boolean
   provider?: 'intigo'
@@ -75,7 +98,7 @@ export interface IntigoDispatchPreview {
     invalid?: number
   }
 
-  wouldPost?: unknown[]
+  wouldPost?: IntigoDispatchPreviewItem[]
   invalid?: IntigoPreviewItem[]
 }
 

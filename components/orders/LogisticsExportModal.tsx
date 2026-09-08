@@ -276,6 +276,15 @@ export default function LogisticsExportModal({
   const [intigoFinalPreviewReady, setIntigoFinalPreviewReady] =
     useState(false)
 
+  const [intigoFinalPreview, setIntigoFinalPreview] =
+    useState<
+      Awaited<
+        ReturnType<
+          typeof intigoDeliveryService.previewReservation
+        >
+      > | null
+    >(null)
+
   const isIntigo = provider === 'intigo'
   const isBusy =
     isLoading ||
@@ -305,6 +314,7 @@ export default function LogisticsExportModal({
     setIntigoPreview(null)
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
+    setIntigoFinalPreview(null)
     onClose()
   }
 
@@ -315,6 +325,7 @@ export default function LogisticsExportModal({
     setIntigoPreview(null)
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
+    setIntigoFinalPreview(null)
   }
 
   const isCustom = provider === 'custom'
@@ -367,6 +378,7 @@ export default function LogisticsExportModal({
     setSuccessMsg(null)
     setIntigoReservationId(null)
     setIntigoFinalPreviewReady(false)
+    setIntigoFinalPreview(null)
 
     try {
       /*
@@ -410,6 +422,10 @@ export default function LogisticsExportModal({
           'Le contrôle final Intigo nécessite une vérification.'
         )
       }
+
+      setIntigoFinalPreview(
+        finalPreview
+      )
 
       setIntigoFinalPreviewReady(true)
 
@@ -707,17 +723,135 @@ export default function LogisticsExportModal({
                           </button>
                         )}
 
-                        {intigoFinalPreviewReady && (
-                          <div className="mt-3 rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
-                            ✓ Fallback validé
-                            <br />
-                            ✓ Réservation locale créée
-                            <br />
-                            ✓ Contrôle final réussi
-                            <br />
-                            ✓ Aucun colis Intigo créé
-                          </div>
-                        )}
+                        {intigoFinalPreviewReady &&
+                          intigoFinalPreview?.wouldPost?.[0] && (
+                            <div className="mt-4 space-y-3">
+                              <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                                ✓ Fallback validé
+                                <br />
+                                ✓ Réservation locale créée
+                                <br />
+                                ✓ Contrôle final réussi
+                                <br />
+                                ✓ Aucun colis Intigo créé
+                              </div>
+
+                              <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+                                <div className="mb-3 flex items-center justify-between gap-3">
+                                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">
+                                    Prêt pour Intigo
+                                  </p>
+
+                                  <span className="rounded-full bg-blue-500/10 px-2 py-1 text-[11px] font-medium text-blue-700 dark:text-blue-400">
+                                    Prévisualisation
+                                  </span>
+                                </div>
+
+                                <dl className="space-y-2 text-xs">
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Commande
+                                    </dt>
+                                    <dd className="font-semibold text-gray-900 dark:text-white">
+                                      #{intigoFinalPreview.wouldPost[0].confirmedId ?? '—'}
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Référence
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                      {intigoFinalPreview.wouldPost[0].correlationId || '—'}
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Ville
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                      {intigoFinalPreview.wouldPost[0].city_name || '—'}
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Délégation
+                                    </dt>
+                                    <dd className="text-right font-medium text-gray-900 dark:text-white">
+                                      {intigoFinalPreview.wouldPost[0].district_name ||
+                                        'Automatique via Intigo'}
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Montant à encaisser
+                                    </dt>
+                                    <dd className="font-semibold text-gray-900 dark:text-white">
+                                      {intigoFinalPreview.wouldPost[0].price ?? '—'} DT
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Point de collecte
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                      Pickup {intigoFinalPreview.wouldPost[0].pickupIndex ?? '—'}
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      État Confirmed
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                      Réservée
+                                    </dd>
+                                  </div>
+
+                                  <div className="flex justify-between gap-4">
+                                    <dt className="text-gray-500 dark:text-slate-400">
+                                      Après envoi réel
+                                    </dt>
+                                    <dd className="font-medium text-gray-900 dark:text-white">
+                                      Créée chez Intigo
+                                    </dd>
+                                  </div>
+                                </dl>
+
+                                {intigoFinalPreview.reservationExpiresAt && (
+                                  <p className="mt-3 border-t border-blue-500/10 pt-3 text-[11px] text-gray-500 dark:text-slate-400">
+                                    Réservation temporaire jusqu&apos;à{' '}
+                                    {new Date(
+                                      intigoFinalPreview.reservationExpiresAt
+                                    ).toLocaleString()}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+                                <p className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                  Envoi réel vers Intigo désactivé
+                                </p>
+
+                                <p className="mt-1 text-[11px] text-gray-600 dark:text-slate-400">
+                                  Ce contrôle n&apos;a créé aucun colis.
+                                  L&apos;envoi réel sera activé séparément après validation.
+                                </p>
+
+                                <button
+                                  type="button"
+                                  disabled
+                                  className="mt-3 w-full cursor-not-allowed rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400"
+                                >
+                                  Confirmer l&apos;envoi — désactivé
+                                </button>
+                              </div>
+                            </div>
+                          )}
 
                         {intigoReservationId && (
                           <p className="mt-2 text-[11px] text-gray-500 dark:text-slate-500">
@@ -803,6 +937,7 @@ export default function LogisticsExportModal({
             }
             disabled={
               isBusy ||
+              (isIntigo && intigoFinalPreviewReady) ||
               (isIntigo && orderIds.length === 0) ||
               (isCustom && customColumns.length === 0)
             }
@@ -817,7 +952,11 @@ export default function LogisticsExportModal({
                   : 'Export en cours…'}
               </>
             ) : isIntigo ? (
-              <>Analyser pour Intigo</>
+              <>
+                {intigoFinalPreviewReady
+                  ? 'Contrôle terminé'
+                  : 'Analyser pour Intigo'}
+              </>
             ) : (
               <>Exporter</>
             )}
