@@ -81,11 +81,7 @@ export default function ShopsPage() {
     if (!formData.platform) errors.platform = t('shops.platformRequired')
 
     const creds = formData.apiCredentials
-    if (formData.platform === 'converty') {
-      if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
-      if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
-      if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
-    } else if (formData.platform === 'shopify') {
+    if (formData.platform === 'shopify') {
       if (!creds.apiKey) errors.apiKey = t('shops.apiKeyRequired')
       if (!creds.apiSecret) errors.apiSecret = t('shops.apiSecretRequired')
       if (!creds.storeUrl) errors.storeUrl = t('shops.storeUrlRequired')
@@ -116,29 +112,72 @@ export default function ShopsPage() {
     setError(null)
 
     try {
-      const credentialsKey = `${formData.platform}Credentials`
-      const payload = {
+      const isConverty = formData.platform === 'converty'
+
+      const payload: Record<string, unknown> = {
         name: formData.name,
         domain: formData.domain,
-        platform: formData.platform,
-        [credentialsKey]: formData.apiCredentials
+        platform: formData.platform
+      }
+
+      if (!isConverty) {
+        const credentialsKey = `${formData.platform}Credentials`
+        payload[credentialsKey] = formData.apiCredentials
       }
 
       const response = await api.post('/api/shops', payload)
-      
-      if (response.data._id || response.data.id) {
-        setShops(prev => [...prev, response.data])
-        setSuccess(t('shops.createSuccess'))
-        setShowModal(false)
-        setFormData(initialFormData)
-        setFormErrors({})
-        setTimeout(() => setSuccess(null), 3000)
-      } else if (response.data.error || response.data.message) {
-        setError(response.data.error || response.data.message)
+
+      const createdShop = response.data?.shop || response.data
+
+      if (!createdShop?._id && !createdShop?.id) {
+        throw new Error(
+          response.data?.error ||
+          response.data?.message ||
+          t('shops.failedCreate')
+        )
       }
+
+      if (isConverty) {
+        const oauthResponse = await api.get(
+          '/api/integration/converty/oauth/start'
+        )
+
+        const authorizationUrl =
+          oauthResponse.data?.authorizationUrl
+
+        if (!authorizationUrl) {
+          throw new Error(
+            'Impossible de démarrer la connexion Converty'
+          )
+        }
+
+        window.location.assign(authorizationUrl)
+        return
+      }
+
+      setShops(prev => [...prev, createdShop])
+      setSuccess(t('shops.createSuccess'))
+      setShowModal(false)
+      setFormData(initialFormData)
+      setFormErrors({})
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      const error = err as { message?: string }
-      setError(error.message || t('shops.failedCreate'))
+      const error = err as {
+        message?: string
+        response?: {
+          data?: {
+            error?: string
+            message?: string
+          }
+        }
+      }
+
+      setError(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        t('shops.failedCreate')
+      )
     } finally {
       setSaving(false)
     }
@@ -167,18 +206,18 @@ export default function ShopsPage() {
     switch (formData.platform) {
       case 'converty':
         return (
-          <div className="space-y-3">
-            <div>
-              <input type="text" placeholder="API Key *" value={formData.apiCredentials.apiKey || ''} onChange={(e) => updateCredential('apiKey', e.target.value)} className={inputClass('apiKey')} />
-              {formErrors.apiKey && <p className="text-red-500 text-xs mt-1">{formErrors.apiKey}</p>}
-            </div>
-            <div>
-              <input type="password" placeholder="API Secret *" value={formData.apiCredentials.apiSecret || ''} onChange={(e) => updateCredential('apiSecret', e.target.value)} className={inputClass('apiSecret')} />
-              {formErrors.apiSecret && <p className="text-red-500 text-xs mt-1">{formErrors.apiSecret}</p>}
-            </div>
-            <div>
-              <input type="url" placeholder="Store URL *" value={formData.apiCredentials.storeUrl || ''} onChange={(e) => updateCredential('storeUrl', e.target.value)} className={inputClass('storeUrl')} />
-              {formErrors.storeUrl && <p className="text-red-500 text-xs mt-1">{formErrors.storeUrl}</p>}
+          <div className="rounded-xl border-2 dark:border-slate-700 light:border-gray-200 p-4 dark:bg-slate-800/50 light:bg-blue-50/50">
+            <div className="flex items-start gap-3">
+              <CheckCircleIcon className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold dark:text-white light:text-gray-900">
+                  Connexion sécurisée avec Converty
+                </p>
+                <p className="text-sm mt-1 dark:text-slate-400 light:text-gray-600">
+                  Aucun API Key ou API Secret n&apos;est nécessaire.
+                  Confirmed vous redirigera vers Converty pour autoriser la connexion.
+                </p>
+              </div>
             </div>
           </div>
         )
@@ -418,7 +457,11 @@ export default function ShopsPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold mb-2 dark:text-white light:text-gray-900">{t('shops.credentials')}</label>
+                        <label className="block text-sm font-semibold mb-2 dark:text-white light:text-gray-900">
+                          {formData.platform === 'converty'
+                            ? 'Connexion'
+                            : t('shops.credentials')}
+                        </label>
                         {renderCredentialFields()}
                       </div>
                     </>
@@ -440,7 +483,11 @@ export default function ShopsPage() {
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                         {t('shops.saving')}
                       </>
-                    ) : t('shops.save')}
+                    ) : (
+                      formData.platform === 'converty'
+                        ? 'Créer et connecter Converty'
+                        : t('shops.save')
+                    )}
                   </button>
                 </div>
               </div>
