@@ -48,6 +48,7 @@ export default function ShopsPage() {
   const [shops, setShops] = useState<Shop[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [reconnectingShopId, setReconnectingShopId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [formData, setFormData] = useState<ShopFormData>(initialFormData)
@@ -180,6 +181,47 @@ export default function ShopsPage() {
       )
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleReconnectConverty = async (shopId: string) => {
+    try {
+      setReconnectingShopId(shopId)
+      setError(null)
+
+      const oauthResponse = await api.get(
+        '/api/integration/converty/oauth/start'
+      )
+
+      const authorizationUrl =
+        oauthResponse.data?.authorizationUrl
+
+      if (!authorizationUrl) {
+        throw new Error(
+          'Impossible de démarrer la reconnexion Converty'
+        )
+      }
+
+      window.location.assign(authorizationUrl)
+    } catch (err) {
+      const reconnectError = err as {
+        message?: string
+        response?: {
+          data?: {
+            error?: string
+            message?: string
+          }
+        }
+      }
+
+      setError(
+        reconnectError.response?.data?.error ||
+        reconnectError.response?.data?.message ||
+        reconnectError.message ||
+        'Impossible de reconnecter Converty'
+      )
+
+      setReconnectingShopId(null)
     }
   }
 
@@ -381,6 +423,19 @@ export default function ShopsPage() {
                         <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded text-xs capitalize">{shop.subscriptionId.plan}</span>
                       )}
                     </div>
+
+                    {shop.platform === 'converty' && (
+                      <button
+                        type="button"
+                        onClick={() => handleReconnectConverty(shop._id)}
+                        disabled={reconnectingShopId === shop._id}
+                        className="mt-4 w-full rounded-lg border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-500 transition-colors hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {reconnectingShopId === shop._id
+                          ? 'Redirection vers Converty...'
+                          : 'Reconnecter Converty'}
+                      </button>
+                    )}
                   </div>
                 )
               })}
