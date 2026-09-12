@@ -208,11 +208,13 @@ export default function ColissimoApiPanel({
         )
 
       let activeReservationId =
-        reservation.reservationId
+        reservation.summary?.reserved === 1
+          ? reservation.reservationId
+          : null
 
       /*
        * Si une préparation existe déjà,
-       * on tente uniquement de la reprendre.
+       * on reprend sa vraie réservation active.
        * Aucun appel Colissimo distant ici.
        */
       if (!activeReservationId) {
