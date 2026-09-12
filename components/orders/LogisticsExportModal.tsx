@@ -14,6 +14,7 @@ import intigoDeliveryService, {
   type IntigoCapabilities,
   type IntigoDryRunPreview,
 } from '@/services/intigoDeliveryService'
+import ColissimoApiPanel from './ColissimoApiPanel'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -262,6 +263,12 @@ export default function LogisticsExportModal({
   const [errorMsg,       setErrorMsg]       = useState<string | null>(null)
   const [successMsg,     setSuccessMsg]     = useState<string | null>(null)
 
+  const [colissimoMode, setColissimoMode] =
+    useState<'api' | 'export'>('api')
+
+  const [isColissimoBusy, setIsColissimoBusy] =
+    useState(false)
+
   const [intigoPreview, setIntigoPreview] =
     useState<IntigoDryRunPreview | null>(null)
 
@@ -302,15 +309,20 @@ export default function LogisticsExportModal({
     >(null)
 
   const isIntigo = provider === 'intigo'
+  const isColissimo = provider === 'colissimo'
+  const isColissimoApi =
+    isColissimo && colissimoMode === 'api'
 
   const intigoLiveDispatchEnabled =
     intigoCapabilities?.liveDispatchEnabled === true
+
   const isBusy =
     isLoading ||
     isIntigoPreviewing ||
     isIntigoReserving ||
     isIntigoResuming ||
-    isIntigoDispatching
+    isIntigoDispatching ||
+    isColissimoBusy
 
   const intigoReady =
     intigoPreview?.ready || []
@@ -344,6 +356,11 @@ export default function LogisticsExportModal({
 
   const handleProviderChange = (id: LogisticsProvider) => {
     setProvider(id)
+
+    if (id === 'colissimo') {
+      setColissimoMode('api')
+    }
+
     setErrorMsg(null)
     setSuccessMsg(null)
     setIntigoPreview(null)
@@ -921,6 +938,55 @@ export default function LogisticsExportModal({
           </div>
 
 
+          {isColissimo && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1 dark:bg-slate-800">
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => {
+                    setColissimoMode('api')
+                    setErrorMsg(null)
+                    setSuccessMsg(null)
+                  }}
+                  className={[
+                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    colissimoMode === 'api'
+                      ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-slate-400',
+                  ].join(' ')}
+                >
+                  Connexion API
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => {
+                    setColissimoMode('export')
+                    setErrorMsg(null)
+                    setSuccessMsg(null)
+                  }}
+                  className={[
+                    'rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    colissimoMode === 'export'
+                      ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-700 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-slate-400',
+                  ].join(' ')}
+                >
+                  Export CSV / XLSX
+                </button>
+              </div>
+
+              {isColissimoApi && (
+                <ColissimoApiPanel
+                  orderIds={orderIds}
+                  onBusyChange={setIsColissimoBusy}
+                />
+              )}
+            </div>
+          )}
+
           {isIntigo && (
             <div className="space-y-4">
               <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-4">
@@ -1441,7 +1507,7 @@ export default function LogisticsExportModal({
           )}
 
           {/* File type selection */}
-          {!isIntigo && (
+          {!isIntigo && !isColissimoApi && (
             <div>
             <label className="block text-sm font-medium mb-2 dark:text-white text-gray-900">
               Format du fichier
@@ -1479,6 +1545,7 @@ export default function LogisticsExportModal({
           >
             Annuler
           </button>
+          {!isColissimoApi && (
           <button
             type="button"
             onClick={
@@ -1512,6 +1579,7 @@ export default function LogisticsExportModal({
               <>Exporter</>
             )}
           </button>
+          )}
         </div>
       </div>
     </div>
