@@ -113,9 +113,7 @@ const getNavigationItems = (
     {
       name: t('nav.deliveryCompany'),
       href: '/panel/client/delivery-company',
-      icon: TruckIcon,
-      badge: t('nav.comingSoon'),
-      disabled: true
+      icon: TruckIcon
     },
 
     // Caché temporairement selon le nouveau dashboard PDF.
