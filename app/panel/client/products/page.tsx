@@ -48,6 +48,25 @@ interface FormData {
   url: string
 }
 
+const stripHtml = (value?: string) => {
+  if (!value) return ''
+
+  return value
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/p>/gi, ' ')
+    .replace(/<\/div>/gi, ' ')
+    .replace(/<\/li>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 const initialFormData: FormData = {
   name: '',
   description: '',
@@ -545,7 +564,7 @@ export default function ProductsPage() {
                               </h3>
 
                               <p className="mt-1 text-sm line-clamp-2 dark:text-slate-400 light:text-gray-600">
-                                {product.description ||
+                                {stripHtml(product.description) ||
                                   t('products.noDescription')}
                               </p>
                             </div>
