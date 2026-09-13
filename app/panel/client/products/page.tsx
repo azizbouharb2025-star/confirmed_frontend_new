@@ -297,8 +297,23 @@ export default function ProductsPage() {
       } else if (response.data.error) {
         setError(response.data.error)
       }
-    } catch {
-      setError(t('products.syncNotAvailable'))
+    } catch (err) {
+      const syncError = err as {
+        message?: string
+        response?: {
+          data?: {
+            error?: string
+            message?: string
+          }
+        }
+      }
+
+      setError(
+        syncError.response?.data?.error ||
+        syncError.response?.data?.message ||
+        syncError.message ||
+        t('products.syncNotAvailable')
+      )
     } finally {
       setSyncing(false)
     }

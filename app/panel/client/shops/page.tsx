@@ -59,6 +59,39 @@ export default function ShopsPage() {
     fetchShops()
   }, [])
 
+  useEffect(() => {
+    const params =
+      new URLSearchParams(
+        window.location.search
+      )
+
+    const convertyStatus =
+      params.get('converty')
+
+    if (convertyStatus === 'connected') {
+      setSuccess(
+        'Boutique Converty connectée avec succès.'
+      )
+    }
+
+    if (
+      convertyStatus ===
+      'already-connected'
+    ) {
+      setError(
+        'Cette boutique Converty est déjà connectée à une autre boutique Confirmed.'
+      )
+    }
+
+    if (convertyStatus) {
+      window.history.replaceState(
+        {},
+        '',
+        window.location.pathname
+      )
+    }
+  }, [])
+
   const fetchShops = async () => {
     try {
       setLoading(true)
