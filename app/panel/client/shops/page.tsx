@@ -14,6 +14,7 @@ interface Shop {
   domain: string
   platform: string
   isActive: boolean
+  convertyConnected?: boolean
   settings?: { callPriority: string; productSyncEnabled: boolean; webhookEnabled: boolean }
   subscriptionId?: { plan: string; status: string }
   createdAt: string
@@ -466,7 +467,9 @@ export default function ShopsPage() {
                       >
                         {reconnectingShopId === shop._id
                           ? 'Redirection vers Converty...'
-                          : 'Reconnecter Converty'}
+                          : shop.convertyConnected
+                            ? 'Reconnecter Converty'
+                            : 'Connecter Converty'}
                       </button>
                     )}
                   </div>
