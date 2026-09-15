@@ -11,6 +11,7 @@ import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { useLanguage } from '@/hooks/useLanguage'
 import { TranslationKey } from '@/lib/i18n'
 import { formatCurrency } from '@/lib/formatCurrency'
+import { getDeliveryStatusDisplayLabel } from '@/services/deliveryTrackingService'
 
 /**
  * OrdersTable Component
@@ -401,7 +402,19 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       key: 'status',
       label: t('orders.status'),
       minPlan: null,
-      render: (order) => <StatusBadge status={order.status} size="sm" />,
+      render: (order) => (
+        <div className="flex flex-col items-start gap-1">
+          <StatusBadge status={order.status} size="sm" />
+
+          {order.externalStatus && (
+            <span className="text-xs capitalize text-blue-500">
+              {order.externalStatus.platform}:{' '}
+              {order.externalStatus.label ||
+                order.externalStatus.code}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       key: 'aiScore',
@@ -425,6 +438,104 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
         )
       },
     },
+    {
+      key: 'delivery',
+      label: 'Livraison',
+      minPlan: null,
+      render: (order) => {
+        const shipment =
+          order.deliveryShipment
+
+        const provider =
+          shipment?.provider ||
+          order.deliveryInfo?.carrier ||
+          ''
+
+        const tracking =
+          shipment?.externalId ||
+          order.deliveryInfo?.trackingNumber ||
+          ''
+
+        if (!provider) {
+          return (
+            <span className="text-xs text-gray-400 dark:text-slate-500">
+              Non expédiée
+            </span>
+          )
+        }
+
+        const providerNames: Record<string, string> = {
+          colissimo: 'Colissimo',
+          intigo: 'Intigo',
+          aramex: 'Aramex',
+          rapid_poste: 'Rapid Poste',
+          dhl: 'DHL',
+          fedex: 'FedEx',
+        }
+
+        const stateNames: Record<string, string> = {
+          preparing: 'Préparation',
+          dispatching: 'Envoi en cours',
+          created: 'Colis créé',
+          failed: 'Échec',
+          cancelled: 'Annulé',
+          reconcile_required: 'À vérifier',
+        }
+
+        const providerKey =
+          String(provider)
+            .trim()
+            .toLowerCase()
+
+        const deliveryStatusLabel =
+          shipment?.state
+            ? getDeliveryStatusDisplayLabel(
+                shipment.provider,
+                shipment.providerStatusCode,
+                shipment.providerStatusLabel
+              ) ||
+              stateNames[shipment.state] ||
+              shipment.state
+            : null
+
+        const deliveryStatusClass =
+          order.status === 'delivered'
+            ? 'mt-0.5 text-xs text-green-500'
+            : [
+                  'cancelled',
+                  'rejected',
+                  'failed_delivery',
+                ].includes(order.status)
+              ? 'mt-0.5 text-xs text-red-500'
+              : order.status === 'shipped'
+                ? 'mt-0.5 text-xs text-blue-500'
+                : 'mt-0.5 text-xs text-gray-500 dark:text-slate-400'
+
+        return (
+          <div className="min-w-[145px]">
+            <div className="font-semibold text-gray-900 dark:text-white">
+              {providerNames[providerKey] || provider}
+            </div>
+
+            {deliveryStatusLabel && (
+              <div className={deliveryStatusClass}>
+                {deliveryStatusLabel}
+              </div>
+            )}
+
+            {tracking && (
+              <div
+                className="mt-0.5 max-w-[160px] truncate text-xs font-mono text-gray-500 dark:text-slate-400"
+                title={String(tracking)}
+              >
+                N° {tracking}
+              </div>
+            )}
+          </div>
+        )
+      },
+    },
+
     {
       key: 'value',
       label: t('orders.value'),

@@ -28,6 +28,7 @@ export interface OrderDetailPanelProps {
   order: Order | null
   isOpen: boolean
   onClose: () => void
+  onEdit?: () => void
 }
 
 /**
@@ -1458,6 +1459,7 @@ export default function OrderDetailPanel({
   order,
   isOpen,
   onClose,
+  onEdit,
 }: OrderDetailPanelProps) {
   const { t } = useLanguage()
 
@@ -1509,6 +1511,25 @@ export default function OrderDetailPanel({
                             </span>
                           </div>
                         </div>
+                        {onEdit && (
+  <button
+    type="button"
+    onClick={onEdit}
+    className="ml-auto mr-2 inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+    title="Modifier la commande"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className="h-3.5 w-3.5"
+    >
+      <path d="M13.586 3.586a2 2 0 012.828 2.828l-8.5 8.5a1 1 0 01-.464.263l-3 1a1 1 0 01-1.265-1.265l1-3a1 1 0 01.263-.464l8.5-8.5.638.638z" />
+    </svg>
+
+    Modifier
+  </button>
+)}
                         <button
                           type="button"
                           className="rounded-md text-gray-400 hover:text-gray-500 dark:text-slate-400 dark:hover:text-slate-300 focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]"

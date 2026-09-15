@@ -70,6 +70,7 @@ export default function ClientOrdersPage() {
   // Manual order modal state
   const { t } = useLanguage()
   const [showManualModal, setShowManualModal] = useState(false)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showLogisticsExportModal, setShowLogisticsExportModal] = useState(false)
   const [manualSaving, setManualSaving] = useState(false)
@@ -108,6 +109,7 @@ export default function ClientOrdersPage() {
     })
     setManualFormErrors({})
     setManualError(null)
+    setEditingOrder(null)
   }
 
   const validateManualForm = (): boolean => {
@@ -115,7 +117,10 @@ export default function ClientOrdersPage() {
     if (!manualForm.clientName.trim()) errors.clientName = t('orders.customerNameRequired')
     if (!manualForm.clientPhone.trim()) errors.clientPhone = t('orders.customerPhoneRequired')
     const validItems = manualForm.items.filter(i => i.name.trim() && i.quantity > 0 && i.price > 0)
-    if (validItems.length === 0) errors.items = t('orders.itemsRequired')
+
+    if (!editingOrder && validItems.length === 0) {
+      errors.items = t('orders.itemsRequired')
+    }
     setManualFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -126,6 +131,40 @@ export default function ClientOrdersPage() {
     setManualError(null)
 
     try {
+      if (editingOrder) {
+        await orderService.updateOrderDetails(
+          editingOrder._id,
+          {
+            clientInfo: {
+              name: manualForm.clientName,
+              phone: manualForm.clientPhone,
+              email: manualForm.clientEmail,
+              address: {
+                street: manualForm.street,
+                city: manualForm.city,
+                state: manualForm.state,
+                district: manualForm.district,
+                zipCode: manualForm.zipCode,
+                country: manualForm.country,
+              },
+            },
+          }
+        )
+
+        setManualSuccess('Commande modifiée avec succès.')
+        setShowManualModal(false)
+        resetManualForm()
+
+        await fetchOrders()
+
+        setTimeout(
+          () => setManualSuccess(null),
+          3000
+        )
+
+        return
+      }
+
       const validItems = manualForm.items.filter(i => i.name.trim() && i.quantity > 0 && i.price > 0)
       const totalAmount = validItems.reduce((sum, i) => sum + i.quantity * i.price, 0)
 
@@ -199,6 +238,49 @@ export default function ClientOrdersPage() {
     } finally {
       setManualSaving(false)
     }
+  }
+
+  const handleEditOrder = (order: Order) => {
+    const address = order.clientInfo?.address
+
+    setEditingOrder(order)
+    setManualError(null)
+    setManualFormErrors({})
+
+    setManualForm({
+      clientName: order.clientInfo?.name || '',
+      clientPhone: order.clientInfo?.phone || '',
+      clientEmail: order.clientInfo?.email || '',
+
+      street: address?.street || '',
+      city: address?.city || '',
+      state: address?.state || '',
+      district: address?.district || '',
+      zipCode: address?.zipCode || '',
+      country: address?.country || '',
+
+      items: [{
+        name: '',
+        quantity: 1,
+        price: 0,
+        sku: '',
+      }],
+
+      estimatedDate: '',
+      trackingNumber: '',
+      carrier: '',
+      secondaryPhone: '',
+      packageCount: 1,
+      comment: '',
+      weight: 0,
+      colissimoType: '',
+    })
+
+    setIsDetailPanelOpen(false)
+
+    setTimeout(() => {
+      setShowManualModal(true)
+    }, 350)
   }
 
   const addItem = () => setManualForm(prev => ({ ...prev, items: [...prev.items, { name: '', quantity: 1, price: 0, sku: '' }] }))
@@ -461,6 +543,11 @@ export default function ClientOrdersPage() {
           order={selectedOrder}
           isOpen={isDetailPanelOpen}
           onClose={handleCloseDetailPanel}
+          onEdit={
+            selectedOrder
+              ? () => handleEditOrder(selectedOrder)
+              : undefined
+          }
         />
 
         {/* Import Orders Modal */}
@@ -479,10 +566,14 @@ export default function ClientOrdersPage() {
 
         {/* Manual Order Modal */}
         {showManualModal && (
-          <div className="fixed inset-0 dark:bg-black/60 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 dark:bg-black/60 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
             <div className="dark:bg-slate-900 bg-white rounded-xl shadow-2xl border dark:border-slate-700 border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-6 border-b dark:border-slate-700 border-gray-200">
-                <h2 className="text-xl font-semibold dark:text-white text-gray-900">{t('orders.manualOrder')}</h2>
+                <h2 className="text-xl font-semibold dark:text-white text-gray-900">
+                  {editingOrder
+                    ? `Modifier la commande #${editingOrder.confirmedId}`
+                    : t('orders.manualOrder')}
+                </h2>
                 <button onClick={() => { setShowManualModal(false); resetManualForm() }} className="p-2 rounded-lg dark:hover:bg-slate-800 hover:bg-gray-100 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
                 </button>
@@ -527,7 +618,7 @@ export default function ClientOrdersPage() {
                 </div>
 
                 {/* Items */}
-                <div>
+                <div className={editingOrder ? 'hidden' : ''}>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-medium dark:text-white text-gray-900">{t('orders.itemsSection')} *</label>
                     <button type="button" onClick={addItem} className="text-sm text-blue-500 hover:text-blue-400">{t('orders.addItem')}</button>
@@ -552,7 +643,7 @@ export default function ClientOrdersPage() {
                 </div>
 
                 {/* Delivery Info */}
-                <div>
+                <div className={editingOrder ? 'hidden' : ''}>
                   <label className="block text-sm font-medium mb-2 dark:text-white text-gray-900">{t('orders.deliverySection')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     <input type="date" placeholder={t('orders.deliveryEstDate')} value={manualForm.estimatedDate} onChange={e => setManualForm(p => ({ ...p, estimatedDate: e.target.value }))} className="w-full px-4 py-2.5 rounded-lg dark:bg-slate-800 bg-gray-50 border-2 dark:border-slate-600 border-gray-300 focus:border-blue-500 dark:text-white text-gray-900 outline-none transition-all" />
@@ -632,7 +723,11 @@ export default function ClientOrdersPage() {
                       <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                       {t('orders.saving')}
                     </>
-                  ) : t('orders.save')}
+                  ) : (
+                    editingOrder
+                      ? 'Enregistrer les modifications'
+                      : t('orders.save')
+                  )}
                 </button>
               </div>
             </div>

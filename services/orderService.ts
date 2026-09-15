@@ -141,6 +141,7 @@ export const orderService = {
         street?: string
         city?: string
         state?: string
+        district?: string
         zipCode?: string
         country?: string
       }
@@ -159,6 +160,35 @@ export const orderService = {
     }
   }): Promise<Order> {
     const response = await api.post('/api/orders', data)
+    return response.data
+  },
+
+  /**
+   * Update customer/order address information
+   */
+  async updateOrderDetails(
+    id: string,
+    data: {
+      clientInfo: {
+        name?: string
+        phone?: string
+        email?: string
+        address?: {
+          street?: string
+          city?: string
+          state?: string
+          district?: string
+          zipCode?: string
+          country?: string
+        }
+      }
+    }
+  ): Promise<Order> {
+    const response = await api.patch(
+      `/api/orders/${id}/operator-details`,
+      data
+    )
+
     return response.data
   },
 

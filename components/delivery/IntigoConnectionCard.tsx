@@ -11,6 +11,7 @@ interface DeliveryIntegration {
   isActive: boolean
   credentialsConfigured: boolean
   settings?: {
+    pickupIndex?: number
     trackingEnabled?: boolean
   }
 }
@@ -53,18 +54,21 @@ const getErrorMessage = (
   return fallback
 }
 
-export default function ColissimoConnectionCard() {
+export default function IntigoConnectionCard() {
   const [integration, setIntegration] =
     useState<DeliveryIntegration | null>(null)
 
   const [open, setOpen] =
     useState(false)
 
-  const [token, setToken] =
+  const [apiKey, setApiKey] =
     useState('')
 
-  const [trackingToken, setTrackingToken] =
-    useState('')
+  const [pickupIndex, setPickupIndex] =
+    useState('1')
+
+  const [trackingEnabled, setTrackingEnabled] =
+    useState(true)
 
   const [loading, setLoading] =
     useState(true)
@@ -92,17 +96,35 @@ export default function ColissimoConnectionCard() {
           ? response.data
           : []
 
-      setIntegration(
+      const intigo =
         integrations.find(
           item =>
-            item.platform === 'colissimo'
+            item.platform === 'intigo'
         ) || null
+
+      setIntegration(intigo)
+
+      if (
+        Number.isInteger(
+          intigo?.settings?.pickupIndex
+        )
+      ) {
+        setPickupIndex(
+          String(
+            intigo.settings.pickupIndex
+          )
+        )
+      }
+
+      setTrackingEnabled(
+        intigo?.settings
+          ?.trackingEnabled !== false
       )
     } catch (err: unknown) {
       setError(
         getErrorMessage(
           err,
-          'Impossible de charger Colissimo.'
+          'Impossible de charger Intigo.'
         )
       )
     } finally {
@@ -119,12 +141,27 @@ export default function ColissimoConnectionCard() {
     integration?.credentialsConfigured === true
 
   const handleSave = async () => {
-    const cleanToken =
-      token.trim()
+    const cleanApiKey =
+      apiKey.trim()
 
-    if (!cleanToken) {
+    const numericPickupIndex =
+      Number(pickupIndex)
+
+    if (!cleanApiKey) {
       setError(
-        'Veuillez saisir le token API Colissimo.'
+        'Veuillez saisir votre clé API Intigo.'
+      )
+      return
+    }
+
+    if (
+      !Number.isInteger(
+        numericPickupIndex
+      ) ||
+      numericPickupIndex < 0
+    ) {
+      setError(
+        'Pickup Index invalide.'
       )
       return
     }
@@ -137,38 +174,29 @@ export default function ColissimoConnectionCard() {
       await api.post(
         '/api/delivery/integration',
         {
-          platform: 'colissimo',
+          platform: 'intigo',
 
           credentials: {
-            addToken:
-              cleanToken,
-
-            trackingToken:
-              trackingToken.trim(),
-
+            apiKey: cleanApiKey,
             baseUrl:
-              'https://colissimodelivery.tn/api/v1/post.php'
+              'https://api.intigo.net/api/v3'
           },
 
           settings: {
-            autoCreateShipment:
-              false,
-
-            trackingEnabled:
-              Boolean(
-                trackingToken.trim()
-              )
+            autoCreateShipment: false,
+            trackingEnabled,
+            pickupIndex:
+              numericPickupIndex
           }
         }
       )
 
-      setToken('')
-      setTrackingToken('')
+      setApiKey('')
 
       await loadIntegration()
 
       setSuccess(
-        'Colissimo connecté avec succès.'
+        'Intigo connecté avec succès.'
       )
 
       setTimeout(() => {
@@ -179,7 +207,7 @@ export default function ColissimoConnectionCard() {
       setError(
         getErrorMessage(
           err,
-          'Impossible de connecter Colissimo.'
+          'Impossible de connecter Intigo.'
         )
       )
     } finally {
@@ -189,35 +217,35 @@ export default function ColissimoConnectionCard() {
 
   if (loading) {
     return (
-      <div className="h-72 animate-pulse rounded-2xl border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800" />
+      <div className="h-80 animate-pulse rounded-2xl border border-slate-700 bg-slate-800" />
     )
   }
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex h-36 items-center justify-center bg-[#eef9ff] p-6 dark:bg-slate-900">
+      <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex h-44 items-center justify-center bg-[#fff4e8] p-7 dark:bg-slate-900">
           <Image
-            src="/assets/delivery-logos/colissimo.png"
-            alt="Colissimo"
-            width={320}
-            height={120}
-            className="w-[280px] max-w-[85%] object-contain scale-125"
+            src="/assets/delivery-logos/intigo.png"
+            alt="Intigo"
+            width={240}
+            height={100}
+            className="max-h-24 w-auto object-contain"
           />
         </div>
 
         <div className="p-5">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Colissimo
+              Intigo
             </h2>
 
             <span
               className={[
                 'rounded-full px-2.5 py-1 text-xs font-semibold',
                 connected
-                  ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400'
-                  : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300',
+                  ? 'bg-green-500/10 text-green-500'
+                  : 'bg-slate-700 text-slate-300',
               ].join(' ')}
             >
               {connected
@@ -226,12 +254,16 @@ export default function ColissimoConnectionCard() {
             </span>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
-              ✓ Création colis
+          <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+            Livraison, création de colis et suivi automatique.
+          </p>
+
+          <div className="mt-4 flex gap-2">
+            <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500">
+              ✓ Labels
             </span>
 
-            <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+            <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs font-medium text-green-500">
               ✓ Tracking
             </span>
           </div>
@@ -243,35 +275,35 @@ export default function ColissimoConnectionCard() {
               setError(null)
               setSuccess(null)
             }}
-            className="mt-5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+            className="mt-5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
           >
             {connected
               ? 'Gérer'
               : 'Connecter'}
           </button>
         </div>
-      </div>
+      </article>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
             <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-slate-700">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Image
-                  src="/assets/delivery-logos/colissimo.png"
-                  alt="Colissimo"
+                  src="/assets/delivery-logos/intigo.png"
+                  alt="Intigo"
                   width={100}
                   height={40}
-                  className="max-h-9 w-auto object-contain"
+                  className="max-h-10 w-auto object-contain"
                 />
 
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    Colissimo
+                  <h3 className="font-semibold">
+                    Intigo
                   </h3>
 
                   <p className="text-xs text-gray-500 dark:text-slate-400">
-                    Configuration de la connexion
+                    Configuration
                   </p>
                 </div>
               </div>
@@ -289,61 +321,79 @@ export default function ColissimoConnectionCard() {
 
             <div className="space-y-5 p-6">
               {connected && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700 dark:border-green-500/20 dark:bg-green-500/10 dark:text-green-400">
-                  ✓ Colissimo est actuellement connecté.
+                <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-500">
+                  ✓ Intigo est connecté.
                 </div>
               )}
 
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Token API d&apos;ajout
+                  Clé API Intigo
                 </label>
 
                 <input
                   type="password"
-                  value={token}
+                  value={apiKey}
                   onChange={event =>
-                    setToken(
+                    setApiKey(
                       event.target.value
                     )
                   }
-                  placeholder="Token API Colissimo"
+                  placeholder="Clé API Intigo"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
                 />
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Token de tracking
+                  Pickup Index
                 </label>
 
                 <input
-                  type="password"
-                  value={trackingToken}
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={pickupIndex}
                   onChange={event =>
-                    setTrackingToken(
+                    setPickupIndex(
                       event.target.value
                     )
                   }
-                  placeholder="Token de tracking Colissimo"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
                 />
               </div>
 
-              {connected && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Pour modifier la configuration, ressaisissez les tokens.
-                </p>
-              )}
+              <label className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-slate-700">
+                <div>
+                  <p className="text-sm font-medium">
+                    Synchronisation automatique
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                    Récupère automatiquement les statuts.
+                  </p>
+                </div>
+
+                <input
+                  type="checkbox"
+                  checked={trackingEnabled}
+                  onChange={event =>
+                    setTrackingEnabled(
+                      event.target.checked
+                    )
+                  }
+                  className="h-4 w-4"
+                />
+              </label>
 
               {error && (
-                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-500/10 dark:text-red-400">
+                <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-500">
                   {error}
                 </div>
               )}
 
               {success && (
-                <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-500">
                   {success}
                 </div>
               )}
@@ -355,7 +405,7 @@ export default function ColissimoConnectionCard() {
                 onClick={() =>
                   setOpen(false)
                 }
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium dark:border-slate-600"
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm dark:border-slate-600"
               >
                 Annuler
               </button>
@@ -365,9 +415,10 @@ export default function ColissimoConnectionCard() {
                 onClick={handleSave}
                 disabled={
                   saving ||
-                  !token.trim()
+                  !apiKey.trim() ||
+                  !pickupIndex.trim()
                 }
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {saving
                   ? 'Enregistrement…'

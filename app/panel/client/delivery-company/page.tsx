@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import ColissimoConnectionCard from '@/components/delivery/ColissimoConnectionCard'
+import IntigoConnectionCard from '@/components/delivery/IntigoConnectionCard'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 
@@ -34,7 +35,10 @@ export default function DeliveryCompanyPage() {
               </p>
             </div>
 
-            <ColissimoConnectionCard />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <ColissimoConnectionCard />
+              <IntigoConnectionCard />
+            </div>
           </div>
         </DashboardLayout>
       </ProtectedRoute>

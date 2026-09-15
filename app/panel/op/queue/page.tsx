@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { PhoneIcon, CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import {
+  PhoneIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import api from '@/lib/api'
@@ -490,8 +497,27 @@ function getRecordedCallAttempts(
   )
 }
 
+function normalizeQueueSearchValue(
+  value: unknown
+): string {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function normalizeQueuePhone(
+  value: unknown
+): string {
+  return String(value ?? '')
+    .replace(/\D/g, '')
+}
+
+
 export default function CallQueue() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [queueSearch, setQueueSearch] = useState('')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [clientDraft, setClientDraft] = useState<OperatorClientDraft | null>(null)
   const [savingClient, setSavingClient] = useState(false)
@@ -593,6 +619,101 @@ export default function CallQueue() {
 
   // Sort orders by priority then AI score
   const sortedOrders = useMemo(() => sortQueueOrders(orders), [orders])
+
+  // Recherche instantanée dans la file d'appels.
+  // Le tri métier existant reste inchangé.
+  const filteredOrders = useMemo(() => {
+    const rawQuery = queueSearch.trim()
+
+    if (!rawQuery) {
+      return sortedOrders
+    }
+
+    const isOrderIdSearch = rawQuery.startsWith('#')
+
+    const textQuery = normalizeQueueSearchValue(rawQuery)
+      .replace(/^#/, '')
+
+    /*
+     * Une recherche commençant par # cible exclusivement
+     * le numéro Confirmed de la commande.
+     *
+     * Exemple :
+     * #42 => commande #42, sans correspondance téléphone.
+     */
+    if (isOrderIdSearch) {
+      if (!textQuery) {
+        return sortedOrders
+      }
+
+      const exactMatches = sortedOrders.filter(order =>
+        normalizeQueueSearchValue(
+          order.confirmedId
+        ) === textQuery
+      )
+
+      if (exactMatches.length > 0) {
+        return exactMatches
+      }
+
+      // Utile pendant la saisie : #4 peut afficher #42, #45...
+      return sortedOrders.filter(order =>
+        normalizeQueueSearchValue(
+          order.confirmedId
+        ).startsWith(textQuery)
+      )
+    }
+
+    const phoneQuery = normalizeQueuePhone(rawQuery)
+
+    return sortedOrders.filter(order => {
+      const confirmedId = normalizeQueueSearchValue(
+        order.confirmedId
+      )
+
+      const clientName = normalizeQueueSearchValue(
+        order.clientInfo?.name
+      )
+
+      const mainPhoneText = normalizeQueueSearchValue(
+        order.clientInfo?.phone
+      )
+
+      const mainPhoneDigits = normalizeQueuePhone(
+        order.clientInfo?.phone
+      )
+
+      const additionalPhones =
+        order.clientInfo?.additionalPhones || []
+
+      const additionalPhoneTextMatch =
+        additionalPhones.some(phone =>
+          normalizeQueueSearchValue(phone).includes(
+            textQuery
+          )
+        )
+
+      const additionalPhoneDigitsMatch =
+        phoneQuery.length > 0 &&
+        additionalPhones.some(phone =>
+          normalizeQueuePhone(phone).includes(
+            phoneQuery
+          )
+        )
+
+      return (
+        confirmedId.includes(textQuery) ||
+        clientName.includes(textQuery) ||
+        mainPhoneText.includes(textQuery) ||
+        additionalPhoneTextMatch ||
+        (
+          phoneQuery.length > 0 &&
+          mainPhoneDigits.includes(phoneQuery)
+        ) ||
+        additionalPhoneDigitsMatch
+      )
+    })
+  }, [sortedOrders, queueSearch])
 
   const selectedShopId = useMemo(() => {
     if (!selectedOrder?.shopId) {
@@ -1507,7 +1628,51 @@ export default function CallQueue() {
             {/* Orders List - Sorted by priority then AI score */}
             <div className="lg:col-span-1">
               <div className="card p-4">
-                <h2 className="font-semibold mb-4">En attente ({sortedOrders.length})</h2>
+                <div className="mb-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="font-semibold">
+                      En attente ({sortedOrders.length})
+                    </h2>
+
+                    {queueSearch.trim() && (
+                      <span className="text-xs dark:text-slate-400 light:text-gray-500">
+                        {filteredOrders.length}{' '}
+                        {filteredOrders.length > 1
+                          ? 'résultats'
+                          : 'résultat'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <MagnifyingGlassIcon
+                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 dark:text-slate-400 light:text-gray-500"
+                    />
+
+                    <input
+                      type="search"
+                      value={queueSearch}
+                      onChange={event =>
+                        setQueueSearch(event.target.value)
+                      }
+                      placeholder="N° commande, client ou téléphone"
+                      className="w-full rounded-lg border py-2.5 pl-9 pr-9 text-sm outline-none transition-colors dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 focus:dark:border-blue-500 light:border-gray-300 light:bg-white light:text-gray-900 light:placeholder:text-gray-400 focus:light:border-blue-500"
+                    />
+
+                    {queueSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setQueueSearch('')}
+                        title="Effacer la recherche"
+                        aria-label="Effacer la recherche"
+                        className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md transition-colors dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white light:text-gray-500 light:hover:bg-gray-100 light:hover:text-gray-900"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {loading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
@@ -1523,9 +1688,20 @@ export default function CallQueue() {
                       Aucune commande en attente à traiter
                     </p>
                   </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <MagnifyingGlassIcon className="mx-auto mb-2 h-10 w-10 dark:text-slate-600 light:text-gray-400" />
+                    <p className="mb-1 font-medium">
+                      Aucune commande trouvée
+                    </p>
+                    <p className="text-sm dark:text-slate-400 light:text-gray-600">
+                      Essayez avec le numéro de commande,
+                      le nom du client ou son téléphone.
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto">
-                    {sortedOrders.map((order) => (
+                    {filteredOrders.map((order) => (
                       <div
                         key={order._id}
                         onClick={() => selectOrder(order)}

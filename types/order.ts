@@ -255,6 +255,17 @@ export interface Order {
 
   totalAmount: number;
   status: OrderStatus;
+
+  /**
+   * Statut indépendant provenant de la plateforme e-commerce.
+   */
+  externalStatus?: {
+    platform: string;
+    code: string;
+    label?: string;
+    syncedAt?: string;
+  } | null;
+
   priority: OrderPriority;
   
   // NEW: AI and Risk Assessment
@@ -382,7 +393,23 @@ export interface Order {
   callHistory: CallHistoryEntry[];
   deliveryInfo?: DeliveryInfo;
   
-  // Timestamps
+
+  deliveryShipment?: {
+    provider: string;
+    state:
+      | 'preparing'
+      | 'dispatching'
+      | 'created'
+      | 'failed'
+      | 'cancelled'
+      | 'reconcile_required';
+    externalId?: string;
+    providerStatusCode?: string | number | null;
+    providerStatusLabel?: string;
+    updatedAt?: string;
+  } | null;
+
+// Timestamps
   createdAt: string;
   updatedAt: string;
   shippedAt?: string;
