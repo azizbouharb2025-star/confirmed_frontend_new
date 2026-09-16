@@ -1,3 +1,4 @@
+import type { Product } from '@/types/product'
 /**
  * Order Service - API methods for order management
  * Requirements: 1.1, 3.3, 3.5, 6.1
@@ -136,6 +137,7 @@ export const orderService = {
     clientInfo: {
       name: string
       phone: string
+      additionalPhones?: string[]
       email?: string
       address?: {
         street?: string
@@ -146,8 +148,15 @@ export const orderService = {
         country?: string
       }
     }
-    items: { name: string; quantity: number; price: number; sku?: string }[]
-    totalAmount: number
+    items: {
+      productId: string
+      name?: string
+      quantity: number
+      price: number
+      sku?: string
+    }[]
+    deliveryFee?: number
+    totalAmount?: number
     deliveryInfo?: {
       estimatedDate?: string
       trackingNumber?: string
@@ -161,6 +170,59 @@ export const orderService = {
   }): Promise<Order> {
     const response = await api.post('/api/orders', data)
     return response.data
+  },
+
+  /**
+   * Load shops accessible to the connected account.
+   * Same source used by the Products page.
+   */
+  async getAccessibleShops(): Promise<
+    Array<{
+      _id: string
+      name?: string
+    }>
+  > {
+    const response =
+      await api.get('/api/shops')
+
+    return Array.isArray(response.data)
+      ? response.data
+      : response.data?.shops || []
+  },
+
+  /**
+   * Load every active product from a shop catalogue.
+   * The API is paginated, so all pages are collected here.
+   */
+  async getShopProducts(shopId: string): Promise<Product[]> {
+    const products: Product[] = []
+
+    let page = 1
+    let totalPages = 1
+
+    do {
+      const response = await api.get(
+        `/api/products/shop/${shopId}?page=${page}&limit=100`
+      )
+
+      const currentProducts: Product[] =
+        Array.isArray(response.data?.products)
+          ? response.data.products
+          : []
+
+      products.push(...currentProducts)
+
+      totalPages = Math.max(
+        1,
+        Number(
+          response.data?.pagination?.pages || 1
+        )
+      )
+
+      page += 1
+    } while (page <= totalPages)
+
+    return products
   },
 
   /**
