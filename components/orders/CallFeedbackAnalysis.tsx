@@ -128,7 +128,7 @@ const priceMap: Record<string, Criterion> = {
   asks_discount: {
     label: 'Comportement face au prix',
     value: 'Demande une réduction',
-    impact: 'neutral',
+    impact: 'negative',
   },
   insists_discount: {
     label: 'Comportement face au prix',
@@ -179,7 +179,7 @@ const deliveryMap: Record<string, Criterion> = {
   partial: {
     label: 'Informations de livraison',
     value: 'Adresse incomplète',
-    impact: 'neutral',
+    impact: 'negative',
   },
   vague: {
     label: 'Informations de livraison',
@@ -227,6 +227,11 @@ const engagementMap: Record<string, Criterion> = {
 }
 
 const receptionMap: Record<string, Criterion> = {
+  no_information: {
+    label: 'Intention de réception',
+    value: 'Aucune information',
+    impact: 'neutral',
+  },
   wants_fast_delivery: {
     label: 'Intention de réception',
     value: 'Souhaite une livraison rapide',

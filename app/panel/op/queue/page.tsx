@@ -68,6 +68,7 @@ type OperatorEngagementLevel =
   | 'distracted'
 
 type OperatorReceptionIntent =
+  | 'no_information'
   | 'wants_fast_delivery'
   | 'clearly_confirms_receipt'
   | 'asks_delivery_info'
@@ -150,6 +151,7 @@ const RECEPTION_INTENT_OPTIONS: Array<{
   value: OperatorReceptionIntent
   label: string
 }> = [
+  { value: 'no_information', label: 'Aucune information' },
   { value: 'wants_fast_delivery', label: 'Souhaite recevoir rapidement' },
   { value: 'clearly_confirms_receipt', label: 'Confirme clairement la réception' },
   { value: 'asks_delivery_info', label: 'Demande des informations sur la livraison' },

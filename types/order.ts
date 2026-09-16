@@ -269,7 +269,7 @@ export interface Order {
   priority: OrderPriority;
   
   // NEW: AI and Risk Assessment
-  aiScore?: number;                              // AI confidence score (0-100%)
+  aiScore?: number;                              // AI confidence score (20-97)
   riskLevel?: RiskLevel;                         // Risk level: high/medium/low
   aiDecision?: 'accept' | 'review' | 'reject';
   aiScoredAt?: string;
