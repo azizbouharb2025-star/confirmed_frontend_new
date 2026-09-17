@@ -437,7 +437,7 @@ export interface OrderFilters {
  */
 export const DEFAULT_ORDER_FILTERS: OrderFilters = {
   search: '',
-  status: 'confirmed',
+  status: 'all',
   dateRange: null,
 };
 

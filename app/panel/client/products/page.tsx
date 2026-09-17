@@ -127,9 +127,12 @@ export default function ProductsPage() {
     }
   }
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (silent = false) => {
     try {
-      setLoading(true)
+      if (!silent) {
+        setLoading(true)
+      }
+
       const response = await api.get(`/api/products/shop/${selectedShop}`)
       // Handle 404 or HTML error responses
       if (response.data?.products) {
@@ -141,11 +144,50 @@ export default function ProductsPage() {
       }
     } catch (err) {
       logger.error('Failed to fetch products:', err, 'Products')
-      setProducts([]) // Reset to empty on error
+
+      // During a silent refresh, preserve the currently displayed products.
+      if (!silent) {
+        setProducts([])
+      }
     } finally {
-      setLoading(false)
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }
+
+  useEffect(() => {
+    if (!selectedShop) return
+
+    const interval = window.setInterval(() => {
+      /*
+       * Silent background refresh.
+       * Do not disturb an active edit, save, sync or deletion.
+       */
+      if (
+        !showModal &&
+        !saving &&
+        !syncing &&
+        !deletingProduct &&
+        !productToDelete
+      ) {
+        void fetchProducts(true)
+      }
+    }, 30000)
+
+    return () => window.clearInterval(interval)
+
+    // fetchProducts intentionally excluded to avoid recreating
+    // the interval on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedShop,
+    showModal,
+    saving,
+    syncing,
+    deletingProduct,
+    productToDelete,
+  ])
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {}

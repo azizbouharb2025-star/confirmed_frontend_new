@@ -126,7 +126,7 @@ function Checkbox({
 function SkeletonRow({ columnCount }: { columnCount: number }) {
   return (
     <tr className="animate-pulse">
-      <td className="px-4 py-3">
+      <td className="px-2 py-3">
         <div className="h-4 w-4 bg-gray-200 dark:bg-slate-700 rounded" />
       </td>
       {Array.from({ length: columnCount }).map((_, i) => (
@@ -232,8 +232,8 @@ function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalOrders)
 
   return (
-    <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-2 border-t border-gray-200 dark:border-slate-700">
-      <div className="text-sm text-gray-600 dark:text-slate-400">
+    <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between px-3 py-1.5 gap-1.5 border-t border-gray-200 dark:border-slate-700">
+      <div className="text-xs text-gray-600 dark:text-slate-400">
         {labels.showing} {startItem} {labels.to} {endItem} {labels.of} {totalOrders}
       </div>
       <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
           className={clsx(
-            'px-3 py-1 rounded-lg text-sm font-medium',
+            'px-2.5 py-0.5 rounded-md text-xs font-medium',
             'border border-gray-300 dark:border-slate-600',
             currentPage <= 1
               ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-slate-800'
@@ -253,14 +253,14 @@ function Pagination({
         >
           {labels.previous}
         </button>
-        <span className="text-sm text-gray-600 dark:text-slate-400">
+        <span className="text-xs text-gray-600 dark:text-slate-400">
           {labels.page} {currentPage} {labels.of} {totalPages}
         </span>
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
           className={clsx(
-            'px-3 py-1 rounded-lg text-sm font-medium',
+            'px-2.5 py-0.5 rounded-md text-xs font-medium',
             'border border-gray-300 dark:border-slate-600',
             currentPage >= totalPages
               ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-slate-800'
@@ -306,7 +306,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.orderId'),
       minPlan: null,
       render: (order) => (
-        <span className="font-medium text-gray-900 dark:text-white">
+        <span className="whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
           {order.confirmedId ? `#${order.confirmedId}` : '—'}
         </span>
       ),
@@ -316,7 +316,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.products'),
       minPlan: null,
       render: (order) => (
-        <div className="w-[240px] space-y-2">
+        <div className="w-full max-w-[190px] space-y-1">
           {order.items?.length ? (
             order.items.map((item, index) => {
               const quantity =
@@ -342,10 +342,10 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
               return (
                 <div
                   key={`${productKey}-${index}`}
-                  className="flex items-center gap-3"
+                  className="flex min-w-0 items-center gap-2"
                   title={productName}
                 >
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
@@ -384,7 +384,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.customer'),
       minPlan: null,
       render: (order) => (
-        <span className="text-gray-700 dark:text-slate-300">
+        <span className="block max-w-[120px] truncate text-gray-700 dark:text-slate-300" title={order.clientInfo.name}>
           {order.clientInfo.name}
         </span>
       ),
@@ -394,7 +394,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.phone'),
       minPlan: null,
       render: (order) => (
-        <span className="text-gray-600 dark:text-slate-400">
+        <span className="text-xs text-gray-600 dark:text-slate-400">
           {order.clientInfo.phone}
         </span>
       ),
@@ -517,7 +517,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
                 : 'mt-0.5 text-xs text-gray-500 dark:text-slate-400'
 
         return (
-          <div className="min-w-[145px]">
+          <div className="min-w-0 max-w-[125px]">
             <div className="font-semibold text-gray-900 dark:text-white">
               {providerNames[providerKey] || provider}
             </div>
@@ -530,7 +530,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
 
             {tracking && (
               <div
-                className="mt-0.5 max-w-[160px] truncate text-xs font-mono text-gray-500 dark:text-slate-400"
+                className="mt-0.5 max-w-[120px] truncate text-xs font-mono text-gray-500 dark:text-slate-400"
                 title={String(tracking)}
               >
                 N° {tracking}
@@ -546,7 +546,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.value'),
       minPlan: null,
       render: (order) => (
-        <span className="font-medium text-gray-900 dark:text-white">
+        <span className="whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
           {formatCurrency(order.totalAmount)}
         </span>
       ),
@@ -662,11 +662,11 @@ export default function OrdersTable({
        * and therefore always visible.
        */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+        <table className="w-full divide-y divide-gray-200 dark:divide-slate-700">
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900">
             <tr>
               {/* Checkbox column */}
-              <th className="px-4 py-3 w-10">
+              <th className="w-9 px-2 py-3">
                 <Checkbox
                   checked={allSelected}
                   indeterminate={someSelected}
@@ -700,7 +700,7 @@ export default function OrdersTable({
                   <th
                     key={column.key}
                     className={clsx(
-                      'px-4 py-3 text-left text-xs font-medium',
+                      'px-2.5 py-3 text-left text-xs font-medium',
                       'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
                       isSortable && 'cursor-pointer select-none hover:text-gray-800 dark:hover:text-white',
                       column.className
@@ -748,7 +748,7 @@ export default function OrdersTable({
                   data-testid={`order-row-${order._id}`}
                 >
                   {/* Checkbox cell */}
-                  <td className="px-4 py-3">
+                  <td className="px-2 py-3">
                     <Checkbox
                       checked={selectedSet.has(order._id)}
                       onChange={(checked) => handleRowSelectionChange(order._id, checked)}
@@ -759,7 +759,7 @@ export default function OrdersTable({
                   {visibleColumns.map((column) => (
                     <td
                       key={column.key}
-                      className={clsx('px-4 py-3 text-sm', column.className)}
+                      className={clsx('px-2.5 py-3 text-sm', column.className)}
                     >
                       {column.render(order)}
                     </td>

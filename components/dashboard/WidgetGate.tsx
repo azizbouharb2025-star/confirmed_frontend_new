@@ -63,7 +63,7 @@ export function WidgetGate({
    * Temporary product mode:
    * every account gets the same dashboard features.
    */
-  if (!SUBSCRIPTION_GATING_ENABLED) {
+  if (!SUBSCRIPTION_GATING_ENABLED && !previewOnly) {
     return <>{children}</>;
   }
 

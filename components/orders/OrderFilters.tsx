@@ -293,7 +293,7 @@ export default function OrderFilters({
     setSearchInput('')
     onFiltersChange({
       search: '',
-      status: 'confirmed',
+      status: 'all',
       dateRange: null,
       aiDecision: 'all',
       aiScoreRange: undefined,
@@ -305,7 +305,7 @@ export default function OrderFilters({
   const hasActiveFilters = useMemo(() => {
     return (
       filters.search !== '' ||
-      filters.status !== 'confirmed' ||
+      filters.status !== 'all' ||
       filters.dateRange !== null ||
       (filters.aiDecision !== undefined && filters.aiDecision !== 'all') ||
       filters.aiScoreRange !== undefined ||
@@ -316,7 +316,7 @@ export default function OrderFilters({
 
   // Base input styles
   const inputBaseStyles = clsx(
-    'w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg',
+    'w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg',
     'text-gray-900 dark:text-white text-sm',
     'focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]/50 focus:border-[#ADFF2F]/50',
     'transition-all duration-200'
@@ -328,9 +328,9 @@ export default function OrderFilters({
   )
 
   return (
-    <div className={clsx('space-y-3', className)}>
+    <div className={clsx('space-y-2', className)}>
       {/* Main filters row */}
-      <div className="flex flex-wrap gap-3 items-end">
+      <div className="flex flex-wrap gap-2 items-end">
         {/* Search input with debounce */}
         <div className="flex-1 min-w-[200px]">
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
@@ -424,7 +424,7 @@ export default function OrderFilters({
       </div>
 
       {/* AI filters */}
-      <div className="relative grid grid-cols-1 gap-3 rounded-xl border border-gray-200/70 bg-gray-50/30 px-3 pb-2.5 pt-3.5 dark:border-slate-700/70 dark:bg-slate-900/20 lg:grid-cols-[1.2fr_1fr_1fr]">
+      <div className="relative grid grid-cols-1 gap-2 rounded-xl border border-gray-200/70 bg-gray-50/30 px-3 pb-1.5 pt-3 dark:border-slate-700/70 dark:bg-slate-900/20 lg:grid-cols-[1.2fr_1fr_1fr]">
         <div className="absolute -top-2.5 left-3 flex items-center gap-1 rounded-full border border-[#ADFF2F]/20 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:bg-slate-900 dark:text-slate-400">
           <span className="text-[#ADFF2F]">✦</span>
           Filtres IA
@@ -432,7 +432,7 @@ export default function OrderFilters({
 
         {/* AI Decision */}
         <div>
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.aiDecision')}
           </div>
 
@@ -454,7 +454,7 @@ export default function OrderFilters({
                     )
                   }
                   className={clsx(
-                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
                     active
                       ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -469,7 +469,7 @@ export default function OrderFilters({
 
         {/* AI Confidence */}
         <div>
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.aiConfidenceLevel')}
           </div>
 
@@ -491,7 +491,7 @@ export default function OrderFilters({
                   type="button"
                   onClick={() => handleAiScoreRangeChange(min, max)}
                   className={clsx(
-                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
                     active
                       ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
@@ -506,7 +506,7 @@ export default function OrderFilters({
 
         {/* Risk Level */}
         <div>
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.riskLevel')}
           </div>
 
@@ -535,7 +535,7 @@ export default function OrderFilters({
                     )
                   }
                   className={clsx(
-                    'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
                     active
                       ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
