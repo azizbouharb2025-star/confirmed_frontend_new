@@ -11,6 +11,7 @@ import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { useLanguage } from '@/hooks/useLanguage'
 import { TranslationKey } from '@/lib/i18n'
 import { formatCurrency } from '@/lib/formatCurrency'
+import { canDisplayOrderAI } from '@/lib/orderStatus'
 import { getDeliveryStatusDisplayLabel } from '@/services/deliveryTrackingService'
 
 /**
@@ -231,7 +232,7 @@ function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalOrders)
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-2 border-t border-gray-200 dark:border-slate-700">
+    <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between px-4 py-3 gap-2 border-t border-gray-200 dark:border-slate-700">
       <div className="text-sm text-gray-600 dark:text-slate-400">
         {labels.showing} {startItem} {labels.to} {endItem} {labels.of} {totalOrders}
       </div>
@@ -421,7 +422,11 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       label: t('orders.aiScore'),
       minPlan: null,
       render: (order) => {
-        if (order.aiScore === undefined || order.aiScore === null) {
+        if (
+          !canDisplayOrderAI(order.status) ||
+          order.aiScore === undefined ||
+          order.aiScore === null
+        ) {
           return (
             <span className="text-sm font-medium text-gray-400 dark:text-slate-500">
               —
@@ -644,10 +649,21 @@ export default function OrdersTable({
   }
 
   return (
-    <div className={clsx('bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden', className)}>
-      <div className="overflow-x-auto">
+    <div
+      className={clsx(
+        'flex min-h-0 flex-col bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden',
+        className
+      )}
+    >
+      {/*
+       * Fixed-height order list.
+       *
+       * Only this area scrolls. Pagination remains outside
+       * and therefore always visible.
+       */}
+      <div className="min-h-0 flex-1 overflow-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-          <thead className="bg-gray-50 dark:bg-slate-900/50">
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900">
             <tr>
               {/* Checkbox column */}
               <th className="px-4 py-3 w-10">

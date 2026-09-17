@@ -1545,11 +1545,11 @@ export default function OrderDetailPanel({
                     {/* Content */}
                     <div className="flex-1 overflow-y-auto px-4 sm:px-5" data-testid="order-detail-content">
                       <CustomerInfoSection order={order} t={t} />
-                      <CallHistorySection order={order} t={t} />
                       <OrderItemsSection order={order} t={t} />
                       <DeliveryAddressSection order={order} t={t} />
-                      <DeliveryTrackingSection order={order} />
+                      <CallHistorySection order={order} t={t} />
                       <AIScoreSection order={order} />
+                      <DeliveryTrackingSection order={order} />
                       
                       {/* Retour d'appel structuré */}
                       <div className="py-2.5 border-b border-gray-200 dark:border-slate-700">

@@ -806,18 +806,44 @@ export default function ClientOrdersPage() {
   /**
    * Handle status update from detail panel
    */
-  const _handleStatusUpdate = useCallback(async (status: OrderStatus, notes?: string): Promise<void> => {
-    if (!selectedOrder) return
-    
-    try {
-      const updatedOrder = await orderService.updateOrderStatus(selectedOrder._id, status, notes)
-      updateOrder(updatedOrder)
-      setSelectedOrder(updatedOrder)
-    } catch (err) {
-      console.error('Failed to update order status:', err)
-      throw err
-    }
-  }, [selectedOrder, updateOrder])
+  const _handleStatusUpdate = useCallback(
+    async (
+      status: OrderStatus,
+      notes?: string
+    ): Promise<void> => {
+      if (!selectedOrder) return
+
+      try {
+        const updatedOrder =
+          await orderService.updateOrderStatus(
+            selectedOrder._id,
+            status,
+            notes
+          )
+
+        updateOrder(updatedOrder)
+        setSelectedOrder(updatedOrder)
+
+        /*
+         * Re-fetch using the active server-side filter.
+         * A status change must immediately move the order
+         * out of its previous filtered list.
+         */
+        await fetchOrders()
+      } catch (err) {
+        console.error(
+          'Failed to update order status:',
+          err
+        )
+        throw err
+      }
+    },
+    [
+      selectedOrder,
+      updateOrder,
+      fetchOrders,
+    ]
+  )
 
   /**
    * Handle clear selection
@@ -832,7 +858,7 @@ export default function ClientOrdersPage() {
 
   return (
     <DashboardLayout userRole="shop_owner">
-      <div className="p-6 space-y-6">
+      <div className="flex h-[calc(100dvh-6rem)] min-h-0 flex-col gap-6 overflow-hidden p-6 sm:h-[calc(100dvh-7rem)]">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -897,6 +923,7 @@ export default function ClientOrdersPage() {
 
         {/* Orders Table - Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 3.1, 3.2 */}
         <OrdersTable
+          className="min-h-0 flex-1"
           orders={orders}
           userRole="seller"
           subscriptionPlan={subscriptionPlan}

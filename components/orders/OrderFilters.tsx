@@ -24,7 +24,7 @@ const _ALL_STATUSES: OrderStatus[] = [
   'confirmed',
   'cancelled',
   'postponed',
-  'in_progress',
+  'shipped',
   'delivered',
   'failed_delivery'
 ]
@@ -361,10 +361,10 @@ export default function OrderFilters({
           >
             <option value="all">Tous les statuts</option>
             <option value="pending">En attente</option>
-            <option value="confirmed">Confirmé</option>
-            <option value="cancelled">Annulé</option>
-            <option value="postponed">Reporté</option>
-            <option value="in_progress">Tentative</option>
+            <option value="confirmed">Confirmée</option>
+            <option value="cancelled">Annulée</option>
+            <option value="postponed">Reportée</option>
+            <option value="shipped">Expédiée</option>
             <option value="delivered">Livrée</option>
             <option value="failed_delivery">Retournée</option>
           </select>
