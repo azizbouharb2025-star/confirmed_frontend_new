@@ -249,12 +249,14 @@ export interface LogisticsExportModalProps {
   onClose:  () => void
   /** IDs of the orders to include in the export. Empty array = all shop orders. */
   orderIds: string[]
+  onExportSuccess?: () => void | Promise<void>
 }
 
 export default function LogisticsExportModal({
   isOpen,
   onClose,
   orderIds,
+  onExportSuccess,
 }: LogisticsExportModalProps) {
   const [provider,       setProvider]       = useState<LogisticsProvider>('generic')
   const [fileType,       setFileType]       = useState<FileType>('csv')
@@ -847,7 +849,11 @@ export default function LogisticsExportModal({
       )
       const filename = `${provider}-export.${fileType}`
       triggerDownload(blob, filename)
-      setSuccessMsg(`Export téléchargé : ${filename}`)
+      setSuccessMsg(
+        `Export téléchargé : ${filename}`
+      )
+
+      await onExportSuccess?.()
     } catch (err) {
       setErrorMsg(
         err instanceof Error ? err.message : "Erreur lors de l'export"

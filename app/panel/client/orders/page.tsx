@@ -674,7 +674,9 @@ export default function ClientOrdersPage() {
    * Fetch orders from API
    * Requirements: 1.1 - Display paginated table
    */
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (
+    autoSelectDisplayed = false
+  ) => {
     setLoading(true)
     setError(null)
     
@@ -688,14 +690,71 @@ export default function ClientOrdersPage() {
       })
       
       setOrders(response.orders)
-      setPagination(response.total, response.totalPages)
+      setPagination(
+        response.total,
+        response.totalPages
+      )
+
+      const hasActiveAiFilter =
+        (
+          filters.aiDecision !== undefined &&
+          filters.aiDecision !== 'all'
+        ) ||
+        filters.aiScoreRange !== undefined ||
+        (
+          filters.riskLevel !== undefined &&
+          filters.riskLevel !== 'all'
+        )
+
+      const visibleIds =
+        response.orders.map(order => order._id)
+
+      /*
+       * Auto-select only when the displayed selection
+       * context changes (filter/page/sort).
+       *
+       * Silent refreshes must preserve manual
+       * deselections.
+       */
+      if (
+        autoSelectDisplayed &&
+        (
+          filters.status === 'confirmed' ||
+          hasActiveAiFilter
+        )
+      ) {
+        setSelectedIds(visibleIds)
+      } else {
+        const selectedBeforeRefresh =
+          useOrderStore.getState().selectedIds
+
+        const visibleIdSet =
+          new Set(visibleIds)
+
+        setSelectedIds(
+          selectedBeforeRefresh.filter(id =>
+            visibleIdSet.has(id)
+          )
+        )
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch orders'
       setError(errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [currentPage, pageSize, filters, sortBy, sortOrder, setOrders, setPagination, setLoading, setError])
+  }, [currentPage, pageSize, filters, sortBy, sortOrder, setOrders, setPagination, setSelectedIds, setLoading, setError])
+
+  const handleLogisticsExportSuccess =
+    useCallback(async () => {
+      /*
+       * The backend has already persisted
+       * confirmed -> shipped at this point.
+       * Re-fetch immediately so exported rows disappear
+       * from the Confirmed selection without refresh.
+       */
+      await fetchOrders()
+    }, [fetchOrders])
 
   const handleSortChange = useCallback(
     (field: string, order: 'asc' | 'desc') => {
@@ -708,7 +767,11 @@ export default function ClientOrdersPage() {
 
   // Fetch orders on mount and when dependencies change
   useEffect(() => {
-    fetchOrders()
+    /*
+     * A new filter/page/sort context automatically
+     * selects the displayed confirmed results.
+     */
+    fetchOrders(true)
   }, [fetchOrders])
 
   /**
@@ -965,8 +1028,13 @@ export default function ClientOrdersPage() {
         {/* Logistics Export Modal */}
         <LogisticsExportModal
           isOpen={showLogisticsExportModal}
-          onClose={() => setShowLogisticsExportModal(false)}
+          onClose={() =>
+            setShowLogisticsExportModal(false)
+          }
           orderIds={selectedIds}
+          onExportSuccess={
+            handleLogisticsExportSuccess
+          }
         />
 
         {/* Manual Order Modal */}

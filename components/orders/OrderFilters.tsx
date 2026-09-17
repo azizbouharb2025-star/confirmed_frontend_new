@@ -254,6 +254,7 @@ export default function OrderFilters({
     (decision: 'accept' | 'review' | 'reject') => {
       onFiltersChange({
         ...filters,
+        status: 'confirmed',
         aiDecision: filters.aiDecision === decision ? 'all' : decision,
       })
     },
@@ -268,6 +269,7 @@ export default function OrderFilters({
 
       onFiltersChange({
         ...filters,
+        status: 'confirmed',
         aiScoreRange: isSameRange ? undefined : { min, max },
       })
     },
@@ -279,6 +281,7 @@ export default function OrderFilters({
     (riskLevel: 'critical' | 'high' | 'medium' | 'low' | 'very_low') => {
       onFiltersChange({
         ...filters,
+        status: 'confirmed',
         riskLevel: filters.riskLevel === riskLevel ? 'all' : riskLevel,
       })
     },
@@ -290,7 +293,7 @@ export default function OrderFilters({
     setSearchInput('')
     onFiltersChange({
       search: '',
-      status: 'all',
+      status: 'confirmed',
       dateRange: null,
       aiDecision: 'all',
       aiScoreRange: undefined,
@@ -302,7 +305,7 @@ export default function OrderFilters({
   const hasActiveFilters = useMemo(() => {
     return (
       filters.search !== '' ||
-      filters.status !== 'all' ||
+      filters.status !== 'confirmed' ||
       filters.dateRange !== null ||
       (filters.aiDecision !== undefined && filters.aiDecision !== 'all') ||
       filters.aiScoreRange !== undefined ||
@@ -473,9 +476,9 @@ export default function OrderFilters({
           <div className="flex flex-wrap gap-1.5">
             {[
               { label: '95–100 %', min: 95, max: 100 },
-              { label: '90–95 %', min: 90, max: 95 },
-              { label: '80–90 %', min: 80, max: 90 },
-              { label: '70–80 %', min: 70, max: 80 },
+              { label: '90–94 %', min: 90, max: 94 },
+              { label: '80–89 %', min: 80, max: 89 },
+              { label: '70–79 %', min: 70, max: 79 },
               { label: '< 70 %', min: 0, max: 69 },
             ].map(({ label, min, max }) => {
               const active =
