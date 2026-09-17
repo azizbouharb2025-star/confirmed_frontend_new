@@ -24,7 +24,6 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
 import { TranslationKey } from '@/lib/i18n'
 import Image from 'next/image'
-import LanguageSelector from '@/components/ui/LanguageSelector'
 
 interface SidebarProps {
   isOpen: boolean
@@ -181,18 +180,20 @@ export default function Sidebar({
               : 'bg-white border-gray-200'
           }`}
         >
-          <div className="flex h-20 shrink-0 items-center justify-between">
-            <Link href="/">
+          <div className="-mx-3 flex h-24 shrink-0 items-center justify-center">
+            <Link
+              href="/"
+              className="flex w-full items-center justify-center"
+            >
               <Image
                 src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'}
                 alt="Confirmed"
-                width={208}
-                height={65}
-                className="object-contain"
+                width={220}
+                height={72}
+                className="h-auto w-[220px] object-contain"
+                priority
               />
             </Link>
-
-            <LanguageSelector />
           </div>
 
           <nav className="flex flex-1 flex-col">
@@ -268,29 +269,32 @@ export default function Sidebar({
                 : 'bg-white border-gray-200'
             }`}
           >
-            <div className="flex h-20 shrink-0 items-center justify-between">
-              <Image
-                src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'}
-                alt="Confirmed"
-                width={156}
-                height={52}
-              />
+            <div className="relative flex h-24 shrink-0 items-center justify-center">
+              <Link
+                href="/"
+                className="flex items-center justify-center"
+              >
+                <Image
+                  src={isDark ? '/assets/logo2.png' : '/assets/logo1.png'}
+                  alt="Confirmed"
+                  width={205}
+                  height={68}
+                  className="h-auto w-[205px] object-contain"
+                  priority
+                />
+              </Link>
 
-              <div className="flex items-center gap-2">
-                <LanguageSelector />
-
-                <button
-                  onClick={onClose}
-                  className={`rounded-lg p-2 transition-colors ${
-                    isDark
-                      ? 'hover:bg-slate-800 text-slate-300'
-                      : 'hover:bg-gray-100 text-gray-600'
-                  }`}
-                  aria-label="Close sidebar"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
+              <button
+                onClick={onClose}
+                className={`absolute right-0 rounded-lg p-2 transition-colors ${
+                  isDark
+                    ? 'hover:bg-slate-800 text-slate-300'
+                    : 'hover:bg-gray-100 text-gray-600'
+                }`}
+                aria-label="Close sidebar"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
             </div>
 
             <nav className="flex flex-1 flex-col">

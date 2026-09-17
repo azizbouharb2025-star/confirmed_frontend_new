@@ -9,6 +9,15 @@
 export type SubscriptionPlan = 'starter' | 'pro' | 'business' | 'enterprise';
 
 /**
+ * Temporary product rule:
+ * all subscription plans currently have the same feature access.
+ *
+ * Keep the subscription architecture intact so tiered access
+ * can be restored later by switching this flag to true.
+ */
+export const SUBSCRIPTION_GATING_ENABLED = false;
+
+/**
  * Hierarchy of subscription plans for feature access comparison
  * Higher number = more features available
  */
@@ -36,6 +45,10 @@ export function hasFeatureAccess(
   userPlan: SubscriptionPlan,
   requiredPlan: SubscriptionPlan
 ): boolean {
+  if (!SUBSCRIPTION_GATING_ENABLED) {
+    return true;
+  }
+
   return PLAN_HIERARCHY[userPlan] >= PLAN_HIERARCHY[requiredPlan];
 }
 
@@ -94,6 +107,10 @@ export function canAccessPlan(
   userPlan: SubscriptionPlan,
   requiredPlan: SubscriptionPlan
 ): boolean {
+  if (!SUBSCRIPTION_GATING_ENABLED) {
+    return true;
+  }
+
   return PLAN_HIERARCHY[userPlan] >= PLAN_HIERARCHY[requiredPlan];
 }
 
@@ -104,6 +121,10 @@ export function canAccessPlan(
  * @returns Array of widget identifiers available for the plan
  */
 export function getWidgetsForPlan(plan: SubscriptionPlan): string[] {
+  if (!SUBSCRIPTION_GATING_ENABLED) {
+    return PLAN_WIDGETS.enterprise;
+  }
+
   return PLAN_WIDGETS[plan];
 }
 
@@ -115,5 +136,9 @@ export function getWidgetsForPlan(plan: SubscriptionPlan): string[] {
  * @returns true if the widget is available for the plan
  */
 export function canAccessWidget(plan: SubscriptionPlan, widgetId: string): boolean {
+  if (!SUBSCRIPTION_GATING_ENABLED) {
+    return true;
+  }
+
   return PLAN_WIDGETS[plan].includes(widgetId);
 }

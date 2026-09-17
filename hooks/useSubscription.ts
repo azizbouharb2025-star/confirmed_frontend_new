@@ -9,8 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { subscriptionService, PlanFeatures } from '@/services/subscriptionService';
-import { SubscriptionPlan, canAccessPlan, getPlanDisplayName } from '@/types/subscription';
-import toast from 'react-hot-toast';
+import { SubscriptionPlan, canAccessPlan } from '@/types/subscription';
 import logger from '@/lib/logger';
 
 /** Callback type for subscription change events */
@@ -103,26 +102,11 @@ export function useSubscription(): UseSubscriptionReturn {
     setPlan(newPlan);
     setLastPlanChange(new Date());
     
-    // Show toast notification for plan changes (not on initial load)
+    /*
+     * Plan changes still update internal state and refresh listeners,
+     * but subscription upgrade/downgrade popups are disabled.
+     */
     if (!isInitialLoadRef.current) {
-      const newPlanName = getPlanDisplayName(newPlan);
-      const oldPlanName = getPlanDisplayName(oldPlan);
-      const isUpgrade = canAccessPlan(newPlan, oldPlan) && newPlan !== oldPlan;
-      
-      if (isUpgrade) {
-        toast.success(`🎉 Upgraded to ${newPlanName}! New features are now available.`, {
-          duration: 5000,
-          position: 'top-right',
-        });
-      } else if (newPlan !== oldPlan) {
-        toast(`Your plan has changed from ${oldPlanName} to ${newPlanName}`, {
-          duration: 5000,
-          position: 'top-right',
-          icon: '📋',
-        });
-      }
-      
-      // Notify all registered callbacks
       notifyPlanChange(newPlan, oldPlan);
     }
   }, [notifyPlanChange]);

@@ -7,7 +7,11 @@
  */
 
 import { ReactNode } from 'react';
-import { SubscriptionPlan, canAccessPlan } from '@/types/subscription';
+import {
+  SubscriptionPlan,
+  SUBSCRIPTION_GATING_ENABLED,
+  canAccessPlan
+} from '@/types/subscription';
 import LockedWidget from './LockedWidget';
 
 export interface WidgetGateProps {
@@ -55,6 +59,14 @@ export function WidgetGate({
   previewOnly = false,
   previewLabel,
 }: WidgetGateProps): JSX.Element {
+  /*
+   * Temporary product mode:
+   * every account gets the same dashboard features.
+   */
+  if (!SUBSCRIPTION_GATING_ENABLED) {
+    return <>{children}</>;
+  }
+
   if (previewOnly) {
     return (
       <LockedWidget
