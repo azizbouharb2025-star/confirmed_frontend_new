@@ -19,6 +19,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import type { TranslationKey } from '@/lib/i18n';
 import type { Order } from '@/types/order';
 import { formatCurrency } from '@/lib/formatCurrency';
+import { canDisplayOrderAI } from '@/lib/orderStatus';
 
 export interface RecentOrdersWidgetProps {
   /** Maximum number of recent orders to display */
@@ -157,9 +158,16 @@ export function RecentOrdersWidget({
 
         case 'aiScore': {
           const aScore =
-            typeof a.aiScore === 'number' ? a.aiScore : null;
+            canDisplayOrderAI(a.status) &&
+            typeof a.aiScore === 'number'
+              ? a.aiScore
+              : null;
+
           const bScore =
-            typeof b.aiScore === 'number' ? b.aiScore : null;
+            canDisplayOrderAI(b.status) &&
+            typeof b.aiScore === 'number'
+              ? b.aiScore
+              : null;
 
           if (aScore === null && bScore === null) {
             comparison = 0;
@@ -416,7 +424,8 @@ export function RecentOrdersWidget({
 
                     {/* Score IA */}
                     <td className="px-2 py-3">
-                      {typeof order.aiScore === 'number' ? (
+                      {canDisplayOrderAI(order.status) &&
+                      typeof order.aiScore === 'number' ? (
                         <AIScoreColumn
                           score={order.aiScore}
                           showDetails={false}

@@ -31,7 +31,6 @@ import CancelledOrdersWidget from '@/components/dashboard/CancelledOrdersWidget'
 const SHOW_CANCELLED_ORDERS_WIDGET = false
 const SHOW_DASHBOARD_QUICK_LINKS = false
 import WidgetGate from '@/components/dashboard/WidgetGate'
-import StaleDataIndicator from '@/components/dashboard/StaleDataIndicator'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useDashboardData, type DashboardPeriod } from '@/hooks/useDashboardData'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -43,16 +42,12 @@ export default function ClientDashboard() {
   const { t } = useLanguage()
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('7d')
 
-  const { 
-    metrics, 
-    isLoading, 
-    error, 
-    refetch, 
-    isStale, 
-    lastUpdated,
-    autoRefreshEnabled,
-    setAutoRefresh 
-  } = useDashboardData(false, selectedPeriod)
+    const {
+    metrics,
+    isLoading,
+    error,
+    refetch
+  } = useDashboardData(true, selectedPeriod)
 
   const { plan, onPlanChange } = useSubscription()
 
@@ -137,24 +132,47 @@ export default function ClientDashboard() {
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
       <DashboardLayout userRole="shop_owner">
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Header */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-2xl font-semibold">{t('dashboard.client')}</h1>
-              <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">
+              <h1 className="text-2xl font-semibold">
+                {t('dashboard.client')}
+              </h1>
+
+              <p className="mt-1 text-sm text-gray-600 dark:text-slate-400">
                 {t('dashboard.monitorPerformance')}
               </p>
             </div>
-            {/* Stale data indicator with refresh controls - Requirements: 6.3 */}
-            <StaleDataIndicator
-              isStale={isStale}
-              lastUpdated={lastUpdated}
-              autoRefresh={autoRefreshEnabled}
-              onAutoRefreshToggle={setAutoRefresh}
-              onRefresh={refetch}
-              isRefreshing={isLoading}
-            />
+
+            <div
+              className="inline-flex w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
+              role="group"
+              aria-label={t('dashboard.period')}
+            >
+              {periodOptions.map(option => {
+                const active =
+                  selectedPeriod === option.value
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() =>
+                      setSelectedPeriod(option.value)
+                    }
+                    aria-pressed={active}
+                    className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                      active
+                        ? 'bg-[#ADFF2F] text-slate-950'
+                        : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Error state */}
@@ -171,36 +189,7 @@ export default function ClientDashboard() {
           )}
 
           {/* Dashboard KPI */}
-          <div className="space-y-3">
-            <div className="flex justify-end">
-              <div
-                className="inline-flex flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
-                role="group"
-                aria-label={t('dashboard.period')}
-              >
-                {periodOptions.map(option => {
-                  const active = selectedPeriod === option.value
-
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setSelectedPeriod(option.value)}
-                      aria-pressed={active}
-                      className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                        active
-                          ? 'bg-[#ADFF2F] text-slate-950'
-                          : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               <MetricCard
                 title={t('dashboard.ordersReceived')}
                 value={
@@ -261,7 +250,6 @@ export default function ClientDashboard() {
                 icon={<BanknotesIcon className="h-6 w-6" />}
                 isLoading={isLoading}
               />
-            </div>
           </div>
 
           {/* Recent Orders Widget - Requirements: 1.2 */}
