@@ -986,6 +986,59 @@ interface SimulatorResult {
   context?: unknown
 }
 
+const translateConfigStatus = (
+  status: SimulatorResult['status']
+) => {
+  if (status === 'draft') {
+    return 'brouillon'
+  }
+
+  if (status === 'active') {
+    return 'active'
+  }
+
+  if (status === 'archived') {
+    return 'archivée'
+  }
+
+  return 'non définie'
+}
+
+const translateRiskLevel = (
+  riskLevel: string
+) => {
+  const translations:
+    Record<string, string> = {
+      low: 'faible',
+      medium: 'moyen',
+      high: 'élevé',
+      critical: 'critique'
+    }
+
+  return (
+    translations[riskLevel] ??
+    'non défini'
+  )
+}
+
+const translateDecision = (
+  decision: string
+) => {
+  const translations:
+    Record<string, string> = {
+      accept: 'Accepter',
+      review: 'À vérifier',
+      reject: 'Refuser',
+      manual_review:
+        'Vérification manuelle'
+    }
+
+  return (
+    translations[decision] ??
+    'Non définie'
+  )
+}
+
 interface ModuleToggleForm {
   customerHistory: boolean
   operatorFeedback: boolean
@@ -1044,7 +1097,7 @@ function SummaryCard({
               : 'bg-slate-500/10 text-slate-400'
           }`}
         >
-          {enabled ? 'Enabled' : 'Disabled'}
+          {enabled ? 'Activé' : 'Désactivé'}
         </span>
       </div>
 
@@ -1257,7 +1310,7 @@ export default function AIScoringAdminPage() {
         )
 
         setError(
-          'Impossible de charger la configuration AI Scoring.'
+          'Impossible de charger la configuration du moteur d’évaluation IA.'
         )
       } finally {
         setLoading(false)
@@ -1556,7 +1609,7 @@ export default function AIScoringAdminPage() {
         )
 
         setError(
-          'Impossible de créer le brouillon AI Scoring.'
+          'Impossible de créer le brouillon de configuration IA.'
         )
       } finally {
         setCreatingDraft(false)
@@ -2011,7 +2064,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Address Scoring enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Évaluation de l’adresse enregistrée dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -2020,7 +2073,7 @@ export default function AIScoringAdminPage() {
         )
 
         setError(
-          'Impossible d’enregistrer Address Scoring.'
+          'Impossible d’enregistrer l’évaluation de l’adresse.'
         )
       } finally {
         setSavingAddress(false)
@@ -2440,7 +2493,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Order Value absolu enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Montant absolu de la commande enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -2451,7 +2504,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer Order Value.'
+            : 'Impossible d’enregistrer le montant de la commande.'
         )
       } finally {
         setSavingAbsoluteValue(false)
@@ -2498,7 +2551,7 @@ export default function AIScoringAdminPage() {
           minimumHistoricalOrders < 0
         ) {
           throw new Error(
-            'Minimum historical orders doit être un entier positif ou nul.'
+            'Le nombre minimum de commandes historiques doit être un entier positif ou nul.'
           )
         }
 
@@ -2696,7 +2749,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Order Value historique enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Comparaison du montant à l’historique enregistrée dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -2707,7 +2760,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer Order Value historique.'
+            : 'Impossible d’enregistrer la comparaison du montant à l’historique.'
         )
       } finally {
         setSavingRelativeValue(false)
@@ -2903,7 +2956,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Order Time enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Heure de commande enregistrée dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -2914,7 +2967,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer Order Time.'
+            : 'Impossible d’enregistrer l’heure de commande.'
         )
       } finally {
         setSavingOrderTime(false)
@@ -3327,7 +3380,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Successful Deliveries enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Historique des livraisons réussies enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -3338,7 +3391,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer Successful Deliveries.'
+            : 'Impossible d’enregistrer l’historique des livraisons réussies.'
         )
       } finally {
         setSavingCustomerSuccess(false)
@@ -3546,7 +3599,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Failed Deliveries enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Historique des échecs de livraison enregistré dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -3557,7 +3610,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer Failed Deliveries.'
+            : 'Impossible d’enregistrer l’historique des échecs de livraison.'
         )
       } finally {
         setSavingCustomerFailure(false)
@@ -3711,7 +3764,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Catégories Operator Feedback enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Catégories de retour opérateur enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -3722,7 +3775,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer les catégories Operator Feedback.'
+            : 'Impossible d’enregistrer les catégories de retour opérateur.'
         )
       } finally {
         setSavingFeedbackCategories(false)
@@ -3950,7 +4003,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Questions Operator Feedback enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Questions de retour opérateur enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -3961,7 +4014,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer les questions Operator Feedback.'
+            : 'Impossible d’enregistrer les questions de retour opérateur.'
         )
       } finally {
         setSavingFeedbackQuestions(false)
@@ -4227,7 +4280,7 @@ export default function AIScoringAdminPage() {
         )
 
         setActionMessage(
-          `Réponses Operator Feedback enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
+          `Réponses du retour opérateur enregistrées dans V${updatedConfig.version}. V${config?.version ?? '?'} reste active.`
         )
       } catch (saveError) {
         console.error(
@@ -4238,7 +4291,7 @@ export default function AIScoringAdminPage() {
         setError(
           saveError instanceof Error
             ? saveError.message
-            : 'Impossible d’enregistrer les réponses Operator Feedback.'
+            : 'Impossible d’enregistrer les réponses du retour opérateur.'
         )
       } finally {
         setSavingFeedbackAnswers(false)
@@ -4383,7 +4436,7 @@ export default function AIScoringAdminPage() {
 
       const confirmed =
         window.confirm(
-          `Activer la configuration AI Scoring V${version} ?\n\n` +
+          `Activer la configuration IA V${version} ?\n\n` +
           `V${config?.version ?? '?'} est actuellement utilisée en production.\n` +
           `Après activation, V${version} deviendra la nouvelle version active.`
         )
@@ -4470,7 +4523,7 @@ export default function AIScoringAdminPage() {
 
         setActionMessage(
           activationResponse.data?.message ||
-          `AI Scoring V${version} est maintenant active.`
+          `La configuration IA V${version} est maintenant active.`
         )
       } catch (activationError) {
         console.error(
@@ -4517,7 +4570,7 @@ export default function AIScoringAdminPage() {
               : backendError
             : activationError instanceof Error
               ? activationError.message
-              : 'Impossible d’activer la configuration AI Scoring.'
+              : 'Impossible d’activer la configuration IA.'
         )
       } finally {
         setActivatingDraft(false)
@@ -4569,7 +4622,7 @@ export default function AIScoringAdminPage() {
           )
         ) {
           throw new Error(
-            'Shop ID invalide. Utilisez un identifiant MongoDB de 24 caractères ou laissez le champ vide.'
+            'Identifiant de boutique invalide. Utilisez un identifiant MongoDB de 24 caractères ou laissez le champ vide.'
           )
         }
 
@@ -4748,7 +4801,7 @@ export default function AIScoringAdminPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold">
-                AI Scoring Engine
+                Moteur d’évaluation IA
               </h1>
 
               <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -4786,7 +4839,7 @@ export default function AIScoringAdminPage() {
                       <DocumentDuplicateIcon className="h-5 w-5" />
 
                       <h2 className="font-semibold">
-                        Configuration versions
+                        Versions de configuration
                       </h2>
                     </div>
 
@@ -4800,7 +4853,7 @@ export default function AIScoringAdminPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     <div className="rounded-lg border dark:border-slate-700 light:border-gray-200 px-3 py-2">
                       <p className="text-xs dark:text-slate-400 light:text-gray-500">
-                        Active
+                        Version active
                       </p>
 
                       <p className="font-semibold text-green-500">
@@ -4811,7 +4864,7 @@ export default function AIScoringAdminPage() {
                     {latestDraft ? (
                       <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
                         <p className="text-xs text-amber-500">
-                          Draft
+                          Brouillon
                         </p>
 
                         <p className="font-semibold text-amber-500">
@@ -4840,7 +4893,7 @@ export default function AIScoringAdminPage() {
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-medium">
-                          V{latestDraft.version} — Draft
+                          V{latestDraft.version} — Brouillon
                         </p>
 
                         <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -4852,7 +4905,7 @@ export default function AIScoringAdminPage() {
 
                       <div className="flex flex-col items-start gap-2 sm:items-end">
                         <span className="text-xs font-medium text-amber-500">
-                          Non utilisée pour le scoring production
+                          Non utilisée pour l’évaluation en production
                         </span>
 
                         <button
@@ -4885,7 +4938,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      General scoring
+                      Paramètres généraux du score
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -4896,7 +4949,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -4934,7 +4987,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4">
                         <label className="block">
                           <span className="text-sm font-medium">
-                            Base Score
+                            Score de base
                           </span>
 
                           <input
@@ -4966,7 +5019,7 @@ export default function AIScoringAdminPage() {
 
                         <label className="block">
                           <span className="text-sm font-medium">
-                            Minimum Score
+                            Score minimum
                           </span>
 
                           <input
@@ -4998,7 +5051,7 @@ export default function AIScoringAdminPage() {
 
                         <label className="block">
                           <span className="text-sm font-medium">
-                            Maximum Score
+                            Score maximum
                           </span>
 
                           <input
@@ -5058,7 +5111,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Pattern signals
+                      Signaux de règles
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -5069,7 +5122,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -5090,31 +5143,31 @@ export default function AIScoringAdminPage() {
                         {[
                           {
                             key: 'enabled' as const,
-                            title: 'Patterns Engine',
+                            title: 'Moteur de signaux',
                             description:
-                              'Interrupteur principal de tous les signaux Pattern.'
+                              'Interrupteur principal de tous les signaux de règles.'
                           },
                           {
                             key: 'address' as const,
-                            title: 'Address',
+                            title: 'Adresse',
                             description:
                               'Complétude et qualité de l’adresse.'
                           },
                           {
                             key: 'geographicZone' as const,
-                            title: 'Geographic Zone',
+                            title: 'Zone géographique',
                             description:
                               'Règles liées au gouvernorat, ville, délégation ou code postal.'
                           },
                           {
                             key: 'orderValue' as const,
-                            title: 'Order Value',
+                            title: 'Montant de la commande',
                             description:
                               'Montant absolu et comparaison avec l’historique.'
                           },
                           {
                             key: 'orderTime' as const,
-                            title: 'Order Time',
+                            title: 'Heure de commande',
                             description:
                               'Heure de commande et signal horaire historique.'
                           }
@@ -5198,7 +5251,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Address Scoring
+                      Évaluation de l’adresse
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -5208,7 +5261,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -5216,7 +5269,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Address Scoring.
+                      Créez d’abord un brouillon pour modifier l’évaluation de l’adresse.
                     </p>
                   </div>
                 )}
@@ -5227,7 +5280,7 @@ export default function AIScoringAdminPage() {
                     <>
                       <div className="mt-5">
                         <p className="text-sm font-medium">
-                          Scoring mode
+                          Mode d’évaluation
                         </p>
 
                         <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -5272,16 +5325,16 @@ export default function AIScoringAdminPage() {
 
                       <div className="mt-6">
                         <h3 className="text-sm font-semibold">
-                          Address elements
+                          Éléments de l’adresse
                         </h3>
 
                         <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3">
                           {(
                             [
-                              ['street', 'Street'],
-                              ['city', 'City'],
-                              ['governorate', 'Governorate'],
-                              ['postalCode', 'Postal Code']
+                              ['street', 'Rue'],
+                              ['city', 'Ville'],
+                              ['governorate', 'Gouvernorat'],
+                              ['postalCode', 'Code postal']
                             ] as const
                           ).map(
                             ([key, label]) => (
@@ -5387,7 +5440,7 @@ export default function AIScoringAdminPage() {
 
                       <div className="mt-6">
                         <h3 className="text-sm font-semibold">
-                          Address levels
+                          Niveaux de l’adresse
                         </h3>
 
                         <div className="mt-3 space-y-3">
@@ -5497,7 +5550,7 @@ export default function AIScoringAdminPage() {
 
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
-                          L’interrupteur principal Address reste dans Pattern signals.
+                          L’interrupteur principal Adresse reste dans les signaux de règles.
                           Cette sauvegarde modifie uniquement V{draftConfig.version}.
                         </p>
 
@@ -5524,7 +5577,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Geographic Zone
+                      Zone géographique
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -5535,7 +5588,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -5554,7 +5607,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Direct geographic rules
+                            Règles géographiques directes
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -5648,9 +5701,7 @@ export default function AIScoringAdminPage() {
                                       Rule {index + 1}
                                     </p>
 
-                                    <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                      {rule.key}
-                                    </p>
+
                                   </div>
 
                                   <div className="flex items-center gap-3">
@@ -5747,7 +5798,7 @@ export default function AIScoringAdminPage() {
                                       className="mt-1 block w-full rounded-lg border dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white px-3 py-2"
                                     >
                                       <option value="governorate">
-                                        Governorate
+                                        Gouvernorat
                                       </option>
 
                                       <option value="delegation">
@@ -5755,11 +5806,11 @@ export default function AIScoringAdminPage() {
                                       </option>
 
                                       <option value="city">
-                                        City
+                                        Ville
                                       </option>
 
                                       <option value="postal_code">
-                                        Postal Code
+                                        Code postal
                                       </option>
                                     </select>
                                   </label>
@@ -5797,7 +5848,7 @@ export default function AIScoringAdminPage() {
 
                                   <label className="block">
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Label
+                                      Libellé
                                     </span>
 
                                     <input
@@ -5880,7 +5931,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingGeographic
                             ? 'Enregistrement...'
-                            : `Enregistrer Geographic V${draftConfig.version}`}
+                            : `Enregistrer la zone géographique V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -5891,7 +5942,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Order Value — Absolute
+                      Montant de la commande — Valeur absolue
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -5901,7 +5952,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -5909,7 +5960,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Order Value.
+                      Créez d’abord un brouillon pour modifier le montant de la commande.
                     </p>
                   </div>
                 )}
@@ -5921,7 +5972,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Absolute Value signal
+                            Signal de montant absolu
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -5980,9 +6031,7 @@ export default function AIScoringAdminPage() {
                                     {rule.label}
                                   </p>
 
-                                  <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                    {rule.key}
-                                  </p>
+
                                 </div>
 
                                 <button
@@ -6224,7 +6273,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Les plages doivent rester cohérentes et sans chevauchement.
-                          Le backend fera également sa validation avant sauvegarde.
+                          Le serveur vérifiera également les données avant la sauvegarde.
                         </p>
 
                         <button
@@ -6239,7 +6288,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingAbsoluteValue
                             ? 'Enregistrement...'
-                            : `Enregistrer Order Value V${draftConfig.version}`}
+                            : `Enregistrer le montant V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -6250,7 +6299,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Order Value — Relative to History
+                      Montant de la commande — Comparaison à l’historique
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -6260,7 +6309,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -6268,7 +6317,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Order Value historique.
+                      Créez d’abord un brouillon pour modifier la comparaison du montant à l’historique.
                     </p>
                   </div>
                 )}
@@ -6281,7 +6330,7 @@ export default function AIScoringAdminPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                           <div>
                             <p className="text-sm font-medium">
-                              Relative to History signal
+                              Signal de comparaison à l’historique
                             </p>
 
                             <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -6326,7 +6375,7 @@ export default function AIScoringAdminPage() {
 
                         <label className="rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                           <span className="text-sm font-medium">
-                            Minimum historical orders
+                            Nombre minimum de commandes historiques
                           </span>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -6375,9 +6424,7 @@ export default function AIScoringAdminPage() {
                                     {rule.label}
                                   </p>
 
-                                  <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                    {rule.key}
-                                  </p>
+
                                 </div>
 
                                 <button
@@ -6428,7 +6475,7 @@ export default function AIScoringAdminPage() {
                               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Minimum ratio
+                                    Ratio minimum
                                   </span>
 
                                   <input
@@ -6466,7 +6513,7 @@ export default function AIScoringAdminPage() {
 
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Maximum ratio
+                                    Ratio maximum
                                   </span>
 
                                   <input
@@ -6621,7 +6668,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Les plages doivent rester cohérentes et sans chevauchement.
-                          Le backend valide également les intervalles avant sauvegarde.
+                          Le serveur vérifie également les intervalles avant la sauvegarde.
                         </p>
 
                         <button
@@ -6636,7 +6683,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingRelativeValue
                             ? 'Enregistrement...'
-                            : `Enregistrer History Value V${draftConfig.version}`}
+                            : `Enregistrer l’historique du montant V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -6647,7 +6694,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Order Time
+                      Heure de commande
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -6657,7 +6704,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -6665,7 +6712,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Order Time.
+                      Créez d’abord un brouillon pour modifier l’heure de commande.
                     </p>
                   </div>
                 )}
@@ -6690,9 +6737,7 @@ export default function AIScoringAdminPage() {
                                     {rule.label}
                                   </p>
 
-                                  <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                    {rule.key}
-                                  </p>
+
                                 </div>
 
                                 <button
@@ -6743,7 +6788,7 @@ export default function AIScoringAdminPage() {
                               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Start
+                                    Début
                                   </span>
 
                                   <input
@@ -6782,7 +6827,7 @@ export default function AIScoringAdminPage() {
 
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    End
+                                    Fin
                                   </span>
 
                                   <input
@@ -6868,7 +6913,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Les plages sont converties en minutes à la sauvegarde.
-                          Le backend vérifie également les trous et chevauchements.
+                          Le serveur vérifie également les espaces et chevauchements.
                         </p>
 
                         <button
@@ -6883,7 +6928,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingOrderTime
                             ? 'Enregistrement...'
-                            : `Enregistrer Order Time V${draftConfig.version}`}
+                            : `Enregistrer l’heure V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -6894,7 +6939,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Order Time — Historical Signal
+                      Heure de commande — Signal historique
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -6904,7 +6949,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -6924,7 +6969,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Historical signal
+                            Signal historique
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -6970,7 +7015,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         <label className="block">
                           <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                            Minimum completed orders
+                            Nombre minimum de commandes terminées
                           </span>
 
                           <input
@@ -7000,7 +7045,7 @@ export default function AIScoringAdminPage() {
 
                         <label className="block">
                           <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                            Minimum failure rate %
+                            Taux d’échec minimum %
                           </span>
 
                           <input
@@ -7031,7 +7076,7 @@ export default function AIScoringAdminPage() {
 
                         <label className="block">
                           <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                            Minimum excess failure %
+                            Excès minimum du taux d’échec %
                           </span>
 
                           <input
@@ -7098,7 +7143,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Les plages horaires fixes restent configurées séparément.
-                          Cette sauvegarde modifie seulement le signal historique du Draft.
+                          Cette sauvegarde modifie seulement le signal historique du brouillon.
                         </p>
 
                         <button
@@ -7113,7 +7158,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingHistoricalTime
                             ? 'Enregistrement...'
-                            : `Enregistrer Historical Time V${draftConfig.version}`}
+                            : `Enregistrer l’historique horaire V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -7124,7 +7169,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Customer History — Successful Deliveries
+                      Historique client — Livraisons réussies
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -7134,7 +7179,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -7142,7 +7187,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Customer History.
+                      Créez d’abord un brouillon pour modifier l’historique client.
                     </p>
                   </div>
                 )}
@@ -7154,7 +7199,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Successful Deliveries signal
+                            Signal des livraisons réussies
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -7213,9 +7258,7 @@ export default function AIScoringAdminPage() {
                                     {rule.label}
                                   </p>
 
-                                  <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                    {rule.key}
-                                  </p>
+
                                 </div>
 
                                 <button
@@ -7266,7 +7309,7 @@ export default function AIScoringAdminPage() {
                               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Minimum deliveries
+                                    Nombre minimum de livraisons
                                   </span>
 
                                   <input
@@ -7304,7 +7347,7 @@ export default function AIScoringAdminPage() {
 
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Maximum deliveries
+                                    Nombre maximum de livraisons
                                   </span>
 
                                   <input
@@ -7383,7 +7426,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Les règles restent basées sur le nombre de commandes livrées du même client.
-                          Le backend valide les plages avant sauvegarde.
+                          Le serveur vérifie les plages avant la sauvegarde.
                         </p>
 
                         <button
@@ -7398,7 +7441,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingCustomerSuccess
                             ? 'Enregistrement...'
-                            : `Enregistrer Success History V${draftConfig.version}`}
+                            : `Enregistrer les livraisons réussies V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -7409,7 +7452,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Customer History — Failed Deliveries
+                      Historique client — Échecs de livraison
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -7419,7 +7462,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -7427,7 +7470,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Customer History.
+                      Créez d’abord un brouillon pour modifier l’historique client.
                     </p>
                   </div>
                 )}
@@ -7439,7 +7482,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Failed Deliveries signal
+                            Signal des échecs de livraison
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -7498,9 +7541,7 @@ export default function AIScoringAdminPage() {
                                     {rule.label}
                                   </p>
 
-                                  <p className="mt-1 text-xs dark:text-slate-500 light:text-gray-500">
-                                    {rule.key}
-                                  </p>
+
                                 </div>
 
                                 <button
@@ -7551,7 +7592,7 @@ export default function AIScoringAdminPage() {
                               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Minimum failures
+                                    Nombre minimum d’échecs
                                   </span>
 
                                   <input
@@ -7589,7 +7630,7 @@ export default function AIScoringAdminPage() {
 
                                 <label>
                                   <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                    Maximum failures
+                                    Nombre maximum d’échecs
                                   </span>
 
                                   <input
@@ -7668,7 +7709,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Chaque commande historique est comptée une seule fois côté moteur.
-                          Le backend valide les plages avant sauvegarde.
+                          Le serveur vérifie les plages avant la sauvegarde.
                         </p>
 
                         <button
@@ -7683,7 +7724,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingCustomerFailure
                             ? 'Enregistrement...'
-                            : `Enregistrer Failure History V${draftConfig.version}`}
+                            : `Enregistrer les échecs de livraison V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -7694,17 +7735,17 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Operator Feedback — Categories
+                      Retour opérateur — Catégories
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
-                      Organisez les questions de feedback opérateur par catégorie.
+                      Organisez les questions du retour opérateur par catégorie.
                     </p>
                   </div>
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -7712,7 +7753,7 @@ export default function AIScoringAdminPage() {
                 {!latestDraft && (
                   <div className="mt-5 rounded-lg dark:bg-slate-800 light:bg-gray-50 p-4">
                     <p className="text-sm">
-                      Créez d’abord un brouillon pour modifier Operator Feedback.
+                      Créez d’abord un brouillon pour modifier le retour opérateur.
                     </p>
                   </div>
                 )}
@@ -7723,7 +7764,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex items-center justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium">
-                            Feedback categories
+                            Catégories de retour opérateur
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -7800,7 +7841,7 @@ export default function AIScoringAdminPage() {
                                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.5fr_auto_auto] lg:items-end">
                                   <label>
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Key
+                                      Clé
                                     </span>
 
                                     <input
@@ -7830,7 +7871,7 @@ export default function AIScoringAdminPage() {
 
                                   <label>
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Label
+                                      Libellé
                                     </span>
 
                                     <input
@@ -7944,7 +7985,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingFeedbackCategories
                             ? 'Enregistrement...'
-                            : `Enregistrer Categories V${draftConfig.version}`}
+                            : `Enregistrer les catégories V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -7955,7 +7996,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Operator Feedback — Questions
+                      Retour opérateur — Questions
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -7965,7 +8006,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -8190,9 +8231,9 @@ export default function AIScoringAdminPage() {
                                 </div>
 
                                 <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                                  <label>
+                                  <label className="hidden">
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Key
+                                      Clé
                                     </span>
 
                                     <input
@@ -8329,18 +8370,18 @@ export default function AIScoringAdminPage() {
                                       className="mt-1 block w-full rounded-lg border dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white px-3 py-2"
                                     >
                                       <option value="single_choice">
-                                        Single choice
+                                        Choix unique
                                       </option>
 
                                       <option value="multiple_choice">
-                                        Multiple choice
+                                        Choix multiple
                                       </option>
                                     </select>
                                   </label>
 
                                   <label className="md:col-span-2">
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Prompt
+                                      Question affichée
                                     </span>
 
                                     <input
@@ -8395,13 +8436,13 @@ export default function AIScoringAdminPage() {
                                     />
 
                                     <span className="text-sm">
-                                      Required
+                                      Obligatoire
                                     </span>
                                   </label>
 
                                   <label>
                                     <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                      Max selections
+                                      Nombre maximum de sélections
                                     </span>
 
                                     <input
@@ -8470,7 +8511,7 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      Operator Feedback — Answers & Impacts
+                      Retour opérateur — Réponses et impacts
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -8480,7 +8521,7 @@ export default function AIScoringAdminPage() {
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -8521,8 +8562,8 @@ export default function AIScoringAdminPage() {
 
                                     <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
                                       {question.type === 'multiple_choice'
-                                        ? `Multiple choice · max ${question.maxSelections}`
-                                        : 'Single choice'}
+                                        ? `Choix multiple · maximum ${question.maxSelections}`
+                                        : 'Choix unique'}
                                     </p>
                                   </div>
 
@@ -8609,9 +8650,9 @@ export default function AIScoringAdminPage() {
                                         className="rounded-lg dark:bg-slate-900/50 light:bg-gray-50 p-4"
                                       >
                                         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.5fr_120px_auto_auto] lg:items-end">
-                                          <label>
+                                          <label className="hidden">
                                             <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                              Key
+                                              Clé
                                             </span>
 
                                             <input
@@ -8654,7 +8695,7 @@ export default function AIScoringAdminPage() {
 
                                           <label>
                                             <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                                              Label
+                                              Libellé
                                             </span>
 
                                             <input
@@ -8846,7 +8887,7 @@ export default function AIScoringAdminPage() {
                       <div className="mt-5 flex flex-col gap-3 border-t dark:border-slate-800 light:border-gray-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
                           Une question active doit conserver au moins une réponse active.
-                          Pour les questions multiples, Max selections ne peut pas dépasser le nombre de réponses actives.
+                          Pour les questions à choix multiple, le nombre maximum de sélections ne peut pas dépasser le nombre de réponses actives.
                         </p>
 
                         <button
@@ -8861,7 +8902,7 @@ export default function AIScoringAdminPage() {
                         >
                           {savingFeedbackAnswers
                             ? 'Enregistrement...'
-                            : `Enregistrer Answers V${draftConfig.version}`}
+                            : `Enregistrer les réponses V${draftConfig.version}`}
                         </button>
                       </div>
                     </>
@@ -8872,17 +8913,17 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      AI Modules
+                      Modules IA
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
-                      Activez ou désactivez les modules historiques et feedback sans supprimer leur configuration.
+                      Activez ou désactivez les modules historiques et le retour opérateur sans supprimer leur configuration.
                     </p>
                   </div>
 
                   {draftConfig && (
                     <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-500">
-                      Editing V{draftConfig.version} Draft
+                      Modification de V{draftConfig.version} — Brouillon
                     </span>
                   )}
                 </div>
@@ -8903,11 +8944,11 @@ export default function AIScoringAdminPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                           <div>
                             <p className="text-sm font-medium">
-                              Customer History
+                              Historique client
                             </p>
 
                             <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
-                              Successful + failed delivery history.
+                              Historique des livraisons réussies et échouées.
                             </p>
                           </div>
 
@@ -8949,11 +8990,11 @@ export default function AIScoringAdminPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                           <div>
                             <p className="text-sm font-medium">
-                              Operator Feedback
+                              Retour opérateur
                             </p>
 
                             <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
-                              Questions, answers and operator signals.
+                              Questions, réponses et signaux de l’opérateur.
                             </p>
                           </div>
 
@@ -9022,11 +9063,11 @@ export default function AIScoringAdminPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <h2 className="font-semibold">
-                      AI Scoring Simulator
+                      Simulateur d’évaluation IA
                     </h2>
 
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
-                      Testez une commande fictive avec le vrai moteur de scoring,
+                      Testez une commande fictive avec le vrai moteur d’évaluation,
                       sans créer ni modifier de commande.
                     </p>
                   </div>
@@ -9034,12 +9075,12 @@ export default function AIScoringAdminPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-500">
                       {draftConfig
-                        ? `Testing V${draftConfig.version} Draft`
-                        : `Testing V${config?.version ?? '?'} Active`}
+                        ? `Test de V${draftConfig.version} — Brouillon`
+                        : `Test de V${config?.version ?? '?'} — Version active`}
                     </span>
 
                     <span className="rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-500">
-                      Read only
+                      Lecture seule
                     </span>
                   </div>
                 </div>
@@ -9050,14 +9091,14 @@ export default function AIScoringAdminPage() {
                   </p>
 
                   <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
-                    Le Shop ID est optionnel. Sans Shop ID, les signaux historiques
+                    L’identifiant de la boutique est optionnel. Sans cet identifiant, les signaux historiques
                     client, montant, zone et heure utilisent un contexte vide.
                   </p>
 
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <label>
                       <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                        Shop ID — optionnel
+                        Identifiant de la boutique — optionnel
                       </span>
 
                       <input
@@ -9074,7 +9115,7 @@ export default function AIScoringAdminPage() {
                             })
                           )
                         }
-                        placeholder="MongoDB ObjectId"
+                        placeholder="Identifiant MongoDB"
                         className="mt-1 block w-full rounded-lg border dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white px-3 py-2"
                       />
                     </label>
@@ -9303,17 +9344,17 @@ export default function AIScoringAdminPage() {
                         </p>
 
                         <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
-                          Configuration {simulatorResult.status}
+                          Configuration {translateConfigStatus(simulatorResult.status)}
                         </p>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
                         <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-500">
-                          Risk: {simulatorResult.simulation.riskLevel}
+                          Risque : {translateRiskLevel(simulatorResult.simulation.riskLevel)}
                         </span>
 
                         <span className="rounded-full bg-green-500/10 px-2.5 py-1 text-xs font-medium text-green-500">
-                          Decision: {simulatorResult.simulation.decision}
+                          Décision : {translateDecision(simulatorResult.simulation.decision)}
                         </span>
                       </div>
                     </div>
@@ -9321,7 +9362,7 @@ export default function AIScoringAdminPage() {
                     <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
                       <div className="rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
-                          Base
+                          Score de base
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold">
@@ -9331,7 +9372,7 @@ export default function AIScoringAdminPage() {
 
                       <div className="rounded-lg border dark:border-slate-800 light:border-gray-200 p-4">
                         <p className="text-xs dark:text-slate-400 light:text-gray-600">
-                          Calculated
+                          Score calculé
                         </p>
 
                         <p className="mt-2 text-2xl font-semibold">
@@ -9361,7 +9402,7 @@ export default function AIScoringAdminPage() {
 
                       <div className="col-span-2 rounded-lg border border-green-500/30 bg-green-500/10 p-4 lg:col-span-1">
                         <p className="text-xs text-green-500">
-                          Final Score
+                          Score final
                         </p>
 
                         <p className="mt-2 text-3xl font-bold text-green-500">
@@ -9374,7 +9415,7 @@ export default function AIScoringAdminPage() {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold">
-                            Scoring factors
+                            Facteurs d’évaluation
                           </p>
 
                           <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
@@ -9461,8 +9502,8 @@ export default function AIScoringAdminPage() {
                                     }`}
                                   >
                                     {factor.applied
-                                      ? 'Applied'
-                                      : 'Not applied'}
+                                      ? 'Appliqué'
+                                      : 'Non appliqué'}
                                   </span>
 
                                   <span
@@ -9511,7 +9552,7 @@ export default function AIScoringAdminPage() {
               <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="card p-5">
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">
-                    Base Score
+                    Score de base
                   </p>
 
                   <p className="mt-2 text-3xl font-semibold">
@@ -9521,7 +9562,7 @@ export default function AIScoringAdminPage() {
 
                 <div className="card p-5">
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">
-                    Minimum Score
+                    Score minimum
                   </p>
 
                   <p className="mt-2 text-3xl font-semibold">
@@ -9531,7 +9572,7 @@ export default function AIScoringAdminPage() {
 
                 <div className="card p-5">
                   <p className="text-sm dark:text-slate-400 light:text-gray-600">
-                    Maximum Score
+                    Score maximum
                   </p>
 
                   <p className="mt-2 text-3xl font-semibold">
@@ -9543,7 +9584,7 @@ export default function AIScoringAdminPage() {
               <section>
                 <div className="mb-4">
                   <h2 className="text-lg font-semibold">
-                    Scoring configuration
+                    Configuration de l’évaluation
                   </h2>
 
                   <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
@@ -9553,18 +9594,18 @@ export default function AIScoringAdminPage() {
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   <SummaryCard
-                    title="Address Scoring"
+                    title="Évaluation de l’adresse"
                     description="Analyse de la qualité et de la complétude de l’adresse."
                     enabled={
                       config.patterns?.enabled !== false &&
                       config.patterns?.address?.enabled !== false
                     }
-                    detail="Street, City, Governorate & Postal Code"
+                    detail="Rue, ville, gouvernorat et code postal"
                     icon={MapPinIcon}
                   />
 
                   <SummaryCard
-                    title="Geographic Zone"
+                    title="Zone géographique"
                     description="Règles géographiques configurables par zone."
                     enabled={
                       config.patterns?.enabled !== false &&
@@ -9575,7 +9616,7 @@ export default function AIScoringAdminPage() {
                   />
 
                   <SummaryCard
-                    title="Order Patterns"
+                    title="Règles de commande"
                     description="Valeur de commande et heure de création."
                     enabled={
                       config.patterns?.enabled !== false &&
@@ -9584,22 +9625,22 @@ export default function AIScoringAdminPage() {
                         config.patterns?.orderTime?.enabled !== false
                       )
                     }
-                    detail="Order Value + Order Time"
+                    detail="Montant et heure de commande"
                     icon={ClockIcon}
                   />
 
                   <SummaryCard
-                    title="Customer History"
+                    title="Historique client"
                     description="Historique des livraisons réussies et échouées."
                     enabled={
                       config.customerHistory?.enabled !== false
                     }
-                    detail="Success + Failed Delivery history"
+                    detail="Historique des livraisons réussies et échouées"
                     icon={UserGroupIcon}
                   />
 
                   <SummaryCard
-                    title="Operator Feedback"
+                    title="Retour opérateur"
                     description="Questions dynamiques renseignées après l’appel opérateur."
                     enabled={
                       config.operatorFeedback?.enabled !== false
@@ -9612,7 +9653,7 @@ export default function AIScoringAdminPage() {
 
               <section className="card p-5">
                 <h2 className="font-semibold">
-                  Next configuration steps
+                  Prochaines étapes de configuration
                 </h2>
 
                 <p className="mt-2 text-sm dark:text-slate-400 light:text-gray-600">
