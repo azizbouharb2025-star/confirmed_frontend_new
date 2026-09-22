@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AdjustmentsHorizontalIcon,
   CheckCircleIcon,
@@ -8,7 +8,10 @@ import {
   MapPinIcon,
   UserGroupIcon,
   ChatBubbleLeftRightIcon,
-  DocumentDuplicateIcon
+  DocumentDuplicateIcon,
+  MagnifyingGlassIcon,
+  XMarkIcon,
+  ArrowUpIcon
 } from '@heroicons/react/24/outline'
 
 import api from '@/lib/api'
@@ -1110,7 +1113,94 @@ function SummaryCard({
   )
 }
 
+interface AIScoringSearchResult {
+  id: string
+  title: string
+  sectionTitle: string
+  target: HTMLElement
+}
+
+const normalizeSearchText = (
+  value: string
+) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const matchesSearchWords = (
+  value: string,
+  words: string[]
+) => {
+  const normalizedValue =
+    normalizeSearchText(value)
+
+  return words.every(word =>
+    normalizedValue.includes(word)
+  )
+}
+
+const getSearchableElementText = (
+  element: HTMLElement
+) => {
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement
+  ) {
+    return [
+      element.value,
+      element.placeholder,
+      element.getAttribute('aria-label')
+    ]
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  if (element instanceof HTMLSelectElement) {
+    return [
+      element.value,
+      element.selectedOptions[0]?.textContent,
+      element.getAttribute('aria-label')
+    ]
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  return (
+    element.textContent
+      ?.replace(/\s+/g, ' ')
+      .trim() ?? ''
+  )
+}
+
+const shortenSearchTitle = (
+  value: string
+) =>
+  value.length > 90
+    ? `${value.slice(0, 87)}...`
+    : value
+
 export default function AIScoringAdminPage() {
+  const searchContentRef =
+    useRef<HTMLDivElement | null>(null)
+
+  const highlightedElementRef =
+    useRef<HTMLElement | null>(null)
+
+  const highlightTimeoutRef =
+    useRef<number | null>(null)
+
+  const [searchQuery, setSearchQuery] =
+    useState('')
+
+  const [searchResults, setSearchResults] =
+    useState<AIScoringSearchResult[]>([])
+
+  const [showBackToTop, setShowBackToTop] =
+    useState(false)
+
   const [config, setConfig] =
     useState<AIScoringConfig | null>(null)
 
@@ -4764,6 +4854,283 @@ export default function AIScoringAdminPage() {
       }
     }
 
+  useEffect(() => {
+    const handlePageScroll = () => {
+      setShowBackToTop(
+        window.scrollY > 500
+      )
+    }
+
+    handlePageScroll()
+
+    window.addEventListener(
+      'scroll',
+      handlePageScroll,
+      { passive: true }
+    )
+
+    return () => {
+      window.removeEventListener(
+        'scroll',
+        handlePageScroll
+      )
+    }
+  }, [])
+
+  const handleBackToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    })
+  }
+
+  const clearSearchHighlight = () => {
+    highlightedElementRef.current?.classList.remove(
+      'ring-2',
+      'ring-blue-500',
+      'ring-offset-4',
+      'transition'
+    )
+
+    highlightedElementRef.current = null
+
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(
+        highlightTimeoutRef.current
+      )
+
+      highlightTimeoutRef.current = null
+    }
+  }
+
+  const handleScoringSearch = (
+    value: string
+  ) => {
+    setSearchQuery(value)
+
+    const normalizedQuery =
+      normalizeSearchText(value)
+
+    if (
+      normalizedQuery.length < 2 ||
+      !searchContentRef.current
+    ) {
+      setSearchResults([])
+      return
+    }
+
+    const searchWords =
+      normalizedQuery
+        .split(' ')
+        .filter(Boolean)
+
+    const sections = Array.from(
+      searchContentRef.current
+        .querySelectorAll<HTMLElement>(
+          ':scope > section'
+        )
+    )
+
+    const nextResults:
+      AIScoringSearchResult[] = []
+
+    for (
+      let sectionIndex = 0;
+      sectionIndex < sections.length;
+      sectionIndex += 1
+    ) {
+      const section =
+        sections[sectionIndex]
+
+      const heading =
+        section.querySelector<HTMLElement>('h2')
+
+      const firstDescription =
+        section.querySelector<HTMLElement>('p')
+
+      const sectionTitle =
+        heading?.textContent
+          ?.replace(/\s+/g, ' ')
+          .trim() ||
+        firstDescription?.textContent
+          ?.replace(/\s+/g, ' ')
+          .trim() ||
+        'Section de configuration'
+
+      if (
+        heading &&
+        matchesSearchWords(
+          sectionTitle,
+          searchWords
+        )
+      ) {
+        nextResults.push({
+          id: `section-${sectionIndex}`,
+          title: sectionTitle,
+          sectionTitle,
+          target: section
+        })
+
+        if (nextResults.length >= 12) {
+          break
+        }
+
+        continue
+      }
+
+      const candidates = Array.from(
+        section.querySelectorAll<HTMLElement>(
+          [
+            'h3',
+            'label',
+            'p.font-medium',
+            'input',
+            'select',
+            'textarea'
+          ].join(', ')
+        )
+      )
+
+      const seenTitles = new Set<string>()
+      let sectionHasSpecificResult = false
+
+      for (
+        let candidateIndex = 0;
+        candidateIndex < candidates.length;
+        candidateIndex += 1
+      ) {
+        const candidate =
+          candidates[candidateIndex]
+
+        if (candidate.offsetParent === null) {
+          continue
+        }
+
+        const candidateText =
+          getSearchableElementText(candidate)
+
+        if (
+          !candidateText ||
+          !matchesSearchWords(
+            candidateText,
+            searchWords
+          )
+        ) {
+          continue
+        }
+
+        const normalizedCandidate =
+          normalizeSearchText(candidateText)
+
+        if (
+          seenTitles.has(normalizedCandidate)
+        ) {
+          continue
+        }
+
+        seenTitles.add(normalizedCandidate)
+        sectionHasSpecificResult = true
+
+        nextResults.push({
+          id: `result-${sectionIndex}-${candidateIndex}`,
+          title:
+            shortenSearchTitle(candidateText),
+          sectionTitle,
+          target: candidate
+        })
+
+        if (nextResults.length >= 12) {
+          break
+        }
+      }
+
+      if (nextResults.length >= 12) {
+        break
+      }
+
+      if (
+        !sectionHasSpecificResult &&
+        matchesSearchWords(
+          section.textContent ?? '',
+          searchWords
+        )
+      ) {
+        nextResults.push({
+          id: `section-content-${sectionIndex}`,
+          title: sectionTitle,
+          sectionTitle,
+          target: section
+        })
+      }
+
+      if (nextResults.length >= 12) {
+        break
+      }
+    }
+
+    setSearchResults(
+      nextResults.slice(0, 12)
+    )
+  }
+
+  const handleSearchResultClick = (
+    result: AIScoringSearchResult
+  ) => {
+    clearSearchHighlight()
+
+    const highlightTarget =
+      result.target.closest<HTMLElement>(
+        'label, .rounded-lg'
+      ) ??
+      result.target.closest<HTMLElement>(
+        'section'
+      ) ??
+      result.target
+
+    result.target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
+    })
+
+    highlightTarget.classList.add(
+      'ring-2',
+      'ring-blue-500',
+      'ring-offset-4',
+      'transition'
+    )
+
+    highlightedElementRef.current =
+      highlightTarget
+
+    if (
+      result.target instanceof
+        HTMLInputElement ||
+      result.target instanceof
+        HTMLTextAreaElement ||
+      result.target instanceof
+        HTMLSelectElement
+    ) {
+      result.target.focus({
+        preventScroll: true
+      })
+    }
+
+    setSearchQuery('')
+    setSearchResults([])
+
+    highlightTimeoutRef.current =
+      window.setTimeout(() => {
+        clearSearchHighlight()
+      }, 2200)
+  }
+
+  useEffect(
+    () => () => {
+      clearSearchHighlight()
+    },
+    []
+  )
+
   if (loading) {
     return (
       <ProtectedRoute allowedRoles={['admin']}>
@@ -4797,7 +5164,10 @@ export default function AIScoringAdminPage() {
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <DashboardLayout userRole="admin">
-        <div className="space-y-6">
+        <div
+          ref={searchContentRef}
+          className="space-y-6"
+        >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold">
@@ -4816,6 +5186,110 @@ export default function AIScoringAdminPage() {
                 V{config.version} Active
               </div>
             )}
+          </div>
+
+          <div className="relative z-30">
+            <label
+              htmlFor="ai-scoring-search"
+              className="sr-only"
+            >
+              Rechercher dans la configuration IA
+            </label>
+
+            <div className="relative">
+              <MagnifyingGlassIcon
+                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 dark:text-slate-400 light:text-gray-500"
+                aria-hidden="true"
+              />
+
+              <input
+                id="ai-scoring-search"
+                type="search"
+                value={searchQuery}
+                onChange={event =>
+                  handleScoringSearch(
+                    event.target.value
+                  )
+                }
+                onKeyDown={event => {
+                  if (event.key === 'Escape') {
+                    setSearchQuery('')
+                    setSearchResults([])
+                  }
+                }}
+                placeholder="Rechercher une section, une règle ou un paramètre..."
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={
+                  searchQuery.trim().length >= 2
+                }
+                aria-controls="ai-scoring-search-results"
+                className="block w-full rounded-xl border py-3 pl-12 pr-12 text-sm shadow-sm outline-none transition dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 light:border-gray-200 light:bg-white light:text-gray-900 light:placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setSearchResults([])
+                  }}
+                  aria-label="Effacer la recherche"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white light:text-gray-500 light:hover:bg-gray-100 light:hover:text-gray-900"
+                >
+                  <XMarkIcon
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
+            </div>
+
+            {searchQuery.trim().length >= 2 && (
+              <div
+                id="ai-scoring-search-results"
+                className="absolute left-0 right-0 top-full mt-2 max-h-80 overflow-y-auto rounded-xl border p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900 light:border-gray-200 light:bg-white"
+              >
+                {searchResults.length > 0 ? (
+                  <div className="space-y-1">
+                    {searchResults.map(result => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() =>
+                          handleSearchResultClick(
+                            result
+                          )
+                        }
+                        className="block w-full rounded-lg px-3 py-2.5 text-left transition dark:hover:bg-slate-800 light:hover:bg-gray-100"
+                      >
+                        <span className="block text-sm font-medium">
+                          {result.title}
+                        </span>
+
+                        {result.title !==
+                          result.sectionTitle && (
+                          <span className="mt-1 block text-xs dark:text-slate-400 light:text-gray-500">
+                            Dans : {
+                              result.sectionTitle
+                            }
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="px-3 py-4 text-center text-sm dark:text-slate-400 light:text-gray-500">
+                    Aucun résultat trouvé.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <p className="mt-1.5 text-xs dark:text-slate-500 light:text-gray-500">
+              Recherche instantanée dans les sections,
+              règles et paramètres affichés.
+            </p>
           </div>
 
           {error && (
@@ -9665,6 +10139,25 @@ export default function AIScoringAdminPage() {
             </>
           )}
         </div>
+
+        {showBackToTop && (
+          <button
+            type="button"
+            onClick={handleBackToTop}
+            aria-label="Retour en haut de la page"
+            title="Retour en haut"
+            className="fixed bottom-6 right-6 z-50 inline-flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 transition hover:-translate-y-0.5 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:bottom-8 sm:right-8"
+          >
+            <ArrowUpIcon
+              className="h-6 w-6"
+              aria-hidden="true"
+            />
+
+            <span className="sr-only">
+              Retour en haut
+            </span>
+          </button>
+        )}
       </DashboardLayout>
     </ProtectedRoute>
   )
