@@ -49,6 +49,7 @@ const getNavigationItems = (
     { name: 'Opérateurs', href: '/panel/admin/operators', icon: UserGroupIcon },
     { name: t('nav.orders'), href: '/panel/admin/orders', icon: ShoppingBagIcon },
     { name: t('nav.analytics'), href: '/panel/admin/analytics', icon: ChartBarIcon },
+    { name: 'AI Scoring Engine', href: '/panel/admin/ai-scoring', icon: ChartPieIcon },
     { name: t('nav.shops'), href: '/panel/admin/shops', icon: BuildingStorefrontIcon },
     { name: t('import.historyNavLabel'), href: '/panel/admin/import-history', icon: ArrowDownTrayIcon },
     { name: t('nav.settings'), href: '/panel/admin/settings', icon: CogIcon },
