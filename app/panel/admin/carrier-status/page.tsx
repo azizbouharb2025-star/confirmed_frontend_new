@@ -180,6 +180,9 @@ export default function CarrierStatusPage() {
   const [saving, setSaving] =
     useState(false)
 
+  const [initializing, setInitializing] =
+    useState(false)
+
   const [error, setError] =
     useState<string | null>(null)
 
@@ -323,6 +326,86 @@ export default function CarrierStatusPage() {
 
     void fetchDraft()
   }, [latestDraft])
+
+
+  const handleInitialize = async () => {
+    try {
+      setInitializing(true)
+      setError(null)
+      setActionMessage(null)
+
+      const response =
+        await api.post(
+          '/api/admin/carrier-status/initialize',
+          {}
+        )
+
+      const created =
+        normalizeConfig(
+          response.data?.config
+        )
+
+      if (!created) {
+        throw new Error(
+          'Invalid initial carrier status configuration response'
+        )
+      }
+
+      setConfigs(previous => [
+        created,
+        ...previous.filter(
+          item =>
+            item.version !==
+            created.version
+        )
+      ])
+
+      setActionMessage(
+        `Brouillon V${created.version} créé. Aucun mapping n’est encore actif en production.`
+      )
+    } catch (requestError: unknown) {
+      console.error(
+        'Failed to initialize carrier status configuration:',
+        requestError
+      )
+
+      const responseData =
+        typeof requestError === 'object' &&
+        requestError !== null &&
+        'response' in requestError
+          ? (
+              requestError as {
+                response?: {
+                  data?: {
+                    details?: unknown
+                    error?: unknown
+                  }
+                }
+              }
+            ).response?.data
+          : undefined
+
+      const details =
+        responseData?.details
+
+      const apiError =
+        typeof responseData?.error === 'string'
+          ? responseData.error
+          : null
+
+      setError(
+        Array.isArray(details) &&
+        details.length > 0
+          ? details
+              .map(item => String(item))
+              .join(' • ')
+          : apiError ||
+            'Impossible de créer la configuration initiale.'
+      )
+    } finally {
+      setInitializing(false)
+    }
+  }
 
 
   const handleSaveDraft = async () => {
@@ -562,10 +645,30 @@ export default function CarrierStatusPage() {
                 Aucun brouillon disponible
               </p>
 
-              <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
-                L’éditeur apparaîtra ici dès que la première version
-                de configuration sera créée.
+              <p className="mx-auto mt-1 max-w-2xl text-sm leading-6 dark:text-slate-400 light:text-gray-600">
+                Créez la première version à partir des mappings
+                actuellement connus pour Intigo et Colissimo.
+                Elle restera en brouillon et ne modifiera pas
+                le tracking en production.
               </p>
+
+              <button
+                type="button"
+                disabled={
+                  initializing ||
+                  configs.length > 0
+                }
+                onClick={() =>
+                  void handleInitialize()
+                }
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <PlusIcon className="h-5 w-5" />
+
+                {initializing
+                  ? 'Création de V1...'
+                  : 'Créer la configuration initiale'}
+              </button>
             </div>
           )}
 
