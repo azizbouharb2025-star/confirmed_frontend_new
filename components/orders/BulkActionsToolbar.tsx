@@ -26,6 +26,7 @@ export interface BulkActionsToolbarProps {
   onBulkStatusUpdate: (status: OrderStatus) => Promise<BulkResult>
   onBulkExport: (orders: Order[]) => Promise<void>
   onClearSelection: () => void
+  allowStatusUpdate?: boolean
   className?: string
 }
 
@@ -362,6 +363,7 @@ export default function BulkActionsToolbar({
   onBulkStatusUpdate,
   onBulkExport: _onBulkExport,
   onClearSelection,
+  allowStatusUpdate = true,
   className,
 }: BulkActionsToolbarProps) {
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false)
@@ -459,18 +461,17 @@ export default function BulkActionsToolbar({
         <ResultSummary result={result} onDismiss={handleDismissResult} t={t} />
       )}
 
-      {/* Actions */}
-      {!isProcessing && !result && (
-        <>
-          {/* Bulk status update dropdown */}
-          <StatusDropdown
-            isOpen={isStatusDropdownOpen}
-            onToggle={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-            onSelect={handleStatusUpdate}
-            disabled={isProcessing}
-            t={t}
-          />
-        </>
+      {/* Status update is available only when explicitly allowed. */}
+      {allowStatusUpdate && !isProcessing && !result && (
+        <StatusDropdown
+          isOpen={isStatusDropdownOpen}
+          onToggle={() =>
+            setIsStatusDropdownOpen(!isStatusDropdownOpen)
+          }
+          onSelect={handleStatusUpdate}
+          disabled={isProcessing}
+          t={t}
+        />
       )}
 
       {/* Clear selection button */}

@@ -66,7 +66,10 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
         rejected: 0,
         cancelled: 0,
         shipped: 0,
+        at_depot: 0,
+        out_for_delivery: 0,
         delivered: 0,
+        returned: 0,
         failed_delivery: 0,
       },
       totalOrders: 0,
@@ -83,7 +86,10 @@ function calculateAnalytics(orders: Order[]): OrderAnalytics {
     rejected: 0,
     cancelled: 0,
     shipped: 0,
+    at_depot: 0,
+    out_for_delivery: 0,
     delivered: 0,
+    returned: 0,
     failed_delivery: 0,
   }
   
@@ -677,6 +683,7 @@ export default function AdminOrdersPage() {
           <OrderFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
+            showLegacyStatuses
           />
 
           {/* Bulk Actions Toolbar */}
@@ -688,6 +695,7 @@ export default function AdminOrdersPage() {
               onBulkStatusUpdate={handleBulkStatusUpdate}
               onBulkExport={handleBulkExport}
               onClearSelection={handleClearSelection}
+              allowStatusUpdate={false}
             />
           )}
 

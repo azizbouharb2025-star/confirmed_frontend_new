@@ -4,7 +4,20 @@
  */
 
 // Order Status Types
-export type OrderStatus = 'pending' | 'assigned' | 'in_progress' | 'confirmed' | 'rejected' | 'cancelled' | 'postponed' | 'shipped' | 'delivered' | 'failed_delivery';
+export type OrderStatus =
+  | 'pending'
+  | 'assigned'
+  | 'in_progress'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled'
+  | 'postponed'
+  | 'shipped'
+  | 'at_depot'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'returned'
+  | 'failed_delivery';
 /**
  * Priorités backend actuelles : low / medium / high.
  * normal / urgent sont conservées temporairement pour

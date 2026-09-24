@@ -982,6 +982,7 @@ export default function ClientOrdersPage() {
             onBulkStatusUpdate={handleBulkStatusUpdate}
             onBulkExport={handleBulkExport}
             onClearSelection={handleClearSelection}
+            allowStatusUpdate={false}
           />
         )}
 

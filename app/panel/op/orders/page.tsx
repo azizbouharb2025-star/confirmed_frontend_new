@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ClipboardDocumentListIcon, CheckCircleIcon, XCircleIcon, ClockIcon, TruckIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { ClipboardDocumentListIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
-import type { TranslationKey } from '@/lib/i18n'
+import StatusBadge from '@/components/ui/StatusBadge'
+import type { OrderStatus } from '@/types/order'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
 import { formatCurrency } from '@/lib/formatCurrency'
@@ -16,7 +17,7 @@ interface Order {
   orderId: string
   clientInfo: { name: string; phone: string }
   totalAmount: number
-  status: string
+  status: OrderStatus
   createdAt: string
   assignedOperatorId?: { name: string }
 }
@@ -44,26 +45,6 @@ export default function OrdersReception() {
     const interval = setInterval(fetchOrders, 30000)
     return () => clearInterval(interval)
   }, [])
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'text-green-500 bg-green-500/10'
-      case 'rejected': return 'text-red-500 bg-red-500/10'
-      case 'pending': return 'text-yellow-500 bg-yellow-500/10'
-      case 'shipped': return 'text-blue-500 bg-blue-500/10'
-      default: return 'text-gray-500 bg-gray-500/10'
-    }
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'confirmed': return <CheckCircleIcon className="h-4 w-4" />
-      case 'rejected': return <XCircleIcon className="h-4 w-4" />
-      case 'pending': return <ClockIcon className="h-4 w-4" />
-      case 'shipped': return <TruckIcon className="h-4 w-4" />
-      default: return <ClockIcon className="h-4 w-4" />
-    }
-  }
 
   const filteredOrders = orders.filter(order => {
     const normalizedSearch = searchTerm.trim().replace(/^#/, '')
@@ -107,6 +88,11 @@ export default function OrdersReception() {
                 <option value="confirmed">{t('common.confirmed')}</option>
                 <option value="rejected">{t('common.rejected')}</option>
                 <option value="shipped">{t('common.shipped')}</option>
+                <option value="at_depot">Dépôt</option>
+                <option value="out_for_delivery">En livraison</option>
+                <option value="delivered">Livrée</option>
+                <option value="returned">Retournée</option>
+                <option value="failed_delivery">Échec livraison</option>
               </select>
             </div>
           </div>
@@ -160,10 +146,10 @@ export default function OrdersReception() {
                           <span className="font-semibold text-green-500">{formatCurrency(order.totalAmount)}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                            {getStatusIcon(order.status)}
-                            {t(`status.${order.status}` as TranslationKey)}
-                          </span>
+                          <StatusBadge
+                            status={order.status}
+                            size="sm"
+                          />
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-sm">{order.assignedOperatorId?.name || t('orders.unassigned')}</span>

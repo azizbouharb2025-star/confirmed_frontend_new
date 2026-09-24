@@ -506,15 +506,21 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
         const deliveryStatusClass =
           order.status === 'delivered'
             ? 'mt-0.5 text-xs text-green-500'
-            : [
-                  'cancelled',
-                  'rejected',
-                  'failed_delivery',
-                ].includes(order.status)
-              ? 'mt-0.5 text-xs text-red-500'
-              : order.status === 'shipped'
-                ? 'mt-0.5 text-xs text-blue-500'
-                : 'mt-0.5 text-xs text-gray-500 dark:text-slate-400'
+            : order.status === 'returned'
+              ? 'mt-0.5 text-xs text-orange-500'
+              : [
+                    'cancelled',
+                    'rejected',
+                    'failed_delivery',
+                  ].includes(order.status)
+                ? 'mt-0.5 text-xs text-red-500'
+                : order.status === 'out_for_delivery'
+                  ? 'mt-0.5 text-xs text-purple-500'
+                  : order.status === 'at_depot'
+                    ? 'mt-0.5 text-xs text-yellow-600 dark:text-yellow-400'
+                    : order.status === 'shipped'
+                      ? 'mt-0.5 text-xs text-blue-500'
+                      : 'mt-0.5 text-xs text-gray-500 dark:text-slate-400'
 
         return (
           <div className="min-w-0 max-w-[125px]">

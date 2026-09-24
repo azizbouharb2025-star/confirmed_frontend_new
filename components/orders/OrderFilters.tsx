@@ -15,6 +15,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 export interface OrderFiltersProps {
   filters: OrderFiltersType
   onFiltersChange: (filters: OrderFiltersType) => void
+  showLegacyStatuses?: boolean
   className?: string
 }
 
@@ -25,8 +26,10 @@ const _ALL_STATUSES: OrderStatus[] = [
   'cancelled',
   'postponed',
   'shipped',
+  'at_depot',
+  'out_for_delivery',
   'delivered',
-  'failed_delivery'
+  'returned'
 ]
 
 /**
@@ -191,6 +194,7 @@ function parseDateFromInput(value: string): Date | null {
 export default function OrderFilters({
   filters,
   onFiltersChange,
+  showLegacyStatuses = false,
   className,
 }: OrderFiltersProps) {
   const { t } = useLanguage()
@@ -368,8 +372,15 @@ export default function OrderFilters({
             <option value="cancelled">Annulée</option>
             <option value="postponed">Reportée</option>
             <option value="shipped">Expédiée</option>
+            <option value="at_depot">Dépôt</option>
+            <option value="out_for_delivery">En livraison</option>
             <option value="delivered">Livrée</option>
-            <option value="failed_delivery">Retournée</option>
+            <option value="returned">Retournée</option>
+            {showLegacyStatuses && (
+              <option value="failed_delivery">
+                Échec livraison
+              </option>
+            )}
           </select>
         </div>
         

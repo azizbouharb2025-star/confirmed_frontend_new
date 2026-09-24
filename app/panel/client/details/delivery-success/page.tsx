@@ -51,19 +51,47 @@ export default function DeliverySuccessDetailPage() {
     }
   };
 
-  // Filter orders that have been shipped
-  const shippedOrders = orders.filter(o => 
-    o.status === 'shipped' || o.status === 'delivered' || o.deliveryStatus
+  // Commandes réellement entrées dans le cycle de livraison.
+  const deliveryOrderStatuses = [
+    'shipped',
+    'at_depot',
+    'out_for_delivery',
+    'delivered',
+    'returned',
+    'failed_delivery',
+  ];
+
+  const externalDeliveryStatuses = [
+    'picked_up',
+    'in_transit',
+    'out_for_delivery',
+    'delivered',
+    'failed',
+    'returned',
+  ];
+
+  const shippedOrders = orders.filter(o =>
+    deliveryOrderStatuses.includes(o.status) ||
+    (
+      Boolean(o.deliveryStatus) &&
+      externalDeliveryStatuses.includes(
+        String(o.deliveryStatus)
+      )
+    )
   );
-  
-  const deliveredOrders = shippedOrders.filter(o => 
-    o.status === 'delivered' || o.deliveryStatus === 'delivered'
+
+  const deliveredOrders = shippedOrders.filter(o =>
+    o.status === 'delivered' ||
+    o.deliveryStatus === 'delivered'
   );
-  
-  const failedDeliveries = shippedOrders.filter(o => 
-    o.deliveryStatus === 'failed' || o.deliveryStatus === 'returned'
+
+  const failedDeliveries = shippedOrders.filter(o =>
+    o.status === 'returned' ||
+    o.status === 'failed_delivery' ||
+    o.deliveryStatus === 'failed' ||
+    o.deliveryStatus === 'returned'
   );
-  
+
   const successRate = shippedOrders.length > 0 
     ? (deliveredOrders.length / shippedOrders.length) * 100 
     : 0;

@@ -49,10 +49,10 @@ export function mapDeliveryStatusToOrderStatus(
     pending_pickup: 'confirmed',
     picked_up: 'shipped',
     in_transit: 'shipped',
-    out_for_delivery: 'shipped',
+    out_for_delivery: 'out_for_delivery',
     delivered: 'delivered',
     failed: 'failed_delivery',
-    returned: 'cancelled',
+    returned: 'returned',
   };
 
   return statusMap[deliveryStatus] || 'in_progress';
@@ -74,7 +74,10 @@ export function mapOrderStatusToDeliveryStatus(
     rejected: 'failed',
     cancelled: 'returned',
     shipped: 'in_transit',
+    at_depot: 'in_transit',
+    out_for_delivery: 'out_for_delivery',
     delivered: 'delivered',
+    returned: 'returned',
     failed_delivery: 'failed',
   };
 

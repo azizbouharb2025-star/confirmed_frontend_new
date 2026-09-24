@@ -70,15 +70,30 @@ export const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string; bord
     text: 'text-indigo-800 dark:text-indigo-300',
     border: 'border-indigo-200 dark:border-indigo-800',
   },
+  at_depot: {
+    bg: 'bg-yellow-100 dark:bg-yellow-900/30',
+    text: 'text-yellow-800 dark:text-yellow-300',
+    border: 'border-yellow-200 dark:border-yellow-800',
+  },
+  out_for_delivery: {
+    bg: 'bg-purple-100 dark:bg-purple-900/30',
+    text: 'text-purple-800 dark:text-purple-300',
+    border: 'border-purple-200 dark:border-purple-800',
+  },
   delivered: {
     bg: 'bg-emerald-100 dark:bg-emerald-900/30',
     text: 'text-emerald-800 dark:text-emerald-300',
     border: 'border-emerald-200 dark:border-emerald-800',
   },
-  failed_delivery: {
+  returned: {
     bg: 'bg-orange-100 dark:bg-orange-900/30',
     text: 'text-orange-800 dark:text-orange-300',
     border: 'border-orange-200 dark:border-orange-800',
+  },
+  failed_delivery: {
+    bg: 'bg-red-100 dark:bg-red-900/30',
+    text: 'text-red-800 dark:text-red-300',
+    border: 'border-red-200 dark:border-red-800',
   },
 }
 
@@ -127,9 +142,24 @@ const StatusIcons: Record<OrderStatus, React.ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
     </svg>
   ),
+  at_depot: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+    </svg>
+  ),
+  out_for_delivery: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 13h11V6H3v7zm11-4h4l3 3v4h-2m-5 0H8m-3 0H3v-3m16 3a2 2 0 11-4 0 2 2 0 014 0zM8 16a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  ),
   delivered: (
     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  returned: (
+    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l-4-4 4-4m-4 4h10a4 4 0 010 8h-1" />
     </svg>
   ),
   failed_delivery: (
@@ -151,8 +181,11 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   assigned: 'Tentative',
   cancelled: 'Annulé',
   shipped: 'Expédiée',
+  at_depot: 'Dépôt',
+  out_for_delivery: 'En livraison',
   delivered: 'Livrée',
-  failed_delivery: 'Retournée',
+  returned: 'Retournée',
+  failed_delivery: 'Échec livraison',
 }
 
 /**
@@ -168,8 +201,11 @@ export function getTranslatedStatusLabels(_t: (key: TranslationKey) => string): 
     assigned: 'Tentative',
     cancelled: 'Annulé',
     shipped: 'Expédiée',
+    at_depot: 'Dépôt',
+    out_for_delivery: 'En livraison',
     delivered: 'Livrée',
-    failed_delivery: 'Retournée',
+    returned: 'Retournée',
+    failed_delivery: 'Échec livraison',
   }
 }
 
@@ -205,8 +241,11 @@ export function getStatusColorCategory(status: OrderStatus): 'green' | 'red' | '
     assigned: 'purple',
     cancelled: 'gray',
     shipped: 'indigo',
+    at_depot: 'yellow',
+    out_for_delivery: 'purple',
     delivered: 'emerald',
-    failed_delivery: 'orange',
+    returned: 'orange',
+    failed_delivery: 'red',
   }
   return colorMap[status]
 }
