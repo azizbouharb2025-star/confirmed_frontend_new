@@ -11,6 +11,7 @@ import {
   DocumentDuplicateIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
+  TrashIcon,
   ArrowUpIcon
 } from '@heroicons/react/24/outline'
 
@@ -1216,8 +1217,21 @@ export default function AIScoringAdminPage() {
   const [creatingDraft, setCreatingDraft] =
     useState(false)
 
+  const [deletingDraft, setDeletingDraft] =
+    useState(false)
+
   const [activatingDraft, setActivatingDraft] =
     useState(false)
+
+  const [
+    activationModalVersion,
+    setActivationModalVersion
+  ] = useState<number | null>(null)
+
+  const [
+    deleteModalVersion,
+    setDeleteModalVersion
+  ] = useState<number | null>(null)
 
   const [actionMessage, setActionMessage] =
     useState<string | null>(null)
@@ -1322,11 +1336,79 @@ export default function AIScoringAdminPage() {
       createdAt: ''
     })
 
+  const [simulatorShops, setSimulatorShops] =
+    useState<Array<{
+      id: string
+      name: string
+    }>>([])
+
+  const [simulatorShopsLoading, setSimulatorShopsLoading] =
+    useState(false)
+
+  const [simulatorShopsError, setSimulatorShopsError] =
+    useState<string | null>(null)
+
   const [simulatorResult, setSimulatorResult] =
     useState<SimulatorResult | null>(null)
 
   const [simulating, setSimulating] =
     useState(false)
+
+  useEffect(() => {
+    const fetchSimulatorShops =
+      async () => {
+        try {
+          setSimulatorShopsLoading(true)
+          setSimulatorShopsError(null)
+
+          const response =
+            await api.get(
+              '/api/admin/ai-scoring/shops'
+            )
+
+          const payload =
+            Array.isArray(
+              response.data
+            )
+              ? response.data
+              : Array.isArray(
+                  response.data?.shops
+                )
+                ? response.data.shops
+                : []
+
+          const validShops =
+            payload.filter(
+              (
+                shop: {
+                  id?: unknown
+                  name?: unknown
+                }
+              ) =>
+                typeof shop.id === 'string' &&
+                typeof shop.name === 'string'
+            )
+
+          setSimulatorShops(
+            validShops
+          )
+        } catch (shopsError) {
+          console.error(
+            'Failed to load simulator shops:',
+            shopsError
+          )
+
+          setSimulatorShopsError(
+            'Impossible de charger les boutiques.'
+          )
+        } finally {
+          setSimulatorShopsLoading(false)
+        }
+      }
+
+    void fetchSimulatorShops()
+  }, [])
+
 
   const latestDraft =
     configs
@@ -1705,6 +1787,59 @@ export default function AIScoringAdminPage() {
         setCreatingDraft(false)
       }
     }
+
+  const handleDeleteDraft =
+    async (
+      version: number
+    ) => {
+      try {
+        setDeletingDraft(true)
+        setError(null)
+        setActionMessage(null)
+
+        const response =
+          await api.delete(
+            `/api/admin/ai-scoring/configs/${version}`
+          )
+
+        setConfigs(previous =>
+          previous.filter(
+            item =>
+              item.version !== version
+          )
+        )
+
+        setDraftConfig(null)
+
+        setActionMessage(
+          response.data?.message
+            ? `Brouillon V${version} supprimé. V${config?.version ?? '?'} reste active.`
+            : `Brouillon V${version} supprimé. V${config?.version ?? '?'} reste active.`
+        )
+      } catch (deleteError) {
+        console.error(
+          'Failed to delete AI scoring draft:',
+          deleteError
+        )
+
+        const apiError =
+          deleteError as {
+            response?: {
+              data?: {
+                error?: string
+              }
+            }
+          }
+
+        setError(
+          apiError.response?.data?.error ||
+          'Impossible de supprimer le brouillon de configuration IA.'
+        )
+      } finally {
+        setDeletingDraft(false)
+      }
+    }
+
 
   const handleSaveGeneral =
     async () => {
@@ -4524,17 +4659,6 @@ export default function AIScoringAdminPage() {
         return
       }
 
-      const confirmed =
-        window.confirm(
-          `Activer la configuration IA V${version} ?\n\n` +
-          `V${config?.version ?? '?'} est actuellement utilisée en production.\n` +
-          `Après activation, V${version} deviendra la nouvelle version active.`
-        )
-
-      if (!confirmed) {
-        return
-      }
-
       try {
         setActivatingDraft(true)
         setError(null)
@@ -5385,7 +5509,30 @@ export default function AIScoringAdminPage() {
                         <button
                           type="button"
                           onClick={() =>
-                            void handleActivateDraft(
+                            setDeleteModalVersion(
+                              latestDraft.version
+                            )
+                          }
+                          disabled={
+                            deletingDraft ||
+                            activatingDraft
+                          }
+                          className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-500/30 px-4 py-2 text-sm font-medium text-red-500 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <TrashIcon
+                            className="h-4 w-4"
+                            aria-hidden="true"
+                          />
+
+                          {deletingDraft
+                            ? `Suppression V${latestDraft.version}...`
+                            : `Supprimer V${latestDraft.version}`}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActivationModalVersion(
                               latestDraft.version
                             )
                           }
@@ -9565,18 +9712,17 @@ export default function AIScoringAdminPage() {
                   </p>
 
                   <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
-                    L’identifiant de la boutique est optionnel. Sans cet identifiant, les signaux historiques
-                    client, montant, zone et heure utilisent un contexte vide.
+                    Sélectionnez une boutique pour tester avec son contexte historique.
+                    Sans boutique, les signaux historiques client, montant, zone et heure utilisent un contexte vide.
                   </p>
 
                   <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <label>
                       <span className="text-xs dark:text-slate-400 light:text-gray-600">
-                        Identifiant de la boutique — optionnel
+                        Boutique de test — optionnel
                       </span>
 
-                      <input
-                        type="text"
+                      <select
                         value={
                           simulatorForm.shopId
                         }
@@ -9589,9 +9735,34 @@ export default function AIScoringAdminPage() {
                             })
                           )
                         }
-                        placeholder="Identifiant MongoDB"
-                        className="mt-1 block w-full rounded-lg border dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white px-3 py-2"
-                      />
+                        disabled={
+                          simulatorShopsLoading
+                        }
+                        className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
+                      >
+                        <option value="">
+                          {simulatorShopsLoading
+                            ? 'Chargement des boutiques...'
+                            : 'Aucune boutique — contexte vide'}
+                        </option>
+
+                        {simulatorShops.map(
+                          shop => (
+                            <option
+                              key={shop.id}
+                              value={shop.id}
+                            >
+                              {shop.name}
+                            </option>
+                          )
+                        )}
+                      </select>
+
+                      {simulatorShopsError && (
+                        <span className="mt-1 block text-xs text-red-500">
+                          {simulatorShopsError}
+                        </span>
+                      )}
                     </label>
 
                     <label>
@@ -10139,6 +10310,301 @@ export default function AIScoringAdminPage() {
             </>
           )}
         </div>
+
+        {deleteModalVersion !== null && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm"
+            role="presentation"
+            onMouseDown={() => {
+              if (!deletingDraft) {
+                setDeleteModalVersion(null)
+              }
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-draft-modal-title"
+              className="relative w-full max-w-lg overflow-hidden rounded-2xl border shadow-2xl dark:border-slate-700 dark:bg-slate-900 light:border-gray-200 light:bg-white"
+              onMouseDown={event =>
+                event.stopPropagation()
+              }
+            >
+              <div className="h-1 bg-red-500" />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setDeleteModalVersion(null)
+                }
+                disabled={deletingDraft}
+                aria-label="Fermer la confirmation"
+                className="absolute right-4 top-5 rounded-lg p-2 transition disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white light:text-gray-500 light:hover:bg-gray-100 light:hover:text-gray-900"
+              >
+                <XMarkIcon
+                  className="h-5 w-5"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <div className="p-6 sm:p-7">
+                <div className="flex items-start gap-4 pr-10">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+                    <TrashIcon
+                      className="h-7 w-7"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-red-500">
+                      Suppression du brouillon
+                    </p>
+
+                    <h2
+                      id="delete-draft-modal-title"
+                      className="mt-1 text-xl font-bold"
+                    >
+                      Supprimer la configuration V
+                      {deleteModalVersion} ?
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-6 dark:text-slate-400 light:text-gray-600">
+                      Cette action supprimera uniquement le brouillon.
+                      La configuration active restera inchangée.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="rounded-xl border p-4 dark:border-slate-700 dark:bg-slate-950/40 light:border-gray-200 light:bg-gray-50">
+                    <p className="text-xs dark:text-slate-400 light:text-gray-500">
+                      Version active
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-green-500">
+                      V{config?.version ?? '?'}
+                    </p>
+                  </div>
+
+                  <span
+                    className="text-xl dark:text-slate-500 light:text-gray-400"
+                    aria-hidden="true"
+                  >
+                    ←
+                  </span>
+
+                  <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+                    <p className="text-xs text-red-500">
+                      Brouillon supprimé
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-red-500">
+                      V{deleteModalVersion}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4">
+                  <p className="text-sm leading-6 text-amber-500">
+                    V{config?.version ?? '?'} restera active en production.
+                    Les commandes, scores et historiques existants ne seront
+                    pas modifiés.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:justify-end dark:border-slate-700 light:border-gray-200">
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() =>
+                    setDeleteModalVersion(null)
+                  }
+                  disabled={deletingDraft}
+                  className="rounded-lg border px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:hover:bg-slate-800 light:border-gray-300 light:hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+
+                <button
+                  type="button"
+                  disabled={deletingDraft}
+                  onClick={() => {
+                    if (
+                      deleteModalVersion === null
+                    ) {
+                      return
+                    }
+
+                    const version =
+                      deleteModalVersion
+
+                    setDeleteModalVersion(null)
+
+                    void handleDeleteDraft(version)
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                >
+                  <TrashIcon
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  />
+
+                  {deletingDraft
+                    ? 'Suppression...'
+                    : `Supprimer V${deleteModalVersion}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activationModalVersion !== null && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm"
+            role="presentation"
+            onMouseDown={() => {
+              if (!activatingDraft) {
+                setActivationModalVersion(null)
+              }
+            }}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="activation-modal-title"
+              className="relative w-full max-w-lg overflow-hidden rounded-2xl border shadow-2xl dark:border-slate-700 dark:bg-slate-900 light:border-gray-200 light:bg-white"
+              onMouseDown={event =>
+                event.stopPropagation()
+              }
+            >
+              <div className="h-1 bg-gradient-to-r from-emerald-400 via-green-500 to-blue-500" />
+
+              <button
+                type="button"
+                onClick={() =>
+                  setActivationModalVersion(null)
+                }
+                aria-label="Fermer la confirmation"
+                className="absolute right-4 top-5 rounded-lg p-2 transition dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white light:text-gray-500 light:hover:bg-gray-100 light:hover:text-gray-900"
+              >
+                <XMarkIcon
+                  className="h-5 w-5"
+                  aria-hidden="true"
+                />
+              </button>
+
+              <div className="p-6 sm:p-7">
+                <div className="flex items-start gap-4 pr-10">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+                    <CheckCircleIcon
+                      className="h-7 w-7"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-green-500">
+                      Nouvelle version
+                    </p>
+
+                    <h2
+                      id="activation-modal-title"
+                      className="mt-1 text-xl font-bold"
+                    >
+                      Activer la configuration IA V
+                      {activationModalVersion} ?
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-6 dark:text-slate-400 light:text-gray-600">
+                      Cette version remplacera immédiatement
+                      la configuration actuellement active.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="rounded-xl border p-4 dark:border-slate-700 dark:bg-slate-950/40 light:border-gray-200 light:bg-gray-50">
+                    <p className="text-xs dark:text-slate-400 light:text-gray-500">
+                      Version actuelle
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold">
+                      V{config?.version ?? '?'}
+                    </p>
+                  </div>
+
+                  <span
+                    className="text-xl dark:text-slate-500 light:text-gray-400"
+                    aria-hidden="true"
+                  >
+                    →
+                  </span>
+
+                  <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4">
+                    <p className="text-xs text-green-500">
+                      Nouvelle version
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-green-500">
+                      V{activationModalVersion}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4">
+                  <p className="text-sm leading-6 text-amber-500">
+                    Les paramètres enregistrés dans cette
+                    version seront utilisés pour les prochaines
+                    évaluations. Les commandes déjà évaluées
+                    conserveront leur configuration et leur
+                    historique.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col-reverse gap-3 border-t px-6 py-4 sm:flex-row sm:justify-end dark:border-slate-700 light:border-gray-200">
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={() =>
+                    setActivationModalVersion(null)
+                  }
+                  className="rounded-lg border px-5 py-2.5 text-sm font-semibold transition dark:border-slate-600 dark:hover:bg-slate-800 light:border-gray-300 light:hover:bg-gray-100"
+                >
+                  Annuler
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (
+                      activationModalVersion === null
+                    ) {
+                      return
+                    }
+
+                    const version =
+                      activationModalVersion
+
+                    setActivationModalVersion(null)
+
+                    void handleActivateDraft(version)
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                >
+                  <CheckCircleIcon
+                    className="h-5 w-5"
+                    aria-hidden="true"
+                  />
+
+                  Activer V{activationModalVersion}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showBackToTop && (
           <button

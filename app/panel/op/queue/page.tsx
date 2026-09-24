@@ -22,142 +22,43 @@ import {
   getAIScoreColor,
 } from './queueUtils'
 
-type OperatorToneSignal =
-  | 'polite'
-  | 'confident'
-  | 'enthusiastic'
-  | 'quick_response'
-  | 'hesitant'
-  | 'distracted'
-  | 'long_pauses'
-  | 'rude'
-  | 'aggressive'
-  | 'nervous'
-  | 'low_interest'
+type OperatorFeedbackQuestionType =
+  | 'single_choice'
+  | 'multiple_choice'
 
-type OperatorConfirmationLevel =
-  | 'very_firm'
-  | 'normal'
-  | 'weak'
-
-type OperatorPriceBehavior =
-  | 'no_issue'
-  | 'asks_discount'
-  | 'insists_discount'
-  | 'strong_negotiation'
-
-type OperatorProductDoubts =
-  | 'none'
-  | 'asks_question'
-  | 'multiple_doubts'
-  | 'compares_seller'
-
-type OperatorDeliveryInformation =
-  | 'complete_quick'
-  | 'clear_precise'
-  | 'partial'
-  | 'vague'
-  | 'difficulty'
-  | 'refuses_details'
-
-type OperatorEngagementLevel =
-  | 'very_engaged'
-  | 'interested'
-  | 'passive'
-  | 'low_involvement'
-  | 'distracted'
-
-type OperatorReceptionIntent =
-  | 'no_information'
-  | 'wants_fast_delivery'
-  | 'clearly_confirms_receipt'
-  | 'asks_delivery_info'
-  | 'uncertain_receipt'
-  | 'does_not_know_when'
-
-const OPERATOR_TONE_OPTIONS: Array<{
-  value: OperatorToneSignal
+interface OperatorFeedbackAnswer {
+  key: string
   label: string
-  group: 'positive' | 'intermediate' | 'negative'
-}> = [
-  { value: 'polite', label: 'Poli et courtois', group: 'positive' },
-  { value: 'confident', label: 'Confiant', group: 'positive' },
-  { value: 'enthusiastic', label: 'Enthousiaste', group: 'positive' },
-  { value: 'quick_response', label: 'Réponse rapide', group: 'positive' },
+  order?: number
+}
 
-  { value: 'hesitant', label: 'Hésitant', group: 'intermediate' },
-  { value: 'distracted', label: 'Distrait', group: 'intermediate' },
-  { value: 'long_pauses', label: 'Longues pauses', group: 'intermediate' },
+interface OperatorFeedbackQuestion {
+  key: string
+  categoryKey: string
+  title: string
+  prompt: string
+  type: OperatorFeedbackQuestionType
+  required: boolean
+  maxSelections?: number | null
+  order?: number
+  answers: OperatorFeedbackAnswer[]
+}
 
-  { value: 'rude', label: 'Impoli', group: 'negative' },
-  { value: 'aggressive', label: 'Agressif', group: 'negative' },
-  { value: 'nervous', label: 'Ton nerveux', group: 'negative' },
-  { value: 'low_interest', label: 'Semble peu intéressé', group: 'negative' },
-]
-
-const CONFIRMATION_LEVEL_OPTIONS: Array<{
-  value: OperatorConfirmationLevel
+interface OperatorFeedbackCategory {
+  key: string
   label: string
-}> = [
-  { value: 'very_firm', label: 'Confirmation très ferme' },
-  { value: 'normal', label: 'Confirmation normale' },
-  { value: 'weak', label: 'Confirmation faible' },
-]
+  order?: number
+}
 
-const PRICE_BEHAVIOR_OPTIONS: Array<{
-  value: OperatorPriceBehavior
-  label: string
-}> = [
-  { value: 'no_issue', label: 'Aucun problème concernant le prix' },
-  { value: 'asks_discount', label: 'Demande une réduction' },
-  { value: 'insists_discount', label: 'Insiste pour obtenir une réduction' },
-  { value: 'strong_negotiation', label: 'Négocie fortement le prix' },
-]
+interface OperatorFeedbackFormConfig {
+  enabled: boolean
+  configVersion: number | null
+  categories: OperatorFeedbackCategory[]
+  questions: OperatorFeedbackQuestion[]
+}
 
-const PRODUCT_DOUBTS_OPTIONS: Array<{
-  value: OperatorProductDoubts
-  label: string
-}> = [
-  { value: 'none', label: 'Aucun doute' },
-  { value: 'asks_question', label: 'Pose une question sur le produit' },
-  { value: 'multiple_doubts', label: 'Exprime plusieurs doutes' },
-  { value: 'compares_seller', label: 'Compare avec un autre vendeur' },
-]
-
-const DELIVERY_INFORMATION_OPTIONS: Array<{
-  value: OperatorDeliveryInformation
-  label: string
-}> = [
-  { value: 'complete_quick', label: 'Adresse complète et fournie rapidement' },
-  { value: 'clear_precise', label: 'Adresse claire et précise' },
-  { value: 'partial', label: 'Adresse partiellement renseignée' },
-  { value: 'vague', label: 'Adresse vague' },
-  { value: 'difficulty', label: 'Difficulté à fournir les informations' },
-  { value: 'refuses_details', label: 'Refuse / évite de communiquer les détails' },
-]
-
-const ENGAGEMENT_LEVEL_OPTIONS: Array<{
-  value: OperatorEngagementLevel
-  label: string
-}> = [
-  { value: 'very_engaged', label: 'Très engagé' },
-  { value: 'interested', label: 'Intéressé' },
-  { value: 'passive', label: 'Passif' },
-  { value: 'low_involvement', label: 'Peu impliqué' },
-  { value: 'distracted', label: 'Distrait' },
-]
-
-const RECEPTION_INTENT_OPTIONS: Array<{
-  value: OperatorReceptionIntent
-  label: string
-}> = [
-  { value: 'no_information', label: 'Aucune information' },
-  { value: 'wants_fast_delivery', label: 'Souhaite recevoir rapidement' },
-  { value: 'clearly_confirms_receipt', label: 'Confirme clairement la réception' },
-  { value: 'asks_delivery_info', label: 'Demande des informations sur la livraison' },
-  { value: 'uncertain_receipt', label: 'Incertain concernant la réception' },
-  { value: 'does_not_know_when', label: 'Ne sait pas quand il pourra recevoir' },
-]
+type OperatorFeedbackResponses =
+  Record<string, string[]>
 
 interface OperatorClientDraft {
   orderId: string
@@ -555,32 +456,24 @@ export default function CallQueue() {
   const [showThirdAttemptCancelModal, setShowThirdAttemptCancelModal] = useState(false)
   const [confirmingThirdAttemptCancel, setConfirmingThirdAttemptCancel] = useState(false)
 
-  // Retour opérateur structuré
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  // Retour opérateur dynamique configuré par l'admin.
+  const [showConfirmationModal, setShowConfirmationModal] =
+    useState(false)
 
-  const [confirmationToneSignals, setConfirmationToneSignals] =
-    useState<OperatorToneSignal[]>([])
+  const [feedbackFormConfig, setFeedbackFormConfig] =
+    useState<OperatorFeedbackFormConfig | null>(null)
 
-  const [confirmationLevel, setConfirmationLevel] =
-    useState<OperatorConfirmationLevel | ''>('')
+  const [feedbackResponses, setFeedbackResponses] =
+    useState<OperatorFeedbackResponses>({})
 
-  const [confirmationPriceBehavior, setConfirmationPriceBehavior] =
-    useState<OperatorPriceBehavior | ''>('')
+  const [loadingFeedbackForm, setLoadingFeedbackForm] =
+    useState(false)
 
-  const [confirmationProductDoubts, setConfirmationProductDoubts] =
-    useState<OperatorProductDoubts | ''>('')
+  const [confirmationNotes, setConfirmationNotes] =
+    useState('')
 
-  const [confirmationDeliveryInformation, setConfirmationDeliveryInformation] =
-    useState<OperatorDeliveryInformation | ''>('')
-
-  const [confirmationEngagementLevel, setConfirmationEngagementLevel] =
-    useState<OperatorEngagementLevel | ''>('')
-
-  const [confirmationReceptionIntent, setConfirmationReceptionIntent] =
-    useState<OperatorReceptionIntent | ''>('')
-
-  const [confirmationNotes, setConfirmationNotes] = useState('')
-  const [confirmationError, setConfirmationError] = useState('')
+  const [confirmationError, setConfirmationError] =
+    useState('')
 
   // Chronomètre réel de l'appel opérateur.
   const [callStartedAt, setCallStartedAt] =
@@ -1357,7 +1250,7 @@ export default function CallQueue() {
     )}`
   }
 
-  const openConfirmationModal = () => {
+  const openConfirmationModal = async () => {
     if (callTimerActive && callStartedAt) {
       setCallElapsedSeconds(
         Math.max(
@@ -1371,33 +1264,90 @@ export default function CallQueue() {
       setCallTimerActive(false)
     }
 
-    setConfirmationToneSignals([])
-    setConfirmationLevel('')
-    setConfirmationPriceBehavior('')
-    setConfirmationProductDoubts('')
-    setConfirmationDeliveryInformation('')
-    setConfirmationEngagementLevel('')
-    setConfirmationReceptionIntent('')
+    setFeedbackFormConfig(null)
+    setFeedbackResponses({})
     setConfirmationNotes('')
     setConfirmationError('')
     setShowConfirmationModal(true)
-  }
+    setLoadingFeedbackForm(true)
 
-  const toggleConfirmationTone = (
-    signal: OperatorToneSignal
-  ) => {
-    setConfirmationToneSignals(current => {
-      if (current.includes(signal)) {
-        return current.filter(
-          item => item !== signal
+    try {
+      const response = await api.get(
+        '/api/orders/operator-feedback/questions'
+      )
+
+      const formConfig =
+        response.data as OperatorFeedbackFormConfig
+
+      if (
+        !formConfig ||
+        !Array.isArray(formConfig.categories) ||
+        !Array.isArray(formConfig.questions)
+      ) {
+        throw new Error(
+          'Configuration du retour opérateur invalide.'
         )
       }
 
-      if (current.length >= 3) {
+      setFeedbackFormConfig(formConfig)
+    } catch (error) {
+      logger.error(
+        'Impossible de charger le formulaire opérateur:',
+        error,
+        'Queue'
+      )
+
+      setConfirmationError(
+        "Impossible de charger le formulaire de retour. Fermez puis réessayez."
+      )
+    } finally {
+      setLoadingFeedbackForm(false)
+    }
+  }
+
+  const toggleFeedbackAnswer = (
+    question: OperatorFeedbackQuestion,
+    answerKey: string
+  ) => {
+    setFeedbackResponses(current => {
+      const selected =
+        current[question.key] || []
+
+      if (question.type === 'single_choice') {
+        return {
+          ...current,
+          [question.key]: [answerKey],
+        }
+      }
+
+      if (selected.includes(answerKey)) {
+        return {
+          ...current,
+          [question.key]:
+            selected.filter(
+              key => key !== answerKey
+            ),
+        }
+      }
+
+      const maxSelections =
+        typeof question.maxSelections ===
+          'number' &&
+        question.maxSelections > 0
+          ? question.maxSelections
+          : question.answers.length
+
+      if (selected.length >= maxSelections) {
         return current
       }
 
-      return [...current, signal]
+      return {
+        ...current,
+        [question.key]: [
+          ...selected,
+          answerKey,
+        ],
+      }
     })
 
     setConfirmationError('')
@@ -1410,26 +1360,58 @@ export default function CallQueue() {
   const confirmOrder = async () => {
     if (!selectedOrder) return
 
-    if (confirmationToneSignals.length === 0) {
+    if (loadingFeedbackForm) {
       setConfirmationError(
-        'Sélectionnez au moins une observation dans Ton et comportement.'
+        'Le formulaire est encore en cours de chargement.'
       )
       return
     }
 
-    if (
-      !confirmationLevel ||
-      !confirmationPriceBehavior ||
-      !confirmationProductDoubts ||
-      !confirmationDeliveryInformation ||
-      !confirmationEngagementLevel ||
-      !confirmationReceptionIntent
-    ) {
+    if (!feedbackFormConfig) {
       setConfirmationError(
-        'Renseignez toutes les catégories obligatoires.'
+        'Le formulaire de retour opérateur est indisponible.'
       )
       return
     }
+
+    const activeQuestions =
+      feedbackFormConfig.enabled
+        ? feedbackFormConfig.questions
+        : []
+
+    const missingQuestion =
+      activeQuestions.find(
+        question =>
+          question.required &&
+          (
+            feedbackResponses[
+              question.key
+            ] || []
+          ).length === 0
+      )
+
+    if (missingQuestion) {
+      setConfirmationError(
+        `Répondez à la question obligatoire : ${missingQuestion.title}.`
+      )
+      return
+    }
+
+    const responses =
+      activeQuestions
+        .map(question => ({
+          questionKey:
+            question.key,
+
+          answerKeys:
+            feedbackResponses[
+              question.key
+            ] || [],
+        }))
+        .filter(
+          response =>
+            response.answerKeys.length > 0
+        )
 
     setProcessing(true)
     setConfirmationError('')
@@ -1438,18 +1420,15 @@ export default function CallQueue() {
       await api.post(
         `/api/orders/${selectedOrder._id}/operator-actions/confirm`,
         {
-          toneSignals: confirmationToneSignals,
-          confirmationLevel,
-          priceBehavior: confirmationPriceBehavior,
-          productDoubts: confirmationProductDoubts,
-          deliveryInformation: confirmationDeliveryInformation,
-          engagementLevel: confirmationEngagementLevel,
-          receptionIntent: confirmationReceptionIntent,
+          responses,
+
           duration:
             callElapsedSeconds > 0
               ? callElapsedSeconds
               : undefined,
-          notes: confirmationNotes.trim(),
+
+          notes:
+            confirmationNotes.trim(),
         }
       )
 
@@ -1594,13 +1573,9 @@ export default function CallQueue() {
     setPostponeNote('')
     setPostponeError('')
     setShowConfirmationModal(false)
-    setConfirmationToneSignals([])
-    setConfirmationLevel('')
-    setConfirmationPriceBehavior('')
-    setConfirmationProductDoubts('')
-    setConfirmationDeliveryInformation('')
-    setConfirmationEngagementLevel('')
-    setConfirmationReceptionIntent('')
+    setFeedbackFormConfig(null)
+    setFeedbackResponses({})
+    setLoadingFeedbackForm(false)
     setConfirmationNotes('')
     setConfirmationError('')
     setCallStartedAt(null)
@@ -2586,274 +2561,161 @@ export default function CallQueue() {
               </div>
 
               <div className="space-y-6">
-                {/* Ton et comportement */}
-                <div>
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <label className="text-sm font-semibold">
-                      Ton et comportement
-                    </label>
-
-                    <span className="text-xs dark:text-slate-400 light:text-gray-500">
-                      {confirmationToneSignals.length} / 3
-                    </span>
+                {loadingFeedbackForm ? (
+                  <div className="rounded-xl border p-5 text-sm dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-300 light:border-gray-200 light:bg-gray-50 light:text-gray-600">
+                    Chargement du formulaire de retour...
                   </div>
+                ) : feedbackFormConfig ? (
+                  feedbackFormConfig.enabled ? (
+                    <div className="space-y-6">
+                      {feedbackFormConfig.categories.map(
+                        category => {
+                          const categoryQuestions =
+                            feedbackFormConfig.questions.filter(
+                              question =>
+                                question.categoryKey ===
+                                category.key
+                            )
 
-                  <p className="mb-3 text-xs dark:text-slate-500 light:text-gray-500">
-                    Sélection multiple, maximum 3 observations.
-                  </p>
+                          if (
+                            categoryQuestions.length === 0
+                          ) {
+                            return null
+                          }
 
-                  {[
-                    ['positive', 'Signaux positifs'],
-                    ['intermediate', 'Signaux intermédiaires'],
-                    ['negative', 'Signaux négatifs'],
-                  ].map(([group, title]) => (
-                    <div
-                      key={group}
-                      className="mb-3"
-                    >
-                      <p className="mb-2 text-xs font-medium dark:text-slate-400 light:text-gray-600">
-                        {title}
-                      </p>
+                          return (
+                            <section
+                              key={category.key}
+                              className="space-y-4"
+                            >
+                              <div className="border-b pb-2 dark:border-slate-700 light:border-gray-200">
+                                <h4 className="font-semibold">
+                                  {category.label}
+                                </h4>
+                              </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        {OPERATOR_TONE_OPTIONS
-                          .filter(option => option.group === group)
-                          .map(option => {
-                            const selected =
-                              confirmationToneSignals.includes(
-                                option.value
-                              )
+                              {categoryQuestions.map(
+                                question => {
+                                  const selectedAnswers =
+                                    feedbackResponses[
+                                      question.key
+                                    ] || []
 
-                            const disabled =
-                              !selected &&
-                              confirmationToneSignals.length >= 3
+                                  const maxSelections =
+                                    question.type ===
+                                      'single_choice'
+                                      ? 1
+                                      : (
+                                          typeof question.maxSelections ===
+                                            'number' &&
+                                          question.maxSelections > 0
+                                            ? question.maxSelections
+                                            : question.answers.length
+                                        )
 
-                            return (
-                              <button
-                                key={option.value}
-                                type="button"
-                                disabled={disabled}
-                                onClick={() =>
-                                  toggleConfirmationTone(
-                                    option.value
+                                  return (
+                                    <div
+                                      key={question.key}
+                                      className="rounded-xl border p-4 dark:border-slate-700 dark:bg-slate-900/40 light:border-gray-200 light:bg-gray-50/70"
+                                    >
+                                      <div className="mb-3">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                          <label className="text-sm font-semibold">
+                                            {question.title}
+
+                                            {question.required && (
+                                              <span className="ml-2 text-xs font-normal text-red-400">
+                                                obligatoire
+                                              </span>
+                                            )}
+                                          </label>
+
+                                          <span className="text-xs dark:text-slate-400 light:text-gray-500">
+                                            {question.type ===
+                                            'multiple_choice'
+                                              ? `${selectedAnswers.length} / ${maxSelections}`
+                                              : 'Choix unique'}
+                                          </span>
+                                        </div>
+
+                                        {question.prompt && (
+                                          <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-600">
+                                            {question.prompt}
+                                          </p>
+                                        )}
+                                      </div>
+
+                                      <div className="flex flex-wrap gap-2">
+                                        {question.answers.map(
+                                          answer => {
+                                            const selected =
+                                              selectedAnswers.includes(
+                                                answer.key
+                                              )
+
+                                            const disabled =
+                                              question.type ===
+                                                'multiple_choice' &&
+                                              !selected &&
+                                              selectedAnswers.length >=
+                                                maxSelections
+
+                                            return (
+                                              <button
+                                                key={answer.key}
+                                                type="button"
+                                                aria-pressed={
+                                                  selected
+                                                }
+                                                disabled={
+                                                  disabled
+                                                }
+                                                onClick={() =>
+                                                  toggleFeedbackAnswer(
+                                                    question,
+                                                    answer.key
+                                                  )
+                                                }
+                                                className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                                                  selected
+                                                    ? 'border-green-500 bg-green-500/15 text-green-400'
+                                                    : disabled
+                                                      ? 'cursor-not-allowed border-slate-700 opacity-40'
+                                                      : 'border-slate-600 hover:border-green-500/60'
+                                                }`}
+                                              >
+                                                {answer.label}
+                                              </button>
+                                            )
+                                          }
+                                        )}
+                                      </div>
+                                    </div>
                                   )
                                 }
-                                className={`rounded-full border px-3 py-2 text-sm transition ${
-                                  selected
-                                    ? 'border-green-500 bg-green-500/15 text-green-400'
-                                    : disabled
-                                      ? 'cursor-not-allowed border-slate-700 text-slate-600 opacity-40'
-                                      : 'border-slate-600 hover:border-green-500/60'
-                                }`}
-                              >
-                                {option.label}
-                              </button>
-                            )
-                          })}
-                      </div>
+                              )}
+                            </section>
+                          )
+                        }
+                      )}
+
+                      {feedbackFormConfig.questions.length ===
+                        0 && (
+                        <p className="rounded-xl border p-4 text-sm dark:border-slate-700 dark:text-slate-300 light:border-gray-200 light:text-gray-600">
+                          Aucune question active n’est configurée.
+                        </p>
+                      )}
                     </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                  {/* Niveau confirmation */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Niveau de confirmation
-                    </label>
-
-                    <select
-                      value={confirmationLevel}
-                      onChange={event => {
-                        setConfirmationLevel(
-                          event.target.value as
-                            | OperatorConfirmationLevel
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {CONFIRMATION_LEVEL_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Prix */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Comportement face au prix
-                    </label>
-
-                    <select
-                      value={confirmationPriceBehavior}
-                      onChange={event => {
-                        setConfirmationPriceBehavior(
-                          event.target.value as
-                            | OperatorPriceBehavior
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {PRICE_BEHAVIOR_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Produit */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Doutes sur le produit
-                    </label>
-
-                    <select
-                      value={confirmationProductDoubts}
-                      onChange={event => {
-                        setConfirmationProductDoubts(
-                          event.target.value as
-                            | OperatorProductDoubts
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {PRODUCT_DOUBTS_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Livraison */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Informations de livraison
-                    </label>
-
-                    <select
-                      value={confirmationDeliveryInformation}
-                      onChange={event => {
-                        setConfirmationDeliveryInformation(
-                          event.target.value as
-                            | OperatorDeliveryInformation
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {DELIVERY_INFORMATION_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Engagement */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Niveau d&apos;engagement
-                    </label>
-
-                    <select
-                      value={confirmationEngagementLevel}
-                      onChange={event => {
-                        setConfirmationEngagementLevel(
-                          event.target.value as
-                            | OperatorEngagementLevel
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {ENGAGEMENT_LEVEL_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Réception */}
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold">
-                      Intention de réception
-                    </label>
-
-                    <select
-                      value={confirmationReceptionIntent}
-                      onChange={event => {
-                        setConfirmationReceptionIntent(
-                          event.target.value as
-                            | OperatorReceptionIntent
-                            | ''
-                        )
-                        setConfirmationError('')
-                      }}
-                      className="w-full rounded-lg border p-3 dark:border-slate-700 dark:bg-slate-900 light:border-gray-300 light:bg-white"
-                    >
-                      <option value="">
-                        Sélectionner
-                      </option>
-
-                      {RECEPTION_INTENT_OPTIONS.map(option => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                  ) : (
+                    <p className="rounded-xl border p-4 text-sm dark:border-slate-700 dark:text-slate-300 light:border-gray-200 light:text-gray-600">
+                      Le retour opérateur est actuellement désactivé. Vous pouvez confirmer la commande sans questionnaire.
+                    </p>
+                  )
+                ) : (
+                  <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+                    Le formulaire de retour n’est pas disponible.
+                  </p>
+                )}
 
                 {/* Note */}
                 <div>
@@ -2900,13 +2762,19 @@ export default function CallQueue() {
 
                 <button
                   type="button"
-                  disabled={processing}
+                  disabled={
+                    processing ||
+                    loadingFeedbackForm ||
+                    !feedbackFormConfig
+                  }
                   onClick={confirmOrder}
                   className="flex-1 rounded-lg bg-green-500 px-4 py-3 font-semibold text-white transition hover:bg-green-600 disabled:opacity-50"
                 >
-                  {processing
-                    ? 'Enregistrement...'
-                    : 'Enregistrer le retour et confirmer'}
+                  {loadingFeedbackForm
+                    ? 'Chargement...'
+                    : processing
+                      ? 'Enregistrement...'
+                      : 'Enregistrer le retour et confirmer'}
                 </button>
               </div>
             </div>
