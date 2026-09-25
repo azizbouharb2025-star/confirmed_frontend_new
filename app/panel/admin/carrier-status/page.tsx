@@ -183,11 +183,48 @@ export default function CarrierStatusPage() {
   const [initializing, setInitializing] =
     useState(false)
 
+  const [activating, setActivating] =
+    useState(false)
+
+  const [
+    activationModalOpen,
+    setActivationModalOpen
+  ] =
+    useState(false)
+
   const [error, setError] =
     useState<string | null>(null)
 
   const [actionMessage, setActionMessage] =
     useState<string | null>(null)
+
+
+  const hasResolvedRetourDepotMapping =
+    useMemo(
+      () =>
+        colissimoDraft.some(mapping => {
+          const normalized =
+            String(
+              mapping.providerStatus || ''
+            )
+              .normalize('NFD')
+              .replace(
+                /[\u0300-\u036f]/g,
+                ''
+              )
+              .trim()
+              .toLowerCase()
+
+          return (
+            mapping.enabled !== false &&
+            normalized === 'retour depot' &&
+            Boolean(
+              mapping.mappedOrderStatus
+            )
+          )
+        }),
+      [colissimoDraft]
+    )
 
 
   const latestDraft =
@@ -504,6 +541,178 @@ export default function CarrierStatusPage() {
       )
     } finally {
       setSaving(false)
+    }
+  }
+
+
+  const handleActivateDraft = async () => {
+    if (!draftConfig) {
+      return
+    }
+
+    if (!hasResolvedRetourDepotMapping) {
+      setError(
+        'Colissimo "Retour dépôt" doit être associé à un statut CONFIRMED avant activation.'
+      )
+
+      setActivationModalOpen(false)
+      return
+    }
+
+    try {
+      setActivating(true)
+      setError(null)
+      setActionMessage(null)
+
+      /*
+       * On sauvegarde d'abord l'état actuel de
+       * l'éditeur afin de ne jamais activer une
+       * ancienne version du brouillon.
+       */
+      const saveResponse =
+        await api.put(
+          `/api/admin/carrier-status/configs/${draftConfig.version}`,
+          {
+            mappings: {
+              intigo:
+                intigoDraft.map(
+                  (mapping, index) => ({
+                    ...mapping,
+                    order:
+                      index
+                  })
+                ),
+
+              colissimo:
+                colissimoDraft.map(
+                  (mapping, index) => ({
+                    ...mapping,
+                    order:
+                      index
+                  })
+                )
+            },
+
+            notes:
+              notesDraft
+          }
+        )
+
+      const saved =
+        normalizeConfig(
+          saveResponse.data?.config
+        )
+
+      if (!saved) {
+        throw new Error(
+          'Invalid saved carrier status configuration response'
+        )
+      }
+
+      const activateResponse =
+        await api.post(
+          `/api/admin/carrier-status/configs/${saved.version}/activate`,
+          {}
+        )
+
+      const activated =
+        normalizeConfig(
+          activateResponse.data?.config
+        )
+
+      if (!activated) {
+        throw new Error(
+          'Invalid activated carrier status configuration response'
+        )
+      }
+
+      setActiveConfig(
+        activated
+      )
+
+      setConfigs(previous =>
+        previous.map(config => {
+          if (
+            config.version ===
+            activated.version
+          ) {
+            return {
+              ...config,
+              status:
+                'active',
+              activatedAt:
+                activated.activatedAt
+            }
+          }
+
+          if (
+            config.status ===
+            'active'
+          ) {
+            return {
+              ...config,
+              status:
+                'archived'
+            }
+          }
+
+          return config
+        })
+      )
+
+      setDraftConfig(null)
+      setIntigoDraft([])
+      setColissimoDraft([])
+      setNotesDraft('')
+
+      setActivationModalOpen(false)
+
+      setActionMessage(
+        `Version V${activated.version} activée.`
+      )
+    } catch (requestError: unknown) {
+      console.error(
+        'Failed to activate carrier status configuration:',
+        requestError
+      )
+
+      const responseData =
+        typeof requestError === 'object' &&
+        requestError !== null &&
+        'response' in requestError
+          ? (
+              requestError as {
+                response?: {
+                  data?: {
+                    details?: unknown
+                    error?: unknown
+                  }
+                }
+              }
+            ).response?.data
+          : undefined
+
+      const details =
+        responseData?.details
+
+      const apiError =
+        typeof responseData?.error === 'string'
+          ? responseData.error
+          : null
+
+      setError(
+        Array.isArray(details) &&
+        details.length > 0
+          ? details
+              .map(item => String(item))
+              .join(' • ')
+          : apiError ||
+            'Impossible d’activer cette version.'
+      )
+
+      setActivationModalOpen(false)
+    } finally {
+      setActivating(false)
     }
   }
 
@@ -1092,10 +1301,21 @@ export default function CarrierStatusPage() {
                   placeholder="Décrire les changements de cette version..."
                 />
 
-                <div className="mt-4 flex justify-end">
+                {!hasResolvedRetourDepotMapping && (
+                  <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-500">
+                    Activation bloquée : la règle Colissimo
+                    « Retour dépôt » doit d’abord être associée
+                    explicitement à un statut CONFIRMED.
+                  </div>
+                )}
+
+                <div className="mt-4 flex flex-wrap justify-end gap-3">
                   <button
                     type="button"
-                    disabled={saving}
+                    disabled={
+                      saving ||
+                      activating
+                    }
                     onClick={() =>
                       void handleSaveDraft()
                     }
@@ -1105,12 +1325,95 @@ export default function CarrierStatusPage() {
                       ? 'Enregistrement...'
                       : `Enregistrer V${draftConfig.version}`}
                   </button>
+
+                  <button
+                    type="button"
+                    disabled={
+                      saving ||
+                      activating ||
+                      !hasResolvedRetourDepotMapping
+                    }
+                    onClick={() =>
+                      setActivationModalOpen(true)
+                    }
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <CheckCircleIcon className="h-5 w-5" />
+
+                    {activating
+                      ? 'Activation...'
+                      : `Activer V${draftConfig.version}`}
+                  </button>
                 </div>
               </section>
             </>
           )}
 
         </div>
+
+        {activationModalOpen && draftConfig && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="carrier-status-activation-title"
+          >
+            <div className="w-full max-w-lg rounded-2xl border border-green-500/30 dark:bg-slate-900 light:bg-white p-6 shadow-2xl">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
+                <CheckCircleIcon className="h-7 w-7 text-green-500" />
+              </div>
+
+              <h2
+                id="carrier-status-activation-title"
+                className="mt-4 text-xl font-semibold"
+              >
+                Activer V{draftConfig.version} ?
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 dark:text-slate-400 light:text-gray-600">
+                Cette version deviendra la configuration active
+                des mappings transporteurs. L’ancienne version
+                active sera archivée automatiquement.
+              </p>
+
+              <div className="mt-4 rounded-xl bg-green-500/10 p-4 text-sm text-green-500">
+                Les modifications actuelles seront enregistrées
+                avant l’activation.
+              </div>
+
+              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  disabled={activating}
+                  onClick={() =>
+                    setActivationModalOpen(false)
+                  }
+                  className="rounded-lg border px-5 py-2.5 text-sm font-semibold transition dark:border-slate-600 dark:hover:bg-slate-800 light:border-gray-300 light:hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    activating ||
+                    !hasResolvedRetourDepotMapping
+                  }
+                  onClick={() =>
+                    void handleActivateDraft()
+                  }
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <CheckCircleIcon className="h-5 w-5" />
+
+                  {activating
+                    ? 'Activation...'
+                    : `Confirmer l’activation de V${draftConfig.version}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </DashboardLayout>
     </ProtectedRoute>
   )
