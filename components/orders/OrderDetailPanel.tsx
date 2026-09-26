@@ -57,9 +57,14 @@ function formatDuration(seconds?: number): string {
  */
 const STATUS_PROGRESSION: OrderStatus[] = [
   'pending',
-  'assigned',
   'in_progress',
+  'cancelled',
+  'postponed',
   'confirmed',
+  'shipped',
+  'out_for_delivery',
+  'delivered',
+  'returned',
 ]
 
 /**
@@ -1080,8 +1085,14 @@ function CallHistorySection({ order, t }: { order: Order; t: (key: TranslationKe
  * Requirements: 4.4
  */
 function StatusTimelineSection({ order, t }: { order: Order; t: (key: TranslationKey) => string }) {
-  const currentStatusIndex = STATUS_PROGRESSION.indexOf(order.status)
-  const isTerminalStatus = order.status === 'rejected' || order.status === 'cancelled'
+  const timelineStatus: OrderStatus =
+    order.status === 'assigned'
+      ? 'in_progress'
+      : order.status === 'rejected'
+      ? 'cancelled'
+      : order.status
+
+  const currentStatusIndex = STATUS_PROGRESSION.indexOf(timelineStatus)
   const translatedLabels = getTranslatedStatusLabels(t)
   
   return (
@@ -1089,8 +1100,8 @@ function StatusTimelineSection({ order, t }: { order: Order; t: (key: Translatio
       <SectionHeader title={t('orderDetail.statusTimeline')} />
       <div className="flex items-center justify-between">
         {STATUS_PROGRESSION.map((status, index) => {
-          const isCompleted = !isTerminalStatus && currentStatusIndex >= index
-          const isCurrent = order.status === status
+          const isCompleted = currentStatusIndex >= index
+          const isCurrent = timelineStatus === status
           
           return (
             <Fragment key={status}>
@@ -1137,7 +1148,7 @@ function StatusTimelineSection({ order, t }: { order: Order; t: (key: Translatio
                 <div
                   className={clsx(
                     'flex-1 h-0.5 mx-2',
-                    !isTerminalStatus && currentStatusIndex > index
+                    currentStatusIndex > index
                       ? 'bg-green-500'
                       : 'bg-gray-200 dark:bg-slate-700'
                   )}
@@ -1148,12 +1159,7 @@ function StatusTimelineSection({ order, t }: { order: Order; t: (key: Translatio
         })}
       </div>
       
-      {/* Terminal status indicator */}
-      {isTerminalStatus && (
-        <div className="mt-4 flex items-center justify-center">
-          <StatusBadge status={order.status} size="md" />
-        </div>
-      )}
+
     </div>
   )
 }
