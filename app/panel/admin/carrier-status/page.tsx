@@ -5,7 +5,6 @@ import {
   CheckCircleIcon,
   ClockIcon,
   PlusIcon,
-  TrashIcon,
   TruckIcon
 } from '@heroicons/react/24/outline'
 
@@ -717,35 +716,6 @@ export default function CarrierStatusPage() {
   }
 
 
-  const addIntigoRule = () => {
-    setIntigoDraft(previous => [
-      ...previous,
-      {
-        matchType: 'exact',
-        code: 0,
-        label: '',
-        mappedOrderStatus: null,
-        enabled: true,
-        order: previous.length
-      }
-    ])
-  }
-
-
-  const addColissimoRule = () => {
-    setColissimoDraft(previous => [
-      ...previous,
-      {
-        providerStatus: '',
-        label: '',
-        mappedOrderStatus: null,
-        enabled: true,
-        order: previous.length
-      }
-    ])
-  }
-
-
   if (loading) {
     return (
       <ProtectedRoute allowedRoles={['admin']}>
@@ -901,28 +871,19 @@ export default function CarrierStatusPage() {
                       Codes ou plages API vers statuts CONFIRMED.
                     </p>
 
-                    <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
-                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950/50 light:border-gray-200 light:bg-gray-50">
-                        <div className="font-semibold">
-                          🔒 1. Code / plage API
-                        </div>
-                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
-                          Technique — à ne pas modifier normalement.
-                        </div>
-                      </div>
-
+                    <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
                       <div className="rounded-lg border px-3 py-2 dark:border-slate-700 light:border-gray-200">
                         <div className="font-semibold">
-                          2. Libellé Admin
+                          1. Statut Intigo
                         </div>
                         <div className="mt-1 dark:text-slate-400 light:text-gray-500">
-                          Description uniquement, sans impact métier.
+                          Nom lisible du statut transporteur.
                         </div>
                       </div>
 
                       <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
                         <div className="font-semibold text-blue-500">
-                          3. Statut CONFIRMED
+                          2. Statut CONFIRMED
                         </div>
                         <div className="mt-1 dark:text-slate-300 light:text-gray-600">
                           À modifier pour changer le statut de la commande.
@@ -930,15 +891,6 @@ export default function CarrierStatusPage() {
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={addIntigoRule}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition dark:border-slate-600 dark:hover:bg-slate-800 light:border-gray-300 light:hover:bg-gray-100"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    Ajouter une règle
-                  </button>
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -949,158 +901,15 @@ export default function CarrierStatusPage() {
                           mapping._id ||
                           `intigo-${index}`
                         }
-                        className="grid gap-3 rounded-xl border p-4 lg:grid-cols-[140px_1fr_1fr_220px_auto] dark:border-slate-700 light:border-gray-200"
+                        className="grid gap-3 rounded-xl border p-4 lg:grid-cols-[1fr_220px] dark:border-slate-700 light:border-gray-200"
                       >
-                        <select
-                          value={mapping.matchType}
-                          onChange={event => {
-                            const value =
-                              event.target.value as IntigoMatchType
-
-                            setIntigoDraft(previous =>
-                              previous.map(
-                                (item, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...item,
-                                        matchType: value,
-                                        code:
-                                          value === 'exact'
-                                            ? item.code ?? 0
-                                            : undefined,
-                                        rangeStart:
-                                          value === 'range'
-                                            ? item.rangeStart ?? 0
-                                            : undefined,
-                                        rangeEnd:
-                                          value === 'range'
-                                            ? item.rangeEnd ?? 0
-                                            : undefined
-                                      }
-                                    : item
-                              )
-                            )
-                          }}
-                          className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
+                        <div
+                          className="flex min-h-10 items-center rounded-lg border px-3 py-2 text-sm font-medium dark:border-slate-700 dark:bg-slate-950/40 light:border-gray-200 light:bg-gray-50"
+                          aria-label="Statut Intigo"
+                          title="Statut technique Intigo non modifiable depuis cette interface."
                         >
-                          <option value="exact">
-                            Code exact
-                          </option>
-                          <option value="range">
-                            Plage
-                          </option>
-                        </select>
-
-                        {mapping.matchType === 'exact' ? (
-                          <input
-                            type="number"
-                            value={mapping.code ?? 0}
-                            onChange={event => {
-                              const value =
-                                Number(
-                                  event.target.value
-                                )
-
-                              setIntigoDraft(previous =>
-                                previous.map(
-                                  (item, itemIndex) =>
-                                    itemIndex === index
-                                      ? {
-                                          ...item,
-                                          code: value
-                                        }
-                                      : item
-                                )
-                              )
-                            }}
-                            className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                            placeholder="5000"
-                          />
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="number"
-                              value={
-                                mapping.rangeStart ??
-                                0
-                              }
-                              onChange={event => {
-                                const value =
-                                  Number(
-                                    event.target.value
-                                  )
-
-                                setIntigoDraft(previous =>
-                                  previous.map(
-                                    (item, itemIndex) =>
-                                      itemIndex === index
-                                        ? {
-                                            ...item,
-                                            rangeStart:
-                                              value
-                                          }
-                                        : item
-                                  )
-                                )
-                              }}
-                              className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                              placeholder="1000"
-                            />
-
-                            <input
-                              type="number"
-                              value={
-                                mapping.rangeEnd ??
-                                0
-                              }
-                              onChange={event => {
-                                const value =
-                                  Number(
-                                    event.target.value
-                                  )
-
-                                setIntigoDraft(previous =>
-                                  previous.map(
-                                    (item, itemIndex) =>
-                                      itemIndex === index
-                                        ? {
-                                            ...item,
-                                            rangeEnd:
-                                              value
-                                          }
-                                        : item
-                                  )
-                                )
-                              }}
-                              className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                              placeholder="1008"
-                            />
-                          </div>
-                        )}
-
-                        <input
-                          type="text"
-                          aria-label="Libellé Admin Intigo"
-                          value={mapping.label || ''}
-                          onChange={event => {
-                            const value =
-                              event.target.value
-
-                            setIntigoDraft(previous =>
-                              previous.map(
-                                (item, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...item,
-                                        label: value
-                                      }
-                                    : item
-                              )
-                            )
-                          }}
-                          className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                          placeholder="Libellé"
-                        />
+                          {mapping.label || 'Statut Intigo'}
+                        </div>
 
                         <select
                           value={
@@ -1142,22 +951,6 @@ export default function CarrierStatusPage() {
                             )
                           )}
                         </select>
-
-                        <button
-                          type="button"
-                          aria-label="Supprimer la règle Intigo"
-                          onClick={() =>
-                            setIntigoDraft(previous =>
-                              previous.filter(
-                                (_, itemIndex) =>
-                                  itemIndex !== index
-                              )
-                            )
-                          }
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-500/10"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
                       </div>
                     )
                   )}
@@ -1167,54 +960,36 @@ export default function CarrierStatusPage() {
 
               {/* COLISSIMO */}
               <section className="rounded-2xl border p-5 dark:border-slate-700 dark:bg-slate-900 light:border-gray-200 light:bg-white">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">
-                      Colissimo
-                    </h2>
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    Colissimo
+                  </h2>
 
-                    <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
-                      États API vers statuts CONFIRMED.
-                    </p>
+                  <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
+                    Statuts transporteur vers statuts CONFIRMED.
+                  </p>
 
-                    <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
-                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950/50 light:border-gray-200 light:bg-gray-50">
-                        <div className="font-semibold">
-                          🔒 1. Statut API Colissimo
-                        </div>
-                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
-                          Valeur technique reçue du transporteur.
-                        </div>
+                  <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+                    <div className="rounded-lg border px-3 py-2 dark:border-slate-700 light:border-gray-200">
+                      <div className="font-semibold">
+                        1. Statut Colissimo
                       </div>
 
-                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 light:border-gray-200">
-                        <div className="font-semibold">
-                          2. Libellé Admin
-                        </div>
-                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
-                          Description uniquement, sans impact métier.
-                        </div>
+                      <div className="mt-1 dark:text-slate-400 light:text-gray-500">
+                        Nom lisible du statut transporteur.
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
+                      <div className="font-semibold text-blue-500">
+                        2. Statut CONFIRMED
                       </div>
 
-                      <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
-                        <div className="font-semibold text-blue-500">
-                          3. Statut CONFIRMED
-                        </div>
-                        <div className="mt-1 dark:text-slate-300 light:text-gray-600">
-                          À modifier pour changer le statut de la commande.
-                        </div>
+                      <div className="mt-1 dark:text-slate-300 light:text-gray-600">
+                        À modifier pour changer le statut de la commande.
                       </div>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={addColissimoRule}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition dark:border-slate-600 dark:hover:bg-slate-800 light:border-gray-300 light:hover:bg-gray-100"
-                  >
-                    <PlusIcon className="h-4 w-4" />
-                    Ajouter une règle
-                  </button>
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -1225,64 +1000,19 @@ export default function CarrierStatusPage() {
                           mapping._id ||
                           `colissimo-${index}`
                         }
-                        className="grid gap-3 rounded-xl border p-4 lg:grid-cols-[1fr_1fr_220px_auto] dark:border-slate-700 light:border-gray-200"
+                        className="grid gap-3 rounded-xl border p-4 lg:grid-cols-[1fr_220px] dark:border-slate-700 light:border-gray-200"
                       >
-                        <input
-                          type="text"
-                          value={
-                            mapping.providerStatus
+                        <div
+                          className="flex min-h-10 items-center rounded-lg border px-3 py-2 text-sm font-medium dark:border-slate-700 dark:bg-slate-950/40 light:border-gray-200 light:bg-gray-50"
+                          aria-label="Statut Colissimo"
+                          title="Statut technique Colissimo non modifiable depuis cette interface."
+                        >
+                          {
+                            mapping.label ||
+                            mapping.providerStatus ||
+                            'Statut Colissimo'
                           }
-                          readOnly={Boolean(mapping._id)}
-                          aria-label="Statut API Colissimo"
-                          title={
-                            mapping._id
-                              ? 'Valeur technique Colissimo — créez une nouvelle règle pour utiliser un autre statut API.'
-                              : 'Saisissez le statut exact retourné par Colissimo.'
-                          }
-                          onChange={event => {
-                            const value =
-                              event.target.value
-
-                            setColissimoDraft(previous =>
-                              previous.map(
-                                (item, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...item,
-                                        providerStatus:
-                                          value
-                                      }
-                                    : item
-                              )
-                            )
-                          }}
-                          className="rounded-lg border px-3 py-2 text-sm read-only:cursor-not-allowed read-only:opacity-70 dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                          placeholder="Statut Colissimo"
-                        />
-
-                        <input
-                          type="text"
-                          aria-label="Libellé Admin Colissimo"
-                          value={mapping.label || ''}
-                          onChange={event => {
-                            const value =
-                              event.target.value
-
-                            setColissimoDraft(previous =>
-                              previous.map(
-                                (item, itemIndex) =>
-                                  itemIndex === index
-                                    ? {
-                                        ...item,
-                                        label: value
-                                      }
-                                    : item
-                              )
-                            )
-                          }}
-                          className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
-                          placeholder="Libellé"
-                        />
+                        </div>
 
                         <select
                           aria-label="Statut CONFIRMED Colissimo"
@@ -1326,22 +1056,6 @@ export default function CarrierStatusPage() {
                             )
                           )}
                         </select>
-
-                        <button
-                          type="button"
-                          aria-label="Supprimer la règle Colissimo"
-                          onClick={() =>
-                            setColissimoDraft(previous =>
-                              previous.filter(
-                                (_, itemIndex) =>
-                                  itemIndex !== index
-                              )
-                            )
-                          }
-                          className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-red-500 transition hover:bg-red-500/10"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
                       </div>
                     )
                   )}
