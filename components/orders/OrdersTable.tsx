@@ -552,14 +552,15 @@ function createColumnConfigs(
                 </div>
               )}
 
-            {tracking && (
-              <div
-                className="mt-0.5 max-w-[120px] truncate text-xs font-mono text-gray-500 dark:text-slate-400"
-                title={String(tracking)}
-              >
-                N° {tracking}
-              </div>
-            )}
+            {userRole !== 'seller' &&
+              tracking && (
+                <div
+                  className="mt-0.5 max-w-[120px] truncate text-xs font-mono text-gray-500 dark:text-slate-400"
+                  title={String(tracking)}
+                >
+                  N° {tracking}
+                </div>
+              )}
           </div>
         )
       },

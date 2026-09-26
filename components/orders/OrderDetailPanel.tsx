@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useState } from 'react'
 import { Dialog, Transition } from '@headlessui/react'
 import { clsx } from 'clsx'
 import type { Order, OrderStatus, CallHistoryEntry } from '@/types/order'
@@ -10,10 +10,6 @@ import type { TranslationKey } from '@/lib/i18n'
 import CallFeedbackAnalysis from './CallFeedbackAnalysis'
 import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { formatCurrency } from '@/lib/formatCurrency'
-import deliveryTrackingService, {
-  getDeliveryStatusDisplayLabel,
-  type DeliveryShipmentTracking,
-} from '@/services/deliveryTrackingService'
 
 /**
  * OrderDetailPanel Component
@@ -1027,248 +1023,6 @@ function DeliveryAddressSection({ order, t }: { order: Order; t: (key: Translati
 }
 
 
-function formatDeliveryProviderName(
-  provider?: string | null
-): string {
-  if (!provider) {
-    return '—'
-  }
-
-  return provider
-    .split(/[\s_-]+/)
-    .filter(Boolean)
-    .map(
-      part =>
-        part.charAt(0).toUpperCase() +
-        part.slice(1).toLowerCase()
-    )
-    .join(' ')
-}
-
-/**
- * Suivi logistique générique.
- *
- * Les données proviennent uniquement de DeliveryShipment
- * dans Confirmed. Aucun appel direct Intigo / transporteur
- * n'est effectué depuis le navigateur.
- */
-function DeliveryTrackingSection({
-  order,
-}: {
-  order: Order
-}) {
-  const [
-    tracking,
-    setTracking,
-  ] = useState<DeliveryShipmentTracking[]>([])
-
-  const [
-    isLoading,
-    setIsLoading,
-  ] = useState(true)
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-
-    setTracking([])
-    setError(null)
-    setIsLoading(true)
-
-    deliveryTrackingService
-      .getOrderTracking(order._id)
-      .then(items => {
-        if (active) {
-          setTracking(items)
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setError(
-            'Le suivi transporteur est momentanément indisponible.'
-          )
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setIsLoading(false)
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [order._id])
-
-  const fallbackProvider =
-    order.deliveryInfo?.carrier ||
-    order.deliveryInfo?.courier ||
-    null
-
-  const fallbackTrackingNumber =
-    order.deliveryInfo?.trackingNumber ||
-    null
-
-  const displayEntries =
-    tracking.length > 0
-      ? tracking.map(item => ({
-          key:
-            item.shipmentId,
-
-          provider:
-            item.provider,
-
-          trackingNumber:
-            item.trackingNumber,
-
-          providerStatusCode:
-            item.providerStatusCode,
-
-          providerStatusLabel:
-            item.providerStatusLabel,
-
-          lastSyncedAt:
-            item.lastSyncedAt,
-        }))
-      : (
-          fallbackProvider ||
-          fallbackTrackingNumber
-        )
-        ? [
-            {
-              key:
-                `order-${order._id}`,
-
-              provider:
-                fallbackProvider,
-
-              trackingNumber:
-                fallbackTrackingNumber,
-
-              providerStatusCode:
-                null,
-
-              providerStatusLabel:
-                null,
-
-              lastSyncedAt:
-                null,
-            },
-          ]
-        : []
-
-  if (
-    !isLoading &&
-    displayEntries.length === 0 &&
-    !error
-  ) {
-    return null
-  }
-
-  if (
-    isLoading &&
-    displayEntries.length === 0
-  ) {
-    return null
-  }
-
-  return (
-    <div
-      className="py-2.5 border-b border-gray-200 dark:border-slate-700"
-      data-testid="delivery-tracking-section"
-    >
-      <SectionHeader title="Suivi de livraison" />
-
-      <div className="space-y-3">
-        {displayEntries.map(
-          entry => {
-            const status =
-              getDeliveryStatusDisplayLabel(
-                entry.provider,
-                entry.providerStatusCode,
-                entry.providerStatusLabel
-              )
-
-            return (
-              <dl
-                key={entry.key}
-                className="space-y-1 text-sm"
-              >
-                <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
-                  <dt className="text-gray-500 dark:text-slate-400">
-                    Transporteur
-                  </dt>
-
-                  <dd className="text-right font-medium text-gray-900 dark:text-white">
-                    {formatDeliveryProviderName(
-                      entry.provider
-                    )}
-                  </dd>
-                </div>
-
-                {entry.trackingNumber && (
-                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
-                    <dt className="text-gray-500 dark:text-slate-400">
-                      N° de suivi
-                    </dt>
-
-                    <dd className="text-right font-mono text-gray-900 dark:text-white break-all">
-                      {entry.trackingNumber}
-                    </dd>
-                  </div>
-                )}
-
-                {status && (
-                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
-                    <dt className="text-gray-500 dark:text-slate-400">
-                      Statut transporteur
-                    </dt>
-
-                    <dd className="text-right font-medium text-gray-900 dark:text-white">
-                      {status}
-
-                    </dd>
-                  </div>
-                )}
-
-                {entry.lastSyncedAt && (
-                  <div className="grid grid-cols-[175px_1fr] gap-2 items-start">
-                    <dt className="text-gray-500 dark:text-slate-400">
-                      Dernière synchronisation
-                    </dt>
-
-                    <dd className="text-right text-gray-700 dark:text-slate-300">
-                      {formatDateTime(
-                        entry.lastSyncedAt
-                      )}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            )
-          }
-        )}
-
-        {isLoading && (
-          <p className="text-xs text-gray-500 dark:text-slate-400">
-            Actualisation du suivi…
-          </p>
-        )}
-
-        {error && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">
-            {error}
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
 /**
  * Call History Section
  * Displays timeline of call attempts with operator, timestamp, outcome, notes
@@ -1549,7 +1303,6 @@ export default function OrderDetailPanel({
                       <DeliveryAddressSection order={order} t={t} />
                       <CallHistorySection order={order} t={t} />
                       <AIScoreSection order={order} />
-                      <DeliveryTrackingSection order={order} />
                       
                       {/* Retour d'appel structuré */}
                       <div className="py-2.5 border-b border-gray-200 dark:border-slate-700">
