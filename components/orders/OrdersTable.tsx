@@ -299,7 +299,10 @@ function cleanProductName(name?: string): string {
 /**
  * Define all available columns with their tier requirements
  */
-function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[] {
+function createColumnConfigs(
+  t: (key: TranslationKey) => string,
+  userRole: OrdersTableProps['userRole']
+): ColumnConfig[] {
   return [
     {
       key: 'orderId',
@@ -403,19 +406,31 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
       key: 'status',
       label: t('orders.status'),
       minPlan: null,
-      render: (order) => (
-        <div className="flex flex-col items-start gap-1">
-          <StatusBadge status={order.status} size="sm" />
+      render: (order) => {
+        const displayedStatus =
+          userRole === 'seller' &&
+          order.status === 'failed_delivery'
+            ? 'at_depot'
+            : order.status
 
-          {order.externalStatus && (
-            <span className="text-xs capitalize text-blue-500">
-              {order.externalStatus.platform}:{' '}
-              {order.externalStatus.label ||
-                order.externalStatus.code}
-            </span>
-          )}
-        </div>
-      ),
+        return (
+          <div className="flex flex-col items-start gap-1">
+            <StatusBadge
+              status={displayedStatus}
+              size="sm"
+            />
+
+            {userRole !== 'seller' &&
+              order.externalStatus && (
+                <span className="text-xs capitalize text-blue-500">
+                  {order.externalStatus.platform}:{' '}
+                  {order.externalStatus.label ||
+                    order.externalStatus.code}
+                </span>
+              )}
+          </div>
+        )
+      },
     },
     {
       key: 'aiScore',
@@ -464,7 +479,9 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
         if (!provider) {
           return (
             <span className="text-xs text-gray-400 dark:text-slate-500">
-              Non expédiée
+              {userRole === 'seller'
+                ? '—'
+                : 'Non expédiée'}
             </span>
           )
         }
@@ -528,11 +545,12 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
               {providerNames[providerKey] || provider}
             </div>
 
-            {deliveryStatusLabel && (
-              <div className={deliveryStatusClass}>
-                {deliveryStatusLabel}
-              </div>
-            )}
+            {userRole !== 'seller' &&
+              deliveryStatusLabel && (
+                <div className={deliveryStatusClass}>
+                  {deliveryStatusLabel}
+                </div>
+              )}
 
             {tracking && (
               <div
@@ -564,6 +582,7 @@ function createColumnConfigs(t: (key: TranslationKey) => string): ColumnConfig[]
 
 export default function OrdersTable({
   orders,
+  userRole,
   subscriptionPlan,
   selectedIds,
   isLoading = false,
@@ -584,7 +603,10 @@ export default function OrdersTable({
   const { t } = useLanguage()
   
   // Get all column configurations
-  const allColumns = useMemo(() => createColumnConfigs(t), [t])
+  const allColumns = useMemo(
+    () => createColumnConfigs(t, userRole),
+    [t, userRole]
+  )
 
   // Filter columns based on subscription plan
   const visibleColumns = useMemo(
