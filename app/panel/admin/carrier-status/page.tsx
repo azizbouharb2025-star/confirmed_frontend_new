@@ -900,6 +900,35 @@ export default function CarrierStatusPage() {
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
                       Codes ou plages API vers statuts CONFIRMED.
                     </p>
+
+                    <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950/50 light:border-gray-200 light:bg-gray-50">
+                        <div className="font-semibold">
+                          🔒 1. Code / plage API
+                        </div>
+                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
+                          Technique — à ne pas modifier normalement.
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 light:border-gray-200">
+                        <div className="font-semibold">
+                          2. Libellé Admin
+                        </div>
+                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
+                          Description uniquement, sans impact métier.
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
+                        <div className="font-semibold text-blue-500">
+                          3. Statut CONFIRMED
+                        </div>
+                        <div className="mt-1 dark:text-slate-300 light:text-gray-600">
+                          À modifier pour changer le statut de la commande.
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -1051,6 +1080,7 @@ export default function CarrierStatusPage() {
 
                         <input
                           type="text"
+                          aria-label="Libellé Admin Intigo"
                           value={mapping.label || ''}
                           onChange={event => {
                             const value =
@@ -1146,6 +1176,35 @@ export default function CarrierStatusPage() {
                     <p className="mt-1 text-sm dark:text-slate-400 light:text-gray-600">
                       États API vers statuts CONFIRMED.
                     </p>
+
+                    <div className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 dark:bg-slate-950/50 light:border-gray-200 light:bg-gray-50">
+                        <div className="font-semibold">
+                          🔒 1. Statut API Colissimo
+                        </div>
+                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
+                          Valeur technique reçue du transporteur.
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border px-3 py-2 dark:border-slate-700 light:border-gray-200">
+                        <div className="font-semibold">
+                          2. Libellé Admin
+                        </div>
+                        <div className="mt-1 dark:text-slate-400 light:text-gray-500">
+                          Description uniquement, sans impact métier.
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-2">
+                        <div className="font-semibold text-blue-500">
+                          3. Statut CONFIRMED
+                        </div>
+                        <div className="mt-1 dark:text-slate-300 light:text-gray-600">
+                          À modifier pour changer le statut de la commande.
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <button
@@ -1173,6 +1232,13 @@ export default function CarrierStatusPage() {
                           value={
                             mapping.providerStatus
                           }
+                          readOnly={Boolean(mapping._id)}
+                          aria-label="Statut API Colissimo"
+                          title={
+                            mapping._id
+                              ? 'Valeur technique Colissimo — créez une nouvelle règle pour utiliser un autre statut API.'
+                              : 'Saisissez le statut exact retourné par Colissimo.'
+                          }
                           onChange={event => {
                             const value =
                               event.target.value
@@ -1190,12 +1256,13 @@ export default function CarrierStatusPage() {
                               )
                             )
                           }}
-                          className="rounded-lg border px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
+                          className="rounded-lg border px-3 py-2 text-sm read-only:cursor-not-allowed read-only:opacity-70 dark:border-slate-600 dark:bg-slate-800 light:border-gray-300 light:bg-white"
                           placeholder="Statut Colissimo"
                         />
 
                         <input
                           type="text"
+                          aria-label="Libellé Admin Colissimo"
                           value={mapping.label || ''}
                           onChange={event => {
                             const value =
@@ -1218,6 +1285,8 @@ export default function CarrierStatusPage() {
                         />
 
                         <select
+                          aria-label="Statut CONFIRMED Colissimo"
+                          title="Ce champ détermine le statut métier appliqué à la commande."
                           value={
                             mapping.mappedOrderStatus ||
                             ''
