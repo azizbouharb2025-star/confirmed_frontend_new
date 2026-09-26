@@ -13,6 +13,8 @@ interface DeliveryIntegration {
   settings?: {
     pickupIndex?: number
     trackingEnabled?: boolean
+    deliveryCost?: number
+    returnCost?: number
   }
 }
 
@@ -70,6 +72,12 @@ export default function IntigoConnectionCard() {
   const [trackingEnabled, setTrackingEnabled] =
     useState(true)
 
+  const [deliveryCost, setDeliveryCost] =
+    useState('0')
+
+  const [returnCost, setReturnCost] =
+    useState('0')
+
   const [loading, setLoading] =
     useState(true)
 
@@ -120,6 +128,18 @@ export default function IntigoConnectionCard() {
         intigo?.settings
           ?.trackingEnabled !== false
       )
+
+      setDeliveryCost(
+        String(
+          intigo?.settings?.deliveryCost ?? 0
+        )
+      )
+
+      setReturnCost(
+        String(
+          intigo?.settings?.returnCost ?? 0
+        )
+      )
     } catch (err: unknown) {
       setError(
         getErrorMessage(
@@ -144,6 +164,24 @@ export default function IntigoConnectionCard() {
     const cleanApiKey =
       apiKey.trim()
 
+    const numericDeliveryCost =
+      Number(deliveryCost)
+
+    const numericReturnCost =
+      Number(returnCost)
+
+    if (
+      !Number.isFinite(numericDeliveryCost) ||
+      numericDeliveryCost < 0 ||
+      !Number.isFinite(numericReturnCost) ||
+      numericReturnCost < 0
+    ) {
+      setError(
+        'Les frais de livraison et de retour doivent être supérieurs ou égaux à 0.'
+      )
+      return
+    }
+
     const parsedPickupIndex =
       Number(pickupIndex)
 
@@ -153,7 +191,7 @@ export default function IntigoConnectionCard() {
         ? parsedPickupIndex
         : 1
 
-    if (!cleanApiKey) {
+    if (!connected && !cleanApiKey) {
       setError(
         'Veuillez saisir votre clé API Intigo.'
       )
@@ -170,17 +208,23 @@ export default function IntigoConnectionCard() {
         {
           platform: 'intigo',
 
-          credentials: {
-            apiKey: cleanApiKey,
-            baseUrl:
-              'https://api.intigo.net/api/v3'
-          },
+          credentials: cleanApiKey
+            ? {
+                apiKey: cleanApiKey,
+                baseUrl:
+                  'https://api.intigo.net/api/v3'
+              }
+            : {},
 
           settings: {
             autoCreateShipment: false,
             trackingEnabled,
             pickupIndex:
-              numericPickupIndex
+              numericPickupIndex,
+            deliveryCost:
+              numericDeliveryCost,
+            returnCost:
+              numericReturnCost
           }
         }
       )
@@ -217,18 +261,18 @@ export default function IntigoConnectionCard() {
 
   return (
     <>
-      <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-1 hover:shadow-xl dark:border-slate-700 dark:bg-slate-800">
+      <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800">
         <div className="flex h-44 items-center justify-center bg-[#fff4e8] p-7 dark:bg-slate-900">
           <Image
             src="/assets/delivery-logos/intigo.png"
             alt="Intigo"
             width={240}
             height={100}
-            className="max-h-24 w-auto object-contain"
+            className="max-h-24 w-auto max-w-[80%] object-contain"
           />
         </div>
 
-        <div className="p-5">
+        <div className="flex flex-1 flex-col p-5">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Intigo
@@ -269,7 +313,7 @@ export default function IntigoConnectionCard() {
               setError(null)
               setSuccess(null)
             }}
-            className="mt-5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+            className="mt-auto w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
           >
             {connected
               ? 'Gérer'
@@ -361,6 +405,42 @@ export default function IntigoConnectionCard() {
                 />
               </label>
 
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Frais de livraison (TND)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={deliveryCost}
+                    onChange={event =>
+                      setDeliveryCost(event.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Frais de retour (TND)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={returnCost}
+                    onChange={event =>
+                      setReturnCost(event.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                  />
+                </div>
+              </div>
+
               {error && (
                 <div className="rounded-lg bg-red-500/10 p-3 text-sm text-red-500">
                   {error}
@@ -390,7 +470,7 @@ export default function IntigoConnectionCard() {
                 onClick={handleSave}
                 disabled={
                   saving ||
-                  !apiKey.trim()
+                  (!connected && !apiKey.trim())
                 }
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >

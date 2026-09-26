@@ -12,6 +12,8 @@ interface DeliveryIntegration {
   credentialsConfigured: boolean
   settings?: {
     trackingEnabled?: boolean
+    deliveryCost?: number
+    returnCost?: number
   }
 }
 
@@ -66,6 +68,12 @@ export default function ColissimoConnectionCard() {
   const [trackingToken, setTrackingToken] =
     useState('')
 
+  const [deliveryCost, setDeliveryCost] =
+    useState('0')
+
+  const [returnCost, setReturnCost] =
+    useState('0')
+
   const [loading, setLoading] =
     useState(true)
 
@@ -92,11 +100,24 @@ export default function ColissimoConnectionCard() {
           ? response.data
           : []
 
-      setIntegration(
+      const colissimo =
         integrations.find(
           item =>
             item.platform === 'colissimo'
         ) || null
+
+      setIntegration(colissimo)
+
+      setDeliveryCost(
+        String(
+          colissimo?.settings?.deliveryCost ?? 0
+        )
+      )
+
+      setReturnCost(
+        String(
+          colissimo?.settings?.returnCost ?? 0
+        )
       )
     } catch (err: unknown) {
       setError(
@@ -122,7 +143,25 @@ export default function ColissimoConnectionCard() {
     const cleanToken =
       token.trim()
 
-    if (!cleanToken) {
+    const numericDeliveryCost =
+      Number(deliveryCost)
+
+    const numericReturnCost =
+      Number(returnCost)
+
+    if (
+      !Number.isFinite(numericDeliveryCost) ||
+      numericDeliveryCost < 0 ||
+      !Number.isFinite(numericReturnCost) ||
+      numericReturnCost < 0
+    ) {
+      setError(
+        'Les frais de livraison et de retour doivent être supérieurs ou égaux à 0.'
+      )
+      return
+    }
+
+    if (!connected && !cleanToken) {
       setError(
         'Veuillez saisir le token API Colissimo.'
       )
@@ -139,25 +178,34 @@ export default function ColissimoConnectionCard() {
         {
           platform: 'colissimo',
 
-          credentials: {
-            addToken:
-              cleanToken,
-
-            trackingToken:
-              trackingToken.trim(),
-
-            baseUrl:
-              'https://colissimodelivery.tn/api/v1/post.php'
-          },
+          credentials: cleanToken
+            ? {
+                addToken: cleanToken,
+                ...(trackingToken.trim()
+                  ? {
+                      trackingToken:
+                        trackingToken.trim()
+                    }
+                  : {}),
+                baseUrl:
+                  'https://colissimodelivery.tn/api/v1/post.php'
+              }
+            : {},
 
           settings: {
             autoCreateShipment:
               false,
 
             trackingEnabled:
-              Boolean(
-                trackingToken.trim()
-              )
+              trackingToken.trim()
+                ? true
+                : integration?.settings?.trackingEnabled !== false,
+
+            deliveryCost:
+              numericDeliveryCost,
+
+            returnCost:
+              numericReturnCost
           }
         }
       )
@@ -195,18 +243,18 @@ export default function ColissimoConnectionCard() {
 
   return (
     <>
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex h-36 items-center justify-center bg-[#eef9ff] p-6 dark:bg-slate-900">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex h-44 items-center justify-center bg-[#eef9ff] p-7 dark:bg-slate-900">
           <Image
             src="/assets/delivery-logos/colissimo.png"
             alt="Colissimo"
             width={320}
             height={120}
-            className="w-[280px] max-w-[85%] object-contain scale-125"
+            className="max-h-24 w-auto max-w-[80%] object-contain"
           />
         </div>
 
-        <div className="p-5">
+        <div className="flex flex-1 flex-col p-5">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Colissimo
@@ -243,7 +291,7 @@ export default function ColissimoConnectionCard() {
               setError(null)
               setSuccess(null)
             }}
-            className="mt-5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
+            className="mt-auto w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:text-white dark:hover:bg-slate-700"
           >
             {connected
               ? 'Gérer'
@@ -330,6 +378,42 @@ export default function ColissimoConnectionCard() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Frais de livraison (TND)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={deliveryCost}
+                    onChange={event =>
+                      setDeliveryCost(event.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Frais de retour (TND)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={returnCost}
+                    onChange={event =>
+                      setReturnCost(event.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
+                  />
+                </div>
+              </div>
+
               {connected && (
                 <p className="text-xs text-amber-600 dark:text-amber-400">
                   Pour modifier la configuration, ressaisissez les tokens.
@@ -365,7 +449,7 @@ export default function ColissimoConnectionCard() {
                 onClick={handleSave}
                 disabled={
                   saving ||
-                  !token.trim()
+                  (!connected && !token.trim())
                 }
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
