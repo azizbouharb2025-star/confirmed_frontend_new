@@ -1841,7 +1841,7 @@ export const translations = {
     // Order Management System
     'orders.title': 'Commandes',
     'orders.subtitle': 'Gérer et suivre vos commandes',
-    'orders.orderId': 'ID Commande',
+    'orders.orderId': 'ID',
     'orders.products': 'Produit',
     'orders.customer': 'Client',
     'orders.phone': 'Téléphone',

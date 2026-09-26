@@ -923,7 +923,7 @@ export default function ClientOrdersPage() {
     <DashboardLayout userRole="shop_owner">
       <div
         className="-mt-2 flex h-[calc(100dvh-5.5rem)] min-h-0 w-full flex-col gap-2 overflow-hidden sm:h-[calc(100dvh-6.5rem)]"
-        style={{ zoom: 1.20 }}
+        style={{ zoom: 1.10 }}
       >
         {/* Page Header */}
         <div className="flex items-center justify-between">

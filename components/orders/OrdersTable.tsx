@@ -691,7 +691,8 @@ export default function OrdersTable({
        * and therefore always visible.
        */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full divide-y divide-gray-200 dark:divide-slate-700">
+        <div style={{ zoom: 0.9 }}>
+          <table className="w-full divide-y divide-gray-200 dark:divide-slate-700">
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900">
             <tr>
               {/* Checkbox column */}
@@ -812,7 +813,8 @@ export default function OrdersTable({
               ))
             )}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}

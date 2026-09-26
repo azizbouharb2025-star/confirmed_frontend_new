@@ -10,6 +10,7 @@ import type { TranslationKey } from '@/lib/i18n'
 import CallFeedbackAnalysis from './CallFeedbackAnalysis'
 import AIScoreColumn from '@/components/orders/AIScoreColumn'
 import { formatCurrency } from '@/lib/formatCurrency'
+import { canDisplayOrderAI } from '@/lib/orderStatus'
 
 /**
  * OrderDetailPanel Component
@@ -204,7 +205,10 @@ function CustomerInfoSection({ order, t }: { order: Order; t: (key: TranslationK
 function AIScoreSection({ order }: { order: Order }) {
   const [showAiDetails, setShowAiDetails] = useState(false)
 
-  if (typeof order.aiScore !== 'number') {
+  if (
+    !canDisplayOrderAI(order.status) ||
+    typeof order.aiScore !== 'number'
+  ) {
     return null
   }
 
@@ -529,19 +533,6 @@ function AIScoreSection({ order }: { order: Order }) {
                   const isPositive = finding.level === 'positive'
                   const isAlert = finding.level === 'alert'
 
-                  const levelLabel = isPositive
-                    ? 'Positif'
-                    : isAlert
-                      ? 'Alerte'
-                      : 'Neutre'
-
-                  const impactLabel =
-                    finding.impact === 'positive'
-                      ? 'Impact positif'
-                      : finding.impact === 'negative'
-                        ? 'Impact négatif'
-                        : 'Impact neutre'
-
                   return (
                     <div
                       key={finding.key}
@@ -556,35 +547,9 @@ function AIScoreSection({ order }: { order: Order }) {
                           'border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-800'
                       )}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start">
-
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {finding.description}
-                            </p>
-
-                            <p className="mt-0.5 text-xs text-gray-500 dark:text-slate-400">
-                              {impactLabel}
-                            </p>
-                          </div>
-                        </div>
-
-                        <span
-                          className={clsx(
-                            'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
-                            isPositive &&
-                              'bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400',
-                            isAlert &&
-                              'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400',
-                            !isPositive &&
-                              !isAlert &&
-                              'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-slate-300'
-                          )}
-                        >
-                          {levelLabel}
-                        </span>
-                      </div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {finding.description}
+                      </p>
                     </div>
                   )
                 })}
