@@ -713,11 +713,19 @@ export default function OrdersTable({
                 }
 
                 const apiSortField = sortableFields[column.key]
-                const isSortable = Boolean(apiSortField)
-                const isActive = sortBy === apiSortField
+
+                const isSortable =
+                  userRole !== 'seller' &&
+                  Boolean(apiSortField)
+
+                const isActive =
+                  isSortable &&
+                  sortBy === apiSortField
 
                 const handleHeaderClick = () => {
-                  if (!apiSortField) return
+                  if (!isSortable || !apiSortField) {
+                    return
+                  }
 
                   onSortChange(
                     apiSortField,
@@ -732,6 +740,8 @@ export default function OrdersTable({
                       'px-2.5 py-3 text-left text-xs font-medium',
                       'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
                       isSortable && 'cursor-pointer select-none hover:text-gray-800 dark:hover:text-white',
+                      column.key === 'orderId' && 'w-[80px] min-w-[80px] max-w-[80px]',
+                      column.key === 'aiScore' && 'w-[210px] min-w-[210px]',
                       column.className
                     )}
                     onClick={handleHeaderClick}
@@ -788,7 +798,12 @@ export default function OrdersTable({
                   {visibleColumns.map((column) => (
                     <td
                       key={column.key}
-                      className={clsx('px-2.5 py-3 text-sm', column.className)}
+                      className={clsx(
+                        'px-2.5 py-3 text-sm',
+                        column.key === 'orderId' && 'w-[80px] min-w-[80px] max-w-[80px]',
+                        column.key === 'aiScore' && 'w-[210px] min-w-[210px]',
+                        column.className
+                      )}
                     >
                       {column.render(order)}
                     </td>

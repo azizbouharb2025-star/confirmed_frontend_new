@@ -921,22 +921,16 @@ export default function ClientOrdersPage() {
 
   return (
     <DashboardLayout userRole="shop_owner">
-      <div className="-mt-2 flex h-[calc(100dvh-5.5rem)] min-h-0 w-full flex-col gap-2 overflow-hidden sm:h-[calc(100dvh-6.5rem)]">
+      <div
+        className="-mt-2 flex h-[calc(100dvh-5.5rem)] min-h-0 w-full flex-col gap-2 overflow-hidden sm:h-[calc(100dvh-6.5rem)]"
+        style={{ zoom: 1.20 }}
+      >
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             {t('orders.title')}
           </h1>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-lg shadow-green-500/25"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              {t('import.button')}
-            </button>
             <button
               onClick={() => setShowLogisticsExportModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/25"

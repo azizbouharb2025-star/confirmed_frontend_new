@@ -144,24 +144,18 @@ export default function IntigoConnectionCard() {
     const cleanApiKey =
       apiKey.trim()
 
-    const numericPickupIndex =
+    const parsedPickupIndex =
       Number(pickupIndex)
+
+    const numericPickupIndex =
+      Number.isInteger(parsedPickupIndex) &&
+      parsedPickupIndex >= 0
+        ? parsedPickupIndex
+        : 1
 
     if (!cleanApiKey) {
       setError(
         'Veuillez saisir votre clé API Intigo.'
-      )
-      return
-    }
-
-    if (
-      !Number.isInteger(
-        numericPickupIndex
-      ) ||
-      numericPickupIndex < 0
-    ) {
-      setError(
-        'Pickup Index invalide.'
       )
       return
     }
@@ -344,25 +338,6 @@ export default function IntigoConnectionCard() {
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium">
-                  Pickup Index
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={pickupIndex}
-                  onChange={event =>
-                    setPickupIndex(
-                      event.target.value
-                    )
-                  }
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-900"
-                />
-              </div>
-
               <label className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-slate-700">
                 <div>
                   <p className="text-sm font-medium">
@@ -415,8 +390,7 @@ export default function IntigoConnectionCard() {
                 onClick={handleSave}
                 disabled={
                   saving ||
-                  !apiKey.trim() ||
-                  !pickupIndex.trim()
+                  !apiKey.trim()
                 }
                 className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >

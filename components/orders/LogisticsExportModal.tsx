@@ -57,13 +57,8 @@ interface ColumnOption {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const PROVIDERS: ProviderOption[] = [
-  { id: 'generic',     label: 'Generic',     enabled: true },
-  { id: 'intigo',      label: 'Intigo',      enabled: true },
-  { id: 'colissimo',   label: 'Colissimo',   enabled: true },
-  { id: 'aramex',      label: 'Aramex',      enabled: true },
-  { id: 'rapid_poste', label: 'Rapid Poste', enabled: true },
-  { id: 'yalidine',    label: 'Yalidine',    enabled: true },
-  { id: 'custom',      label: 'Custom',      enabled: true },
+  { id: 'intigo', label: 'Intigo', enabled: true },
+  { id: 'colissimo', label: 'Colissimo', enabled: true },
 ]
 
 /** All available custom columns in display order */
@@ -258,7 +253,7 @@ export default function LogisticsExportModal({
   orderIds,
   onExportSuccess,
 }: LogisticsExportModalProps) {
-  const [provider,       setProvider]       = useState<LogisticsProvider>('generic')
+  const [provider,       setProvider]       = useState<LogisticsProvider>('intigo')
   const [fileType,       setFileType]       = useState<FileType>('csv')
   const [customColumns,  setCustomColumns]  = useState<CustomExportColumn[]>(DEFAULT_CUSTOM_COLUMNS)
   const [isLoading,      setIsLoading]      = useState(false)
@@ -310,6 +305,26 @@ export default function LogisticsExportModal({
       > | null
     >(null)
 
+  const [intigoBatchPreparations, setIntigoBatchPreparations] =
+    useState<
+      Array<{
+        orderId: string
+        confirmedId?: number
+        reservationId: string
+      }>
+    >([])
+
+  const [intigoBatchResults, setIntigoBatchResults] =
+    useState<
+      Array<{
+        orderId: string
+        confirmedId?: number
+        success: boolean
+        nid?: string
+        error?: string
+      }>
+    >([])
+
   const isIntigo = provider === 'intigo'
   const isColissimo = provider === 'colissimo'
   const isColissimoApi =
@@ -343,6 +358,8 @@ export default function LogisticsExportModal({
   if (!isOpen) return null
 
   const handleClose = () => {
+    setIntigoBatchPreparations([])
+    setIntigoBatchResults([])
     if (isBusy) return
     setErrorMsg(null)
     setSuccessMsg(null)
@@ -357,6 +374,8 @@ export default function LogisticsExportModal({
   }
 
   const handleProviderChange = (id: LogisticsProvider) => {
+    setIntigoBatchPreparations([])
+    setIntigoBatchResults([])
     setProvider(id)
 
     if (id === 'colissimo') {
@@ -376,6 +395,9 @@ export default function LogisticsExportModal({
   const isCustom = provider === 'custom'
 
   const handleIntigoPreview = async () => {
+    setIntigoBatchPreparations([])
+    setIntigoBatchResults([])
+    setShowIntigoSendConfirmation(false)
     if (orderIds.length === 0) {
       setErrorMsg(
         'Sélectionnez au moins une commande avant l’analyse Intigo.'
@@ -621,6 +643,351 @@ export default function LogisticsExportModal({
       )
     } finally {
       setIsIntigoReserving(false)
+    }
+  }
+
+  const handlePrepareIntigoBatch = async () => {
+    const candidates = [
+      ...intigoReady,
+      ...intigoReview,
+    ]
+
+    if (candidates.length === 0) {
+      setErrorMsg(
+        'Aucune commande Intigo ne peut être préparée.'
+      )
+      return
+    }
+
+    setIsIntigoReserving(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    setShowIntigoSendConfirmation(false)
+
+    setIntigoReservationId(null)
+    setIntigoFinalPreviewReady(false)
+    setIntigoFinalPreview(null)
+    setIntigoPreparationResumed(false)
+
+    setIntigoBatchPreparations([])
+    setIntigoBatchResults([])
+
+    const prepared: Array<{
+      orderId: string
+      confirmedId?: number
+      reservationId: string
+    }> = []
+
+    const failed: Array<{
+      orderId: string
+      confirmedId?: number
+      success: boolean
+      error?: string
+    }> = []
+
+    for (const item of candidates) {
+      if (!item.orderId) {
+        continue
+      }
+
+      try {
+        /*
+         * Chaque commande obtient sa propre réservation.
+         * Le backend LIVE reste ainsi limité à
+         * exactement une commande par réservation.
+         */
+        const reservation =
+          await intigoDeliveryService.reserveOrders(
+            [item.orderId],
+            true
+          )
+
+        if (
+          !reservation.reservationId ||
+          reservation.summary?.reserved !== 1
+        ) {
+          throw new Error(
+            'La réservation locale Intigo n’a pas pu être créée.'
+          )
+        }
+
+        /*
+         * Contrôle final individuel.
+         * Aucun colis Intigo n'est encore créé.
+         */
+        const preview =
+          await intigoDeliveryService.previewReservation(
+            reservation.reservationId
+          )
+
+        const previewItem =
+          preview.wouldPost?.[0]
+
+        if (
+          preview.summary?.wouldPost !== 1 ||
+          (preview.summary?.invalid || 0) !== 0 ||
+          !previewItem?.correlationId ||
+          !previewItem?.payloadHash
+        ) {
+          throw new Error(
+            'Le contrôle final Intigo nécessite une vérification.'
+          )
+        }
+
+        prepared.push({
+          orderId: item.orderId,
+          confirmedId: item.confirmedId,
+          reservationId:
+            reservation.reservationId,
+        })
+      } catch (err) {
+        const apiMessage =
+          typeof err === 'object' &&
+          err !== null &&
+          'response' in err
+            ? (
+                err as {
+                  response?: {
+                    data?: {
+                      error?: string
+                    }
+                  }
+                }
+              ).response?.data?.error
+            : null
+
+        failed.push({
+          orderId: item.orderId,
+          confirmedId: item.confirmedId,
+          success: false,
+          error:
+            apiMessage ||
+            (
+              err instanceof Error
+                ? err.message
+                : 'Erreur pendant la préparation Intigo.'
+            ),
+        })
+      }
+    }
+
+    setIntigoBatchPreparations(
+      prepared
+    )
+
+    setIntigoBatchResults(
+      failed
+    )
+
+    if (prepared.length === 0) {
+      setErrorMsg(
+        'Aucune commande n’a pu être préparée pour Intigo.'
+      )
+    } else {
+      setSuccessMsg(
+        `${prepared.length} commande(s) préparée(s) individuellement pour Intigo.${
+          failed.length > 0
+            ? ` ${failed.length} commande(s) en erreur.`
+            : ''
+        } Aucun colis n’a encore été créé.`
+      )
+    }
+
+    setIsIntigoReserving(false)
+  }
+
+  const handleConfirmIntigoBatchDispatch = async () => {
+    if (!intigoLiveDispatchEnabled) {
+      setErrorMsg(
+        'L’envoi réel Intigo est désactivé par le serveur.'
+      )
+      return
+    }
+
+    if (intigoBatchPreparations.length === 0) {
+      setErrorMsg(
+        'Aucune préparation Intigo disponible.'
+      )
+      return
+    }
+
+    setIsIntigoDispatching(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+
+    const results: Array<{
+      orderId: string
+      confirmedId?: number
+      success: boolean
+      nid?: string
+      error?: string
+    }> = []
+
+    try {
+      /*
+       * Vérification globale du verrou serveur
+       * avant de commencer le batch.
+       */
+      const capabilities =
+        await intigoDeliveryService.getCapabilities()
+
+      setIntigoCapabilities(
+        capabilities
+      )
+
+      if (!capabilities.liveDispatchEnabled) {
+        throw new Error(
+          'L’envoi réel Intigo vient d’être désactivé par le serveur.'
+        )
+      }
+
+      /*
+       * Important :
+       * les commandes sont envoyées séquentiellement.
+       *
+       * Une erreur sur une commande
+       * n'empêche pas le traitement des suivantes.
+       */
+      for (const preparation of intigoBatchPreparations) {
+        try {
+          const freshPreview =
+            await intigoDeliveryService.previewReservation(
+              preparation.reservationId
+            )
+
+          const item =
+            freshPreview.wouldPost?.[0]
+
+          if (
+            freshPreview.summary?.wouldPost !== 1 ||
+            (freshPreview.summary?.invalid || 0) !== 0 ||
+            !item?.correlationId ||
+            !item?.payloadHash
+          ) {
+            throw new Error(
+              'Le contrôle final Intigo n’est plus valide.'
+            )
+          }
+
+          if (
+            freshPreview.reservationExpiresAt &&
+            new Date(
+              freshPreview.reservationExpiresAt
+            ).getTime() <= Date.now()
+          ) {
+            throw new Error(
+              'La réservation Intigo a expiré.'
+            )
+          }
+
+          const result =
+            await intigoDeliveryService.dispatchReservation({
+              reservationId:
+                preparation.reservationId,
+
+              expectedCorrelationId:
+                item.correlationId,
+
+              expectedPayloadHash:
+                item.payloadHash,
+            })
+
+          if (
+            result.remoteCreated !== true ||
+            !result.intigo?.nid
+          ) {
+            throw new Error(
+              'Réponse Intigo inattendue après création.'
+            )
+          }
+
+          results.push({
+            orderId:
+              preparation.orderId,
+
+            confirmedId:
+              preparation.confirmedId,
+
+            success:
+              true,
+
+            nid:
+              result.intigo.nid,
+          })
+        } catch (err) {
+          const apiMessage =
+            typeof err === 'object' &&
+            err !== null &&
+            'response' in err
+              ? (
+                  err as {
+                    response?: {
+                      data?: {
+                        error?: string
+                      }
+                    }
+                  }
+                ).response?.data?.error
+              : null
+
+          results.push({
+            orderId:
+              preparation.orderId,
+
+            confirmedId:
+              preparation.confirmedId,
+
+            success:
+              false,
+
+            error:
+              apiMessage ||
+              (
+                err instanceof Error
+                  ? err.message
+                  : 'Erreur pendant l’envoi Intigo.'
+              ),
+          })
+        }
+      }
+
+      setIntigoBatchResults(
+        results
+      )
+
+      setIntigoBatchPreparations([])
+      setShowIntigoSendConfirmation(false)
+
+      const successCount =
+        results.filter(
+          item => item.success
+        ).length
+
+      const failureCount =
+        results.length -
+        successCount
+
+      if (successCount === 0) {
+        setErrorMsg(
+          `Aucune commande n’a été envoyée. ${failureCount} erreur(s).`
+        )
+      } else {
+        setSuccessMsg(
+          `${successCount} commande(s) envoyée(s) avec succès${
+            failureCount > 0
+              ? `, ${failureCount} en erreur`
+              : ''
+          }.`
+        )
+      }
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : 'Erreur lors de l’envoi multiple Intigo.'
+      )
+    } finally {
+      setIsIntigoDispatching(false)
     }
   }
 
@@ -1149,6 +1516,207 @@ export default function LogisticsExportModal({
                     </div>
                   ))}
 
+                  {orderIds.length > 1 &&
+                    (
+                      intigoReady.length > 0 ||
+                      intigoReview.length > 0 ||
+                      intigoBatchResults.length > 0
+                    ) && (
+                      <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4">
+                        <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+                          Préparation multiple Intigo
+                        </p>
+
+                        <p className="mt-1 text-xs text-gray-600 dark:text-slate-300">
+                          Chaque commande est préparée et envoyée individuellement.
+                          Une erreur sur une commande ne bloquera pas les suivantes.
+                        </p>
+
+                        {intigoBatchPreparations.length === 0 &&
+                          intigoBatchResults.length === 0 && (
+                            <button
+                              type="button"
+                              onClick={handlePrepareIntigoBatch}
+                              disabled={isBusy}
+                              className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {isIntigoReserving
+                                ? 'Préparation en cours…'
+                                : `Préparer ${
+                                    intigoReady.length +
+                                    intigoReview.length
+                                  } commande(s)`}
+                            </button>
+                          )}
+
+                        {intigoBatchPreparations.length > 0 && (
+                          <div className="mt-3 space-y-3">
+                            <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
+                              ✓ {intigoBatchPreparations.length} commande(s)
+                              préparée(s)
+                              <br />
+                              ✓ Une réservation individuelle par commande
+                              <br />
+                              ✓ Contrôle final réussi
+                              <br />
+                              ✓ Aucun colis Intigo créé pour le moment
+                            </div>
+
+                            <div
+                              className={[
+                                'rounded-lg border p-3',
+                                intigoLiveDispatchEnabled
+                                  ? 'border-amber-500/20 bg-amber-500/5'
+                                  : 'border-red-500/20 bg-red-500/5',
+                              ].join(' ')}
+                            >
+                              <p
+                                className={[
+                                  'text-xs font-semibold',
+                                  intigoLiveDispatchEnabled
+                                    ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-red-600 dark:text-red-400',
+                                ].join(' ')}
+                              >
+                                {intigoLiveDispatchEnabled
+                                  ? 'Envoi réel autorisé par le serveur'
+                                  : 'Envoi réel vers Intigo désactivé par le serveur'}
+                              </p>
+
+                              <button
+                                type="button"
+                                disabled={!intigoLiveDispatchEnabled}
+                                onClick={() => {
+                                  if (!intigoLiveDispatchEnabled) {
+                                    return
+                                  }
+
+                                  setShowIntigoSendConfirmation(true)
+                                  setErrorMsg(null)
+                                  setSuccessMsg(null)
+                                }}
+                                className={[
+                                  'mt-3 w-full rounded-lg px-4 py-2.5 text-sm font-semibold',
+                                  intigoLiveDispatchEnabled
+                                    ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                    : 'cursor-not-allowed bg-gray-300 text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400',
+                                ].join(' ')}
+                              >
+                                {intigoLiveDispatchEnabled
+                                  ? 'Continuer vers la confirmation'
+                                  : 'Confirmer l’envoi — désactivé'}
+                              </button>
+                            </div>
+
+                            {showIntigoSendConfirmation && (
+                              <div className="rounded-lg border-2 border-amber-500/30 bg-amber-500/10 p-4">
+                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                                  Confirmation finale
+                                </p>
+
+                                <p className="mt-1 text-xs text-gray-600 dark:text-slate-300">
+                                  {intigoBatchPreparations.length} commande(s)
+                                  seront envoyées une par une vers Intigo.
+                                </p>
+
+                                <div className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
+                                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">
+                                    Attention
+                                  </p>
+
+                                  <p className="mt-1 text-[11px] text-gray-600 dark:text-slate-300">
+                                    Chaque succès créera réellement un colis chez
+                                    Intigo. Une erreur n’arrêtera pas les commandes
+                                    suivantes.
+                                  </p>
+                                </div>
+
+                                <div className="mt-4 flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setShowIntigoSendConfirmation(false)
+                                    }
+                                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-gray-700 dark:border-slate-600 dark:text-white"
+                                  >
+                                    Retour
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={handleConfirmIntigoBatchDispatch}
+                                    disabled={
+                                      !intigoLiveDispatchEnabled ||
+                                      isIntigoDispatching
+                                    }
+                                    className={[
+                                      'flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold',
+                                      intigoLiveDispatchEnabled &&
+                                      !isIntigoDispatching
+                                        ? 'bg-red-600 text-white hover:bg-red-700'
+                                        : 'cursor-not-allowed bg-gray-300 text-gray-500 opacity-70 dark:bg-slate-700 dark:text-slate-400',
+                                    ].join(' ')}
+                                  >
+                                    {isIntigoDispatching
+                                      ? 'Envoi en cours…'
+                                      : `Envoyer ${
+                                          intigoBatchPreparations.length
+                                        } commande(s)`}
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {intigoBatchResults.length > 0 && (
+                          <div className="mt-4 space-y-2">
+                            <p className="text-xs font-semibold text-gray-700 dark:text-slate-300">
+                              Résultat par commande
+                            </p>
+
+                            {intigoBatchResults.map(
+                              (result, index) => (
+                                <div
+                                  key={`${result.orderId}-${index}`}
+                                  className={[
+                                    'rounded-lg border p-3 text-xs',
+                                    result.success
+                                      ? 'border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-400'
+                                      : 'border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-400',
+                                  ].join(' ')}
+                                >
+                                  <div className="flex justify-between gap-3">
+                                    <strong>
+                                      Commande #{result.confirmedId ?? '—'}
+                                    </strong>
+
+                                    <span>
+                                      {result.success
+                                        ? 'Envoyée'
+                                        : 'Erreur'}
+                                    </span>
+                                  </div>
+
+                                  {result.success && result.nid && (
+                                    <p className="mt-1">
+                                      N° de suivi : {result.nid}
+                                    </p>
+                                  )}
+
+                                  {!result.success && result.error && (
+                                    <p className="mt-1">
+                                      {result.error}
+                                    </p>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                   {(
                     (
                       intigoReview.length === 1 &&
@@ -1276,15 +1844,6 @@ export default function LogisticsExportModal({
                                     </dt>
                                     <dd className="font-semibold text-gray-900 dark:text-white">
                                       {intigoFinalPreview.wouldPost[0].price ?? '—'} DT
-                                    </dd>
-                                  </div>
-
-                                  <div className="flex justify-between gap-4">
-                                    <dt className="text-gray-500 dark:text-slate-400">
-                                      Point de collecte
-                                    </dt>
-                                    <dd className="font-medium text-gray-900 dark:text-white">
-                                      Pickup {intigoFinalPreview.wouldPost[0].pickupIndex ?? '—'}
                                     </dd>
                                   </div>
 
