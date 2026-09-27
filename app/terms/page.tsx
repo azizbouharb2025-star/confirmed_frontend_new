@@ -26,7 +26,7 @@ export default function TermsPage() {
         { title: '10. Termination', content: 'Either party may terminate. We may suspend for violations. Data export available for 30 days post-termination.' },
         { title: '11. Modifications', content: 'We may modify terms with 30 days notice. Continued use constitutes acceptance.' },
         { title: '12. Governing Law', content: 'Governed by Tunisian law. Disputes resolved in Tunisian courts. Mediation encouraged first.' },
-        { title: '13. Contact', content: 'Email: support@confirmed.tn | Address: Tunisia' }
+        { title: '13. Contact', content: 'Email: contact@confirmed.tn | Address: Tunisia' }
       ]
     },
     fr: {
@@ -45,7 +45,7 @@ export default function TermsPage() {
         { title: '10. Résiliation', content: 'Chaque partie peut résilier. Suspension possible pour violations. Export de données disponible 30 jours après résiliation.' },
         { title: '11. Modifications', content: 'Modification possible avec préavis de 30 jours. L\'utilisation continue constitue acceptation.' },
         { title: '12. Loi Applicable', content: 'Régi par la loi tunisienne. Litiges résolus par tribunaux tunisiens. Médiation encouragée d\'abord.' },
-        { title: '13. Contact', content: 'Email : support@confirmed.tn | Adresse : Tunisie' }
+        { title: '13. Contact', content: 'Email : contact@confirmed.tn | Adresse : Tunisie' }
       ]
     },
     ar: {
@@ -64,7 +64,7 @@ export default function TermsPage() {
         { title: '10. الإنهاء', content: 'يمكن لأي طرف الإنهاء. قد نوقف للانتهاكات. تصدير البيانات متاح 30 يوماً بعد الإنهاء.' },
         { title: '11. التعديلات', content: 'قد نعدل الشروط بإشعار 30 يوماً. الاستخدام المستمر يشكل قبولاً.' },
         { title: '12. القانون الحاكم', content: 'يحكمه القانون التونسي. النزاعات تحل في المحاكم التونسية. الوساطة مشجعة أولاً.' },
-        { title: '13. الاتصال', content: 'البريد: support@confirmed.tn | العنوان: تونس' }
+        { title: '13. الاتصال', content: 'البريد: contact@confirmed.tn | العنوان: تونس' }
       ]
     }
   }

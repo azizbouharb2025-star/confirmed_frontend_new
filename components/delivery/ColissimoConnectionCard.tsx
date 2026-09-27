@@ -246,7 +246,7 @@ export default function ColissimoConnectionCard() {
       <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition hover:-translate-y-0.5 hover:shadow-lg dark:border-slate-700 dark:bg-slate-800">
         <div className="flex h-44 items-center justify-center bg-[#eef9ff] p-7 dark:bg-slate-900">
           <Image
-            src="/assets/delivery-logos/colissimo.png"
+            src="/assets/colissimo.png"
             alt="Colissimo"
             width={320}
             height={120}
@@ -306,7 +306,7 @@ export default function ColissimoConnectionCard() {
             <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-slate-700">
               <div className="flex items-center gap-3">
                 <Image
-                  src="/assets/delivery-logos/colissimo.png"
+                  src="/assets/colissimo.png"
                   alt="Colissimo"
                   width={100}
                   height={40}

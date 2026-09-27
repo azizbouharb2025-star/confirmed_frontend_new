@@ -61,7 +61,7 @@ export default function Footer() {
                 alt="Confirmed"
                 width={200}
                 height={200}
-                className="w-20 h-20 object-contain"
+                className="w-32 h-32 object-contain"
               />
               
              
@@ -181,6 +181,26 @@ export default function Footer() {
                 </li>
               ))}
             </ul>
+
+            <div className="space-y-2">
+              <a
+                href="mailto:contact@confirmed.tn"
+                className={`block text-sm transition-colors hover:text-[#ADFF2F] ${
+                  theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#6C757D]'
+                }`}
+              >
+                contact@confirmed.tn
+              </a>
+
+              <a
+                href="tel:+21658051293"
+                className={`block text-sm transition-colors hover:text-[#ADFF2F] ${
+                  theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#6C757D]'
+                }`}
+              >
+                (+216) 58 051 293
+              </a>
+            </div>
           </motion.div>
         </div>
 
@@ -197,7 +217,7 @@ export default function Footer() {
           <p className={`text-sm ${
             theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#6C757D]'
           }`}>
-            © 2025 Confirmed. {t('footer.rights')}
+            © 2026 Confirmed. {t('footer.rights')}
           </p>
           
           <div className="flex space-x-6">

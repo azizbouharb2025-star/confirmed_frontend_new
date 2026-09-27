@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
@@ -9,18 +11,21 @@ export default function IntegrationsSection() {
   const { theme } = useTheme()
 
   const integrations = [
-    { name: 'Shopify', category: 'E-commerce' },
-    { name: 'WooCommerce', category: 'E-commerce' },
-    { name: 'Magento', category: 'E-commerce' },
-    { name: 'Stripe', category: 'Payment' },
-    { name: 'PayPal', category: 'Payment' },
-    { name: 'Aramex', category: 'Shipping' },
-    { name: 'DHL', category: 'Shipping' },
-    { name: 'FedEx', category: 'Shipping' },
-    { name: 'Zapier', category: 'Automation' },
-    { name: 'Slack', category: 'Communication' },
-    { name: 'WhatsApp', category: 'Communication' },
-    { name: 'Telegram', category: 'Communication' }
+    {
+      name: 'Converty',
+      category: 'E-commerce',
+      logo: '/assets/converty.png'
+    },
+    {
+      name: 'Intigo',
+      category: 'Livraison',
+      logo: '/assets/delivery-logos/intigo.png'
+    },
+    {
+      name: 'Colissimo',
+      category: 'Livraison',
+      logo: '/assets/colissimo.png'
+    }
   ]
 
   return (
@@ -47,7 +52,7 @@ export default function IntegrationsSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
           {integrations.map((integration, index) => (
             <motion.div
               key={integration.name}
@@ -62,12 +67,18 @@ export default function IntegrationsSection() {
               }`}
             >
               <div className="text-center space-y-3">
-                <div className={`w-12 h-12 mx-auto border-2 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
+                <div className={`w-20 h-20 mx-auto border-2 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 ${
                   theme === 'dark' 
                     ? 'border-white/20 group-hover:border-[#ADFF2F]/50' 
                     : 'border-gray-300 group-hover:border-green-500/50'
                 }`}>
-                  <div className={`w-6 h-6 rounded bg-current opacity-20`} />
+                  <Image
+                    src={integration.logo}
+                    alt={`Logo ${integration.name}`}
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 object-contain"
+                  />
                 </div>
                 <div>
                   <h3 className={`font-semibold ${

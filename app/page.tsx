@@ -2,7 +2,6 @@
 
 import { useTheme } from '@/hooks/useTheme'
 import HeroSection from '@/components/landing/HeroSection'
-import TrustSection from '@/components/landing/TrustSection'
 import ProductSection from '@/components/landing/ProductSection'
 import FeaturesSection from '@/components/landing/FeaturesSection'
 import MobileAppSection from '@/components/landing/MobileAppSection'
@@ -35,7 +34,6 @@ export default function HomePage() {
         <Header />
         <main>
           <HeroSection />
-          <TrustSection />
           <section id="product">
             <ProductSection />
           </section>
