@@ -14,6 +14,7 @@ import colissimoDeliveryService, {
 interface ColissimoApiPanelProps {
   orderIds: string[]
   onBusyChange?: (busy: boolean) => void
+  onDispatchSuccess?: () => void | Promise<void>
 }
 
 function getApiErrorData(err: unknown) {
@@ -44,6 +45,7 @@ function getApiErrorData(err: unknown) {
 export default function ColissimoApiPanel({
   orderIds,
   onBusyChange,
+  onDispatchSuccess,
 }: ColissimoApiPanelProps) {
   const [typeColis, setTypeColis] =
     useState<1 | 2 | 3>(1)
@@ -372,6 +374,8 @@ export default function ColissimoApiPanel({
       setSuccessMsg(
         `Colis Colissimo créé avec succès. N° de suivi : ${result.externalId}`
       )
+
+      await onDispatchSuccess?.()
     } catch (err) {
       const apiError =
         getApiErrorData(err)

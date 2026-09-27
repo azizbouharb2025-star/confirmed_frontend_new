@@ -256,10 +256,25 @@ export default function OrderFilters({
   // AI decision filter
   const handleAiDecisionChange = useCallback(
     (decision: 'accept' | 'review' | 'reject') => {
+      const isSameDecision = filters.aiDecision === decision
+
+      if (isSameDecision) {
+        setSearchInput('')
+        onFiltersChange({
+          search: '',
+          status: 'all',
+          dateRange: null,
+          aiDecision: 'all',
+          aiScoreRange: undefined,
+          riskLevel: 'all',
+        })
+        return
+      }
+
       onFiltersChange({
         ...filters,
         status: 'confirmed',
-        aiDecision: filters.aiDecision === decision ? 'all' : decision,
+        aiDecision: decision,
       })
     },
     [filters, onFiltersChange]
@@ -271,10 +286,23 @@ export default function OrderFilters({
       const current = filters.aiScoreRange
       const isSameRange = current?.min === min && current?.max === max
 
+      if (isSameRange) {
+        setSearchInput('')
+        onFiltersChange({
+          search: '',
+          status: 'all',
+          dateRange: null,
+          aiDecision: 'all',
+          aiScoreRange: undefined,
+          riskLevel: 'all',
+        })
+        return
+      }
+
       onFiltersChange({
         ...filters,
         status: 'confirmed',
-        aiScoreRange: isSameRange ? undefined : { min, max },
+        aiScoreRange: { min, max },
       })
     },
     [filters, onFiltersChange]
@@ -283,10 +311,25 @@ export default function OrderFilters({
   // AI risk level filter
   const handleRiskLevelChange = useCallback(
     (riskLevel: 'critical' | 'high' | 'medium' | 'low' | 'very_low') => {
+      const isSameRiskLevel = filters.riskLevel === riskLevel
+
+      if (isSameRiskLevel) {
+        setSearchInput('')
+        onFiltersChange({
+          search: '',
+          status: 'all',
+          dateRange: null,
+          aiDecision: 'all',
+          aiScoreRange: undefined,
+          riskLevel: 'all',
+        })
+        return
+      }
+
       onFiltersChange({
         ...filters,
         status: 'confirmed',
-        riskLevel: filters.riskLevel === riskLevel ? 'all' : riskLevel,
+        riskLevel,
       })
     },
     [filters, onFiltersChange]

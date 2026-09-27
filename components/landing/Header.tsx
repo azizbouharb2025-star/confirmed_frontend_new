@@ -23,22 +23,40 @@ export default function Header() {
   const { theme } = useTheme()
   const { isAuthenticated, getDashboardPath } = useSession()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { scrollY } = useScroll()
   const headerOpacity = useTransform(scrollY, [0, 100], [0.8, 0.95])
   const headerBlur = useTransform(scrollY, [0, 100], [20, 40])
 
   useEffect(() => {
+    let previousScroll = scrollY.get()
+
     const unsubscribe = scrollY.onChange((latest) => {
-      setIsScrolled(latest > 50)
+      if (latest <= 50) {
+        setIsScrolled(false)
+        setIsHeaderVisible(true)
+      } else if (latest > previousScroll) {
+        setIsScrolled(true)
+        setIsHeaderVisible(false)
+      } else if (latest < previousScroll) {
+        setIsScrolled(false)
+        setIsHeaderVisible(true)
+      }
+
+      previousScroll = latest
     })
+
     return () => unsubscribe()
   }, [scrollY])
 
   return (
     <motion.header 
       initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={{
+        y: isHeaderVisible ? 0 : '-100%',
+        opacity: isHeaderVisible ? 1 : 0
+      }}
       transition={{ duration: 0.8, type: "spring", stiffness: 100 }}
       style={{ 
         backdropFilter: `blur(${headerBlur}px)`,
@@ -64,7 +82,7 @@ export default function Header() {
               width={300}
               height={300}
               className={`object-contain transition-all duration-300 ${
-                isScrolled ? 'w-24 h-14' : 'w-28 h-18'
+                isScrolled ? 'w-44 h-20' : 'w-44 h-20'
               }`}
             />
           </Link>

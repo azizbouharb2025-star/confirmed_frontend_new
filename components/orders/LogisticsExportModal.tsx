@@ -1115,6 +1115,8 @@ export default function LogisticsExportModal({
         `Colis Intigo créé avec succès. N° de suivi : ${result.intigo.nid}`
       )
 
+      await onExportSuccess?.()
+
     } catch (err) {
 
       const responseData =
@@ -1355,6 +1357,7 @@ export default function LogisticsExportModal({
                 <ColissimoApiPanel
                   orderIds={orderIds}
                   onBusyChange={setIsColissimoBusy}
+                  onDispatchSuccess={onExportSuccess}
                 />
               )}
             </div>

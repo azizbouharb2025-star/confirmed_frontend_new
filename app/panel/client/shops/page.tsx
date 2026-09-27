@@ -439,8 +439,16 @@ export default function ShopsPage() {
                   <div key={shop._id} className="card p-6 hover:shadow-lg transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-lg bg-blue-500/10">
-                          <PlatformIcon className="w-6 h-6 text-blue-500" />
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                          {shop.platform === 'converty' ? (
+                            <img
+                              src="/assets/converty.png"
+                              alt="Converty"
+                              className="h-8 w-8 object-contain"
+                            />
+                          ) : (
+                            <PlatformIcon className="w-6 h-6 text-blue-500" />
+                          )}
                         </div>
                         <div>
                           <h3 className="font-semibold">{shop.name}</h3>
