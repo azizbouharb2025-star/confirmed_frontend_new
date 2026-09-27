@@ -53,21 +53,6 @@ function formatDuration(seconds?: number): string {
 
 
 /**
- * Order status progression for timeline
- */
-const STATUS_PROGRESSION: OrderStatus[] = [
-  'pending',
-  'in_progress',
-  'cancelled',
-  'postponed',
-  'confirmed',
-  'shipped',
-  'out_for_delivery',
-  'delivered',
-  'returned',
-]
-
-/**
  * Get the call result display label and color
  */
 function getCallResultDisplay(
@@ -1092,19 +1077,46 @@ function StatusTimelineSection({ order, t }: { order: Order; t: (key: Translatio
       ? 'cancelled'
       : order.status
 
-  const currentStatusIndex = STATUS_PROGRESSION.indexOf(timelineStatus)
+  const normalizeTimelineStatus = (status: OrderStatus): OrderStatus =>
+    status === 'assigned'
+      ? 'in_progress'
+      : status === 'rejected'
+      ? 'cancelled'
+      : status
+
+  const timelineStatuses = (
+    [
+      'pending',
+      ...(order.statusHistory ?? []).map(entry =>
+        normalizeTimelineStatus(entry.status)
+      ),
+    ] as OrderStatus[]
+  ).filter(
+    (status, index, statuses) =>
+      index === 0 || status !== statuses[index - 1]
+  )
+
+  const normalizedCurrentStatus = normalizeTimelineStatus(timelineStatus)
+
+  if (
+    timelineStatuses[timelineStatuses.length - 1] !==
+    normalizedCurrentStatus
+  ) {
+    timelineStatuses.push(normalizedCurrentStatus)
+  }
+
   const translatedLabels = getTranslatedStatusLabels(t)
   
   return (
     <div className="py-4" data-testid="status-timeline-section">
       <SectionHeader title={t('orderDetail.statusTimeline')} />
       <div className="flex items-center justify-between">
-        {STATUS_PROGRESSION.map((status, index) => {
-          const isCompleted = currentStatusIndex >= index
-          const isCurrent = timelineStatus === status
+        {timelineStatuses.map((status, index) => {
+          const isCompleted = index < timelineStatuses.length - 1
+          const isCurrent = index === timelineStatuses.length - 1
           
           return (
-            <Fragment key={status}>
+            <Fragment key={`${status}-${index}`}>
               {/* Status node */}
               <div className="flex flex-col items-center">
                 <div
@@ -1144,11 +1156,11 @@ function StatusTimelineSection({ order, t }: { order: Order; t: (key: Translatio
               </div>
               
               {/* Connector line */}
-              {index < STATUS_PROGRESSION.length - 1 && (
+              {index < timelineStatuses.length - 1 && (
                 <div
                   className={clsx(
                     'flex-1 h-0.5 mx-2',
-                    currentStatusIndex > index
+                    index < timelineStatuses.length - 1
                       ? 'bg-green-500'
                       : 'bg-gray-200 dark:bg-slate-700'
                   )}

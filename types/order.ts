@@ -270,6 +270,18 @@ export interface Order {
   status: OrderStatus;
 
   /**
+   * Historique réel des changements de statut de la commande.
+   */
+  statusHistory?: Array<{
+    status: OrderStatus;
+    timestamp: string;
+    operatorId?: string;
+    source?: string;
+    reason?: string;
+    notes?: string;
+  }>;
+
+  /**
    * Statut indépendant provenant de la plateforme e-commerce.
    */
   externalStatus?: {

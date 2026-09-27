@@ -919,6 +919,20 @@ export default function ClientOrdersPage() {
   // Calculate selection count for toolbar
   const selectionCount = selectedIds.length
 
+  /*
+   * Logistics exports are intentionally limited to orders
+   * that are confirmed or postponed.
+   *
+   * The normal table selection remains unchanged because
+   * it is also used by other bulk actions.
+   */
+  const logisticsExportOrderIds = selectedOrders
+    .filter(order =>
+      order.status === 'confirmed' ||
+      order.status === 'postponed'
+    )
+    .map(order => order._id)
+
   return (
     <DashboardLayout userRole="shop_owner">
       <div
@@ -1027,7 +1041,7 @@ export default function ClientOrdersPage() {
           onClose={() =>
             setShowLogisticsExportModal(false)
           }
-          orderIds={selectedIds}
+          orderIds={logisticsExportOrderIds}
           onExportSuccess={
             handleLogisticsExportSuccess
           }
