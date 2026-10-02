@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Bars3Icon, BellIcon, UserCircleIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, UserCircleIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import Sidebar from './Sidebar'
 import LanguageSelector from '@/components/ui/LanguageSelector'
 import ThemeToggle from '@/components/ui/ThemeToggle'
 import ConnectionStatus from '@/components/ui/ConnectionStatus'
 import RealTimeNotifications from '@/components/ui/RealTimeNotifications'
+import NotificationBell from '@/components/dashboard/NotificationBell'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
@@ -91,12 +92,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
               <LanguageSelector />
               <ThemeToggle />
               
-              <button className={`relative p-2 rounded-lg transition-colors ${
-                isDark ? 'hover:bg-slate-800' : 'hover:bg-gray-100'
-              }`}>
-                <BellIcon className="w-5 h-5" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
-              </button>
+              <NotificationBell />
 
               <div className="relative" ref={profileRef}>
                 <button
