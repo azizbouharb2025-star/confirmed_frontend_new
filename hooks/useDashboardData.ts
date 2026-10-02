@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api';
 
-export type DashboardPeriod = '7d' | '30d' | '90d';
+export type DashboardPeriod = 'today' | '7d' | '30d' | '90d';
 
 export interface DashboardKpiMetric {
   value: number;

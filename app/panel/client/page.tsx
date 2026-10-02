@@ -73,6 +73,7 @@ export default function ClientDashboard() {
     value: DashboardPeriod
     label: string
   }> = [
+    { value: 'today', label: t('dashboard.periodToday') },
     { value: '7d', label: t('dashboard.period7d') },
     { value: '30d', label: t('dashboard.period30d') },
     { value: '90d', label: t('dashboard.period90d') }

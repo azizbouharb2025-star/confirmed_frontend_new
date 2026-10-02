@@ -9,6 +9,7 @@ import ThemeToggle from '@/components/ui/ThemeToggle'
 import ConnectionStatus from '@/components/ui/ConnectionStatus'
 import RealTimeNotifications from '@/components/ui/RealTimeNotifications'
 import NotificationBell from '@/components/dashboard/NotificationBell'
+import ShopWalletButton from '@/components/dashboard/ShopWalletButton'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
@@ -91,6 +92,10 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
               </div>
               <LanguageSelector />
               <ThemeToggle />
+
+              {userRole === 'shop_owner' && (
+                <ShopWalletButton />
+              )}
               
               <NotificationBell />
 
