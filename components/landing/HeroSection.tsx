@@ -18,11 +18,37 @@ export default function HeroSection() {
   const opacity = useTransform(scrollY, [0, 300], [1, 0.8])
 
   return (
-    <section className={`relative min-h-screen flex items-center overflow-hidden ${
+    <section className={`relative min-h-screen pt-24 lg:pt-28 flex items-center overflow-hidden ${
       theme === 'dark' ? 'bg-gradient-to-br from-[#0a0a0a] via-[#121212] to-[#1a1a1a]' : 'bg-gradient-to-br from-white via-gray-50 to-blue-50'
     }`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
+        {theme !== 'dark' && (
+          <>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `
+                  radial-gradient(circle at 12% 18%, rgba(173,255,47,0.14), transparent 24%),
+                  radial-gradient(circle at 82% 20%, rgba(0,191,255,0.10), transparent 26%),
+                  radial-gradient(circle at 38% 78%, rgba(50,205,50,0.10), transparent 22%),
+                  linear-gradient(135deg, #f8fff4 0%, #f7f9fc 45%, #eef8ff 100%)
+                `
+              }}
+            />
+            <div
+              className="absolute inset-0 opacity-[0.16]"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(0,191,255,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(50,205,50,0.08) 1px, transparent 1px)',
+                backgroundSize: '120px 120px'
+              }}
+            />
+            <div className="absolute left-[8%] top-[18%] h-40 w-40 rounded-full bg-[#ADFF2F]/10 blur-3xl" />
+            <div className="absolute right-[10%] top-[24%] h-48 w-48 rounded-full bg-[#00BFFF]/10 blur-3xl" />
+            <div className="absolute bottom-[12%] left-[32%] h-36 w-36 rounded-full bg-[#32CD32]/10 blur-3xl" />
+          </>
+        )}
         {/* Floating orbs */}
         <motion.div
           animate={{
@@ -61,7 +87,7 @@ export default function HeroSection() {
 
       <motion.div 
         style={{ y, opacity }}
-        className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-32 sm:pt-40"
+        className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 lg:py-8"
       >
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left Column - Text */}
@@ -69,13 +95,13 @@ export default function HeroSection() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 1, type: "spring", stiffness: 100 }}
-            className="space-y-10"
+            className="space-y-5 lg:space-y-5"
           >
             <motion.h1 
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight"
+              className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-6xl font-bold leading-tight"
             >
               <span className={theme === 'dark' ? 'text-white' : 'text-[#1A1A1A]'}>
                 {t('hero.title.part1')}
@@ -95,7 +121,7 @@ export default function HeroSection() {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
-              className={`text-base sm:text-xl lg:text-2xl leading-relaxed max-w-2xl ${
+              className={`text-base sm:text-lg lg:text-xl 2xl:text-xl leading-relaxed max-w-2xl ${
                 theme === 'dark' ? 'text-[#E0E0E0]' : 'text-[#6C757D]'
               }`}
             >
@@ -107,22 +133,41 @@ export default function HeroSection() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.8 }}
-              className="grid grid-cols-3 gap-2 sm:gap-8 py-4 sm:py-8"
+              className={`relative grid grid-cols-3 gap-0 overflow-hidden rounded-2xl border backdrop-blur-xl shadow-lg transition-all duration-300 ${
+                theme === 'dark'
+                  ? 'border-white/10 bg-white/[0.04] shadow-black/20'
+                  : 'border-gray-200/80 bg-white/90 shadow-xl shadow-gray-300/35 ring-1 ring-black/[0.02]'
+              }`}
             >
+              <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#32CD32]/70 to-transparent" />
+
               {[
                 { number: 99.9, suffix: '%', label: 'Accuracy' },
                 { number: 50, suffix: 'K+', label: 'Orders' },
                 { number: 24, suffix: '/7', label: 'Support' }
               ].map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className={`text-xl sm:text-3xl font-bold ${
+                <div
+                  key={index}
+                  className={`relative text-center px-2 sm:px-5 py-3 sm:py-4 transition-colors duration-300 ${
+                    index > 0
+                      ? theme === 'dark'
+                        ? 'border-l border-white/10'
+                        : 'border-l border-gray-200/80'
+                      : ''
+                  } ${
+                    theme === 'dark'
+                      ? 'hover:bg-white/[0.04]'
+                      : 'hover:bg-white/60'
+                  }`}
+                >
+                  <div className={`text-xl sm:text-3xl font-bold tracking-tight ${
                     theme === 'dark' ? 'text-[#ADFF2F]' : 'text-green-600'
                   }`}>
                     <CountUp end={stat.number} duration={2} delay={1 + index * 0.2} />
                     {stat.suffix}
                   </div>
-                  <div className={`text-xs sm:text-sm ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                  <div className={`mt-1 text-xs sm:text-sm font-medium ${
+                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                   }`}>
                     {stat.label}
                   </div>
@@ -174,7 +219,7 @@ export default function HeroSection() {
               initial={{ y: 60, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1.1, duration: 0.8 }}
-              className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 pt-4 sm:pt-8"
+              className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 pt-2 sm:pt-3"
             >
               <div className="flex items-center space-x-2">
                 <ShieldCheckIcon className={`w-5 h-5 flex-shrink-0 ${

@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import OrdersTable from '@/components/orders/OrdersTable'
+import OrderDetailPanel from '@/components/orders/OrderDetailPanel'
 import OrderFilters from '@/components/orders/OrderFilters'
 import BulkActionsToolbar from '@/components/orders/BulkActionsToolbar'
 import StatusBadge from '@/components/ui/StatusBadge'
@@ -14,7 +15,7 @@ import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
 import logger from '@/lib/logger'
 import { formatCurrency } from '@/lib/formatCurrency'
-import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult, ShopRef, OperatorRef } from '@/types/order'
+import type { Order, OrderFilters as OrderFiltersType, OrderStatus, BulkResult, OrderStatusSummary, ShopRef, OperatorRef } from '@/types/order'
 import { clsx } from 'clsx'
 
 /**
@@ -35,149 +36,15 @@ interface Shop {
 
 interface Operator {
   _id: string
-  name: string
+  name?: string
+  firstName?: string
+  lastName?: string
   email?: string
 }
 
-interface OrderAnalytics {
-  confirmationRate: number
-  averageProcessingTime: number // in hours
-  statusDistribution: Record<OrderStatus, number>
-  totalOrders: number
-}
-
-/**
- * Calculate order analytics from orders list
- * Requirements: 6.5
- */
-function calculateAnalytics(orders: Order[]): OrderAnalytics {
-  const totalOrders = orders.length
-  
-  if (totalOrders === 0) {
-    return {
-      confirmationRate: 0,
-      averageProcessingTime: 0,
-      statusDistribution: {
-        pending: 0,
-        postponed: 0,
-        assigned: 0,
-        in_progress: 0,
-        confirmed: 0,
-        rejected: 0,
-        cancelled: 0,
-        shipped: 0,
-        at_depot: 0,
-        out_for_delivery: 0,
-        delivered: 0,
-        returned: 0,
-        failed_delivery: 0,
-      },
-      totalOrders: 0,
-    }
-  }
-
-  // Calculate status distribution
-  const statusDistribution: Record<OrderStatus, number> = {
-    pending: 0,
-    postponed: 0,
-    assigned: 0,
-    in_progress: 0,
-    confirmed: 0,
-    rejected: 0,
-    cancelled: 0,
-    shipped: 0,
-    at_depot: 0,
-    out_for_delivery: 0,
-    delivered: 0,
-    returned: 0,
-    failed_delivery: 0,
-  }
-  
-  orders.forEach((order) => {
-    if (statusDistribution[order.status] !== undefined) {
-      statusDistribution[order.status]++
-    }
-  })
-  
-  // Calculate confirmation rate
-  const confirmedCount = statusDistribution.confirmed
-  const processedCount = confirmedCount + statusDistribution.rejected
-  const confirmationRate = processedCount > 0 
-    ? (confirmedCount / processedCount) * 100 
-    : 0
-  
-  // Calculate average processing time (from creation to confirmation/rejection)
-  let totalProcessingTime = 0
-  let processedOrders = 0
-  
-  orders.forEach((order) => {
-    if (order.status === 'confirmed' || order.status === 'rejected') {
-      const createdAt = new Date(order.createdAt).getTime()
-      const updatedAt = new Date(order.updatedAt).getTime()
-      const processingTime = (updatedAt - createdAt) / (1000 * 60 * 60) // Convert to hours
-      totalProcessingTime += processingTime
-      processedOrders++
-    }
-  })
-  
-  const averageProcessingTime = processedOrders > 0 
-    ? totalProcessingTime / processedOrders 
-    : 0
-  
-  return {
-    confirmationRate,
-    averageProcessingTime,
-    statusDistribution,
-    totalOrders,
-  }
-}
-
-/**
- * Analytics Summary Card Component
- * Requirements: 6.5
- */
-function AnalyticsSummary({ analytics }: { analytics: OrderAnalytics }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      {/* Total Orders */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow">
-        <p className="text-sm text-gray-500 dark:text-slate-400">Total Orders</p>
-        <p className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.totalOrders}</p>
-      </div>
-      
-      {/* Confirmation Rate */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow">
-        <p className="text-sm text-gray-500 dark:text-slate-400">Confirmation Rate</p>
-        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-          {analytics.confirmationRate.toFixed(1)}%
-        </p>
-      </div>
-      
-      {/* Average Processing Time */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow">
-        <p className="text-sm text-gray-500 dark:text-slate-400">Avg Processing Time</p>
-        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-          {analytics.averageProcessingTime.toFixed(1)}h
-        </p>
-      </div>
-      
-      {/* Status Distribution */}
-      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow">
-        <p className="text-sm text-gray-500 dark:text-slate-400 mb-2">Status Distribution</p>
-        <div className="flex flex-wrap gap-2">
-          <span className="text-xs px-2 py-1 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">
-            Pending: {analytics.statusDistribution.pending}
-          </span>
-          <span className="text-xs px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
-            Confirmed: {analytics.statusDistribution.confirmed}
-          </span>
-          <span className="text-xs px-2 py-1 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
-            Rejected: {analytics.statusDistribution.rejected}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+interface CourierOption {
+  _id: string
+  name: string
 }
 
 
@@ -445,14 +312,24 @@ export default function AdminOrdersPage() {
   // Local state
   const [shops, setShops] = useState<Shop[]>([])
   const [operators, setOperators] = useState<Operator[]>([])
+  const [couriers, setCouriers] = useState<CourierOption[]>([])
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+
+  const [
+    adminSummary,
+    setAdminSummary,
+  ] = useState<OrderStatusSummary | null>(
+    null
+  )
+
+  const [
+    isAdminActionsOpen,
+    setIsAdminActionsOpen,
+  ] = useState(false)
   const [sortBy, setSortBy] = useState<string>('createdAt')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false)
   const [selectedShopId, setSelectedShopId] = useState<string>('')
-
-  // Calculate analytics from current orders
-  const analytics = useMemo(() => calculateAnalytics(orders), [orders])
 
   /**
    * Fetch shops list for filter dropdown
@@ -471,12 +348,58 @@ export default function AdminOrdersPage() {
    */
   const fetchOperators = useCallback(async () => {
     try {
-      const response = await api.get('/api/users?role=operator')
-      setOperators(response.data.users || response.data || [])
+      const response =
+        await api.get('/api/admin/operators')
+
+      const items =
+        response.data?.operators || []
+
+      setOperators(
+        items.map((op: {
+          _id: string
+          firstName?: string
+          lastName?: string
+          email?: string
+        }) => ({
+          _id: op._id,
+          name:
+            [op.firstName, op.lastName]
+              .filter(Boolean)
+              .join(' ')
+              .trim() ||
+            op.email ||
+            'Opérateur',
+          email: op.email,
+        }))
+      )
     } catch (err) {
       logger.error('Failed to fetch operators:', err, 'Admin')
     }
   }, [])
+
+  /**
+   * Fetch real courier options used by orders.
+   */
+  const fetchOrderFilterOptions =
+    useCallback(async () => {
+      try {
+        const response =
+          await api.get(
+            '/api/admin/order-filter-options'
+          )
+
+        setCouriers(
+          response.data?.couriers ||
+          []
+        )
+      } catch (err) {
+        logger.error(
+          'Failed to fetch order filter options:',
+          err,
+          'Admin'
+        )
+      }
+    }, [])
 
   /**
    * Fetch orders from API
@@ -501,8 +424,15 @@ export default function AdminOrdersPage() {
         sortOrder,
       })
       
+      setAdminSummary(
+        response.summary || null
+      )
+
       setOrders(response.orders)
-      setPagination(response.total, response.totalPages)
+      setPagination(
+        response.total,
+        response.totalPages
+      )
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch orders'
       setError(errorMessage)
@@ -524,7 +454,12 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     fetchShops()
     fetchOperators()
-  }, [fetchShops, fetchOperators])
+    fetchOrderFilterOptions()
+  }, [
+    fetchShops,
+    fetchOperators,
+    fetchOrderFilterOptions
+  ])
 
   // Fetch orders when dependencies change
   useEffect(() => {
@@ -534,10 +469,31 @@ export default function AdminOrdersPage() {
   /**
    * Handle order row click - opens detail panel
    */
-  const handleOrderSelect = useCallback((order: Order) => {
-    setSelectedOrder(order)
-    setIsDetailPanelOpen(true)
-  }, [])
+  const handleOrderSelect = useCallback(
+    async (order: Order) => {
+      setSelectedOrder(order)
+      setIsAdminActionsOpen(false)
+      setIsDetailPanelOpen(true)
+
+      try {
+        const detailedOrder =
+          await orderService.getOrderById(
+            order._id
+          )
+
+        setSelectedOrder(
+          detailedOrder
+        )
+      } catch (err) {
+        logger.error(
+          'Failed to fetch complete order detail:',
+          err,
+          'Admin'
+        )
+      }
+    },
+    []
+  )
 
   /**
    * Handle closing the detail panel
@@ -550,10 +506,49 @@ export default function AdminOrdersPage() {
   /**
    * Handle filter changes
    */
-  const handleFiltersChange = useCallback((newFilters: OrderFiltersType) => {
-    setFilters(newFilters)
-    clearSelection()
-  }, [setFilters, clearSelection])
+  const handleFiltersChange = useCallback(
+    (newFilters: OrderFiltersType) => {
+      /*
+       * Le composant partagé OrderFilters force historiquement
+       * status='confirmed' lors d'un changement de filtre IA.
+       *
+       * En Admin, le PDF exige des filtres combinables.
+       * On conserve donc le statut choisi par l'Admin lorsqu'un
+       * filtre IA change.
+       */
+      const aiFiltersChanged =
+        JSON.stringify(
+          newFilters.aiScoreRange
+        ) !==
+          JSON.stringify(
+            filters.aiScoreRange
+          ) ||
+        newFilters.aiDecision !==
+          filters.aiDecision ||
+        newFilters.riskLevel !==
+          filters.riskLevel
+
+      const normalizedFilters =
+        aiFiltersChanged
+          ? {
+              ...newFilters,
+              status: filters.status,
+            }
+          : newFilters
+
+      setFilters(
+        normalizedFilters
+      )
+      setCurrentPage(1)
+      clearSelection()
+    },
+    [
+      filters,
+      setFilters,
+      setCurrentPage,
+      clearSelection
+    ]
+  )
 
   /**
    * Handle shop filter change
@@ -658,26 +653,240 @@ export default function AdminOrdersPage() {
             </div>
           </div>
 
-          {/* Analytics Summary - Requirements: 6.5 */}
-          <AnalyticsSummary analytics={analytics} />
+          {/* KPI réels - toutes les commandes filtrées */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
 
-          {/* Shop Filter - Requirements: 6.2 */}
-          <div className="flex items-center gap-4 mb-4">
-            <label className="text-sm font-medium text-gray-700 dark:text-slate-300">
-              Filter by Shop:
-            </label>
-            <select
-              value={selectedShopId}
-              onChange={(e) => handleShopFilterChange(e.target.value)}
-              className="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg text-sm"
-              data-testid="shop-filter"
-            >
-              <option value="">All Shops</option>
-              {shops.map((shop) => (
-                <option key={shop._id} value={shop._id}>{shop.name}</option>
+            <div className="mb-4">
+              <h2 className="font-semibold text-gray-900 dark:text-white">
+                Supervision des commandes
+              </h2>
+
+              <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+                KPI calculés sur toutes les commandes correspondant aux filtres actifs.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5 xl:grid-cols-10">
+
+              {[
+                ['Total', adminSummary?.total ?? 0],
+                ['En attente', adminSummary?.pending ?? 0],
+                ['Confirmées', adminSummary?.confirmed ?? 0],
+                ['Expédiées', adminSummary?.shipped ?? 0],
+                ['Dépôt', adminSummary?.at_depot ?? 0],
+                ['En livraison', adminSummary?.out_for_delivery ?? 0],
+                ['Livrées', adminSummary?.delivered ?? 0],
+                ['Retournées', adminSummary?.returned ?? 0],
+                ['Annulées', adminSummary?.cancelled ?? 0],
+                ['Reportées', adminSummary?.postponed ?? 0],
+              ].map(([label, value]) => (
+                <div
+                  key={String(label)}
+                  className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-3 dark:border-slate-700 dark:bg-slate-800/60"
+                >
+                  <p className="text-[11px] font-medium text-gray-500 dark:text-slate-400">
+                    {label}
+                  </p>
+
+                  <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+                    {value}
+                  </p>
+                </div>
               ))}
-            </select>
+
+            </div>
           </div>
+
+
+          {/* Filtres Admin complémentaires */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+
+              <label className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                  Boutique
+                </span>
+
+                <select
+                  value={selectedShopId}
+                  onChange={(e) =>
+                    handleShopFilterChange(
+                      e.target.value
+                    )
+                  }
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                  data-testid="shop-filter"
+                >
+                  <option value="">
+                    Toutes les boutiques
+                  </option>
+
+                  {shops.map(shop => (
+                    <option
+                      key={shop._id}
+                      value={shop._id}
+                    >
+                      {shop.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+
+              <label className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                  Opérateur
+                </span>
+
+                <select
+                  value={
+                    filters.operatorId ||
+                    ''
+                  }
+                  onChange={(e) =>
+                    handleFiltersChange({
+                      ...filters,
+                      operatorId:
+                        e.target.value ||
+                        undefined,
+                    })
+                  }
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                >
+                  <option value="">
+                    Tous les opérateurs
+                  </option>
+
+                  {operators.map(operator => {
+                    const fullName =
+                      [
+                        operator.firstName,
+                        operator.lastName,
+                      ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .trim()
+
+                    return (
+                      <option
+                        key={operator._id}
+                        value={operator._id}
+                      >
+                        {
+                          operator.name ||
+                          fullName ||
+                          operator.email ||
+                          operator._id
+                        }
+                      </option>
+                    )
+                  })}
+                </select>
+              </label>
+
+
+              <label className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                  Transporteur
+                </span>
+
+                <select
+                  value={
+                    filters.courier ||
+                    ''
+                  }
+                  onChange={(e) =>
+                    handleFiltersChange({
+                      ...filters,
+                      courier:
+                        e.target.value ||
+                        undefined,
+                    })
+                  }
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                >
+                  <option value="">
+                    Tous les transporteurs
+                  </option>
+
+                  {couriers.map(courier => (
+                    <option
+                      key={courier._id}
+                      value={courier._id}
+                    >
+                      {courier.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+
+              <label className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                  Montant min.
+                </span>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={
+                    filters.minAmount ??
+                    ''
+                  }
+                  onChange={(e) =>
+                    handleFiltersChange({
+                      ...filters,
+                      minAmount:
+                        e.target.value === ''
+                          ? undefined
+                          : Number(
+                              e.target.value
+                            ),
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+              </label>
+
+
+              <label className="space-y-1">
+                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                  Montant max.
+                </span>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={
+                    filters.maxAmount ??
+                    ''
+                  }
+                  onChange={(e) =>
+                    handleFiltersChange({
+                      ...filters,
+                      maxAmount:
+                        e.target.value === ''
+                          ? undefined
+                          : Number(
+                              e.target.value
+                            ),
+                    })
+                  }
+                  placeholder="∞"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800"
+                />
+              </label>
+
+            </div>
+
+            <p className="mt-3 text-xs text-gray-500 dark:text-slate-400">
+              Ces filtres se combinent avec Statut, Transporteur, Score IA, Période et Recherche.
+            </p>
+
+          </div>
+
 
           {/* Filters */}
           <OrderFilters
@@ -720,11 +929,29 @@ export default function AdminOrdersPage() {
             onRetry={handleRetry}
           />
 
-          {/* Admin Order Detail Panel */}
-          <AdminOrderDetailPanel
+          {/* Même sidebar détaillée que Seller */}
+          <OrderDetailPanel
             order={selectedOrder}
             isOpen={isDetailPanelOpen}
+            showAdminContext
             onClose={handleCloseDetailPanel}
+            onEdit={() => {
+              setIsDetailPanelOpen(false)
+              setIsAdminActionsOpen(true)
+            }}
+          />
+
+          {/* Actions réservées à l'Admin */}
+          <AdminOrderDetailPanel
+            order={selectedOrder}
+            isOpen={isAdminActionsOpen}
+            onClose={() => {
+              setIsAdminActionsOpen(false)
+
+              if (selectedOrder) {
+                setIsDetailPanelOpen(true)
+              }
+            }}
             operators={operators}
             onAssignOperator={handleAssignOperator}
             onStatusOverride={handleStatusOverride}

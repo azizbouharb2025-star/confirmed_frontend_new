@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowPathIcon,
   BanknotesIcon,
@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline'
 import api from '@/lib/api'
 import { useTheme } from '@/hooks/useTheme'
+import { TransactionRows, WalletTransaction as LedgerTransaction, amountText } from '@/components/wallet/WalletHistory'
 
 interface Wallet {
   id: string
@@ -20,29 +21,11 @@ interface Wallet {
   updatedAt?: string
 }
 
-interface WalletTransaction {
-  _id: string
-  type: 'credit' | 'debit' | 'adjustment' | 'refund'
-  status: 'pending' | 'completed' | 'cancelled'
-  amount: number
-  currency: 'TND'
-  description: string
-  reference?: string | null
-  createdAt: string
-}
-
 interface WalletResponse {
   wallet: Wallet
-}
-
-interface TransactionsResponse {
-  transactions: WalletTransaction[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+  summary?: { totalCredited: number; totalConsumed: number; totalFees: number; creditsGranted: number; pendingCredits: number; lastRechargeAt?: string; lastActivityAt?: string }
+  billing?: { rate: number; mode: string }
+  status?: string
 }
 
 function formatAmount(value: number) {
@@ -59,21 +42,22 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
-function transactionSign(type: WalletTransaction['type']) {
-  return type === 'debit' ? '-' : '+'
-}
+const walletStatuses: Record<string, string> = { active: 'Actif', low_balance: 'Solde faible', exhausted: 'Solde épuisé', credit_in_progress: 'Crédit en cours' }
 
 export default function WalletPage() {
   const { theme } = useTheme()
   const isDark = theme === 'dark'
 
   const [wallet, setWallet] = useState<Wallet | null>(null)
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([])
+  const [walletInfo, setWalletInfo] = useState<WalletResponse | null>(null)
+  const [journal, setJournal] = useState<LedgerTransaction[]>([])
+  const [journalPage, setJournalPage] = useState(1)
+  const [journalPages, setJournalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadWallet = async (manual = false) => {
+  const loadWallet = useCallback(async (manual = false) => {
     if (manual) {
       setRefreshing(true)
     } else {
@@ -85,25 +69,27 @@ export default function WalletPage() {
     try {
       const [walletResponse, transactionResponse] = await Promise.all([
         api.get('/api/wallet'),
-        api.get('/api/wallet/transactions?limit=20&page=1'),
+        api.get(`/api/wallet/transactions?limit=20&page=${journalPage}`),
       ])
 
       const walletData = walletResponse.data as WalletResponse
-      const transactionData = transactionResponse.data as TransactionsResponse
 
       setWallet(walletData.wallet)
-      setTransactions(transactionData.transactions ?? [])
+      setWalletInfo(walletData)
+      setJournal(transactionResponse.data.transactions || [])
+      setJournalPages(transactionResponse.data.pagination?.pages || 0)
+
     } catch {
       setError('Impossible de charger le portefeuille pour le moment.')
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [journalPage])
 
   useEffect(() => {
-    loadWallet()
-  }, [])
+    void loadWallet()
+  }, [loadWallet])
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
@@ -168,6 +154,14 @@ export default function WalletPage() {
           {error}
         </div>
       )}
+
+      {walletInfo?.summary && <section className="rounded-xl border border-gray-200 p-4 dark:border-slate-800">
+        <p className="mb-3 text-sm">Statut : {walletStatuses[walletInfo.status || ''] || walletInfo.status} · Tarif : {amountText(walletInfo.billing?.rate)} / commande · {walletInfo.billing?.mode === 'delivered' ? 'Commande livrée' : 'Commande confirmée'}</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">{[
+          ['Total crédité', walletInfo.summary.totalCredited], ['Total consommé', walletInfo.summary.totalConsumed], ['Total des frais', walletInfo.summary.totalFees], ['Crédits accordés', walletInfo.summary.creditsGranted], ['Crédits en attente de règlement', walletInfo.summary.pendingCredits]
+        ].map(([label, value]) => <div key={String(label)}><p className="text-xs text-gray-500 dark:text-slate-400">{label}</p><p className="font-semibold">{amountText(Number(value))}</p></div>)}</div>
+        <p className="mt-3 text-xs text-gray-500">Dernière recharge : {walletInfo.summary.lastRechargeAt ? formatDate(walletInfo.summary.lastRechargeAt) : '—'} · Dernière activité : {walletInfo.summary.lastActivityAt ? formatDate(walletInfo.summary.lastActivityAt) : '—'}</p>
+      </section>}
 
       <div className="grid gap-4 md:grid-cols-2">
         <div
@@ -251,123 +245,10 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <section
-        className={`overflow-hidden rounded-2xl border ${
-          isDark
-            ? 'border-slate-800 bg-slate-900'
-            : 'border-gray-200 bg-white'
-        }`}
-      >
-        <div
-          className={`border-b px-5 py-4 ${
-            isDark ? 'border-slate-800' : 'border-gray-200'
-          }`}
-        >
-          <h2
-            className={`text-base font-semibold ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}
-          >
-            Historique des transactions
-          </h2>
-
-          <p
-            className={`mt-1 text-sm ${
-              isDark ? 'text-slate-400' : 'text-gray-500'
-            }`}
-          >
-            Les derniers mouvements enregistrés sur votre Wallet.
-          </p>
-        </div>
-
-        {loading ? (
-          <div
-            className={`px-5 py-12 text-center text-sm ${
-              isDark ? 'text-slate-400' : 'text-gray-500'
-            }`}
-          >
-            Chargement...
-          </div>
-        ) : transactions.length === 0 ? (
-          <div className="px-5 py-14 text-center">
-            <WalletIcon
-              className={`mx-auto h-10 w-10 ${
-                isDark ? 'text-slate-600' : 'text-gray-300'
-              }`}
-            />
-
-            <p
-              className={`mt-3 font-medium ${
-                isDark ? 'text-slate-200' : 'text-gray-700'
-              }`}
-            >
-              Aucune transaction pour le moment
-            </p>
-
-            <p
-              className={`mt-1 text-sm ${
-                isDark ? 'text-slate-500' : 'text-gray-500'
-              }`}
-            >
-              Les futurs crédits et débits apparaîtront ici.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200 dark:divide-slate-800">
-            {transactions.map(transaction => (
-              <div
-                key={transaction._id}
-                className="flex items-center justify-between gap-4 px-5 py-4"
-              >
-                <div className="min-w-0">
-                  <p
-                    className={`truncate text-sm font-medium ${
-                      isDark ? 'text-slate-100' : 'text-gray-800'
-                    }`}
-                  >
-                    {transaction.description}
-                  </p>
-
-                  <p
-                    className={`mt-1 text-xs ${
-                      isDark ? 'text-slate-500' : 'text-gray-500'
-                    }`}
-                  >
-                    {formatDate(transaction.createdAt)}
-                    {transaction.reference
-                      ? ` · ${transaction.reference}`
-                      : ''}
-                  </p>
-                </div>
-
-                <div className="shrink-0 text-right">
-                  <p
-                    className={`text-sm font-semibold ${
-                      transaction.type === 'debit'
-                        ? 'text-red-500'
-                        : 'text-emerald-500'
-                    }`}
-                  >
-                    {transactionSign(transaction.type)}
-                    {formatAmount(transaction.amount)} DT
-                  </p>
-
-                  <p
-                    className={`mt-1 text-xs ${
-                      isDark ? 'text-slate-500' : 'text-gray-500'
-                    }`}
-                  >
-                    {transaction.status === 'completed'
-                      ? 'Terminé'
-                      : transaction.status === 'pending'
-                        ? 'En attente'
-                        : 'Annulé'}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+      <section className="rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-4 font-semibold">Historique financier détaillé</h2>
+        {loading ? <p>Chargement...</p> : <TransactionRows transactions={journal} />}
+        <div className="mt-4 flex justify-end items-center gap-3"><button type="button" disabled={journalPage <= 1 || loading} onClick={() => setJournalPage(journalPage - 1)} className="rounded border px-3 py-1 disabled:opacity-40">Précédent</button><span>Page {journalPage} / {Math.max(1, journalPages)}</span><button type="button" disabled={journalPage >= journalPages || loading} onClick={() => setJournalPage(journalPage + 1)} className="rounded border px-3 py-1 disabled:opacity-40">Suivant</button></div>
       </section>
     </div>
   )

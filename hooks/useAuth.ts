@@ -7,7 +7,9 @@ import logger from '@/lib/logger'
 
 interface User {
   id: string
-  name: string
+  name?: string
+  firstName?: string
+  lastName?: string
   email: string
   role: 'admin' | 'operator' | 'shop_owner'
   subscriptionPlan?: SubscriptionPlan
@@ -28,8 +30,33 @@ export const useAuth = create<AuthStore>()(
       token: null,
       isAuthenticated: false,
       login: (user: User, token: string) => {
-        logger.debug('Login called with user:', user, 'Auth')
-        set({ user, token, isAuthenticated: true })
+        const fallbackParts = (user.name || '').trim().split(/\s+/).filter(Boolean)
+
+        const firstName =
+          user.firstName ??
+          fallbackParts[0] ??
+          ''
+
+        const lastName =
+          user.lastName ??
+          fallbackParts.slice(1).join(' ')
+
+        const normalizedUser: User = {
+          ...user,
+          firstName,
+          lastName,
+          name:
+            user.name ||
+            `${firstName} ${lastName}`.trim()
+        }
+
+        logger.debug('Login called with user:', normalizedUser, 'Auth')
+
+        set({
+          user: normalizedUser,
+          token,
+          isAuthenticated: true
+        })
       },
       logout: () => {
         logger.debug('Logout called', undefined, 'Auth')

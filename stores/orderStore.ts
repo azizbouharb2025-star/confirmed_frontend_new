@@ -87,7 +87,7 @@ const initialState: OrderState = {
   currentPage: 1,
   totalPages: 1,
   totalOrders: 0,
-  pageSize: 30,
+  pageSize: 10,
 };
 
 /**

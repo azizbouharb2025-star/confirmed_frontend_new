@@ -32,6 +32,14 @@ type SubscriptionPlan =
   | 'business'
   | 'enterprise'
 
+type ActivityPeriod =
+  | 'today'
+  | '7d'
+  | '30d'
+  | 'this_month'
+  | 'previous_month'
+  | 'custom'
+
 interface User {
   _id: string
   firstName?: string
@@ -81,6 +89,19 @@ interface UserDetails {
     name?: string
     domain?: string
     platform?: string
+    logoUrl?: string
+    contact?: {
+      email?: string
+      phone?: string
+      whatsapp?: string
+    }
+    address?: {
+      street?: string
+      city?: string
+      governorate?: string
+      postalCode?: string
+      country?: string
+    }
     createdAt?: string
     isActive?: boolean
     numberOfShops: number
@@ -89,10 +110,18 @@ interface UserDetails {
   stats: {
     totalOrders: number
     confirmedOrders: number
+    deliveredOrders: number
+    returnedOrders: number
+    failedDeliveryOrders: number
     cancelledOrders: number
     postponedOrders: number
     attempts: number
     confirmationRate: number
+    deliveryRate: number
+    returnRate: number
+    cancellationRate: number
+    deliveredRevenue: number
+    deliveredAverageOrderValue: number
     averageAiScore: number | null
   }
 }
@@ -102,7 +131,20 @@ interface EditForm {
   lastName: string
   email: string
   phoneNumber: string
+  whatsappNumber: string
+  country: string
+  role: string
+  password: string
   shopName: string
+  shopLogoUrl: string
+  shopEmail: string
+  shopPhone: string
+  shopWhatsapp: string
+  shopStreet: string
+  shopCity: string
+  shopGovernorate: string
+  shopPostalCode: string
+  shopCountry: string
 }
 
 function getUserName(user: User): string {
@@ -196,13 +238,35 @@ export default function UsersManagement() {
   const [saving, setSaving] =
     useState(false)
 
+  const [activityPeriod, setActivityPeriod] =
+    useState<ActivityPeriod>('30d')
+
+  const [activityFrom, setActivityFrom] =
+    useState('')
+
+  const [activityTo, setActivityTo] =
+    useState('')
+
   const [editForm, setEditForm] =
     useState<EditForm>({
       firstName: '',
       lastName: '',
       email: '',
       phoneNumber: '',
+      whatsappNumber: '',
+      country: '',
+      role: 'shop_owner',
+      password: '',
       shopName: '',
+      shopLogoUrl: '',
+      shopEmail: '',
+      shopPhone: '',
+      shopWhatsapp: '',
+      shopStreet: '',
+      shopCity: '',
+      shopGovernorate: '',
+      shopPostalCode: '',
+      shopCountry: 'Tunisia',
     })
 
   const [
@@ -283,15 +347,47 @@ export default function UsersManagement() {
   ])
 
   const openUserDetails = async (
-    userId: string
+    userId: string,
+    options?: {
+      period?: ActivityPeriod
+      from?: string
+      to?: string
+      preserveEditing?: boolean
+    }
   ) => {
     setDrawerOpen(true)
     setDetailLoading(true)
-    setEditing(false)
+
+    if (!options?.preserveEditing) {
+      setEditing(false)
+    }
 
     try {
+      const nextPeriod =
+        options?.period || activityPeriod
+
+      const params = new URLSearchParams({
+        period: nextPeriod,
+      })
+
+      if (nextPeriod === 'custom') {
+        const nextFrom =
+          options?.from ?? activityFrom
+
+        const nextTo =
+          options?.to ?? activityTo
+
+        if (nextFrom) {
+          params.set('from', nextFrom)
+        }
+
+        if (nextTo) {
+          params.set('to', nextTo)
+        }
+      }
+
       const response = await api.get(
-        `/api/admin/users/${userId}/details`
+        `/api/admin/users/${userId}/details?${params.toString()}`
       )
 
       const details =
@@ -299,7 +395,8 @@ export default function UsersManagement() {
 
       setSelectedUser(details)
 
-      setEditForm({
+      if (!options?.preserveEditing) {
+        setEditForm({
         firstName:
           details.user.firstName || '',
         lastName:
@@ -307,9 +404,35 @@ export default function UsersManagement() {
         email: details.user.email || '',
         phoneNumber:
           details.user.phoneNumber || '',
+        whatsappNumber:
+          details.user.whatsappNumber || '',
+        country:
+          details.user.country || '',
+        role:
+          details.user.role || 'shop_owner',
+        password: '',
         shopName:
           details.shop.name || '',
-      })
+        shopLogoUrl:
+          details.shop.logoUrl || '',
+        shopEmail:
+          details.shop.contact?.email || '',
+        shopPhone:
+          details.shop.contact?.phone || '',
+        shopWhatsapp:
+          details.shop.contact?.whatsapp || '',
+        shopStreet:
+          details.shop.address?.street || '',
+        shopCity:
+          details.shop.address?.city || '',
+        shopGovernorate:
+          details.shop.address?.governorate || '',
+        shopPostalCode:
+          details.shop.address?.postalCode || '',
+        shopCountry:
+          details.shop.address?.country || 'Tunisia',
+        })
+      }
     } catch (error) {
       logger.error(
         'Failed to load user details:',
@@ -324,6 +447,59 @@ export default function UsersManagement() {
       setDetailLoading(false)
     }
   }
+
+  const changeActivityPeriod = async (
+    nextPeriod: ActivityPeriod
+  ) => {
+    setActivityPeriod(nextPeriod)
+
+    if (
+      !selectedUser ||
+      nextPeriod === 'custom'
+    ) {
+      return
+    }
+
+    await openUserDetails(
+      selectedUser.user._id,
+      {
+        period: nextPeriod,
+        preserveEditing: true,
+      }
+    )
+  }
+
+  const applyCustomActivityPeriod =
+    async () => {
+      if (!selectedUser) return
+
+      if (!activityFrom || !activityTo) {
+        toast.error(
+          'Sélectionnez une date de début et une date de fin'
+        )
+        return
+      }
+
+      if (
+        new Date(activityFrom) >
+        new Date(activityTo)
+      ) {
+        toast.error(
+          'La date de début doit précéder la date de fin'
+        )
+        return
+      }
+
+      await openUserDetails(
+        selectedUser.user._id,
+        {
+          period: 'custom',
+          from: activityFrom,
+          to: activityTo,
+          preserveEditing: true,
+        }
+      )
+    }
 
   const updateUserSubscription = async (
     userId: string,
@@ -368,6 +544,16 @@ export default function UsersManagement() {
   const saveUser = async () => {
     if (!selectedUser) return
 
+    if (
+      editForm.password &&
+      editForm.password.length < 6
+    ) {
+      toast.error(
+        'Le nouveau mot de passe doit contenir au moins 6 caractères'
+      )
+      return
+    }
+
     setSaving(true)
 
     try {
@@ -382,8 +568,35 @@ export default function UsersManagement() {
             editForm.email.trim(),
           phoneNumber:
             editForm.phoneNumber.trim(),
+          whatsappNumber:
+            editForm.whatsappNumber.trim(),
+          country:
+            editForm.country.trim(),
+          role:
+            editForm.role,
+          ...(editForm.password
+            ? { password: editForm.password }
+            : {}),
           shopName:
             editForm.shopName.trim(),
+          shopLogoUrl:
+            editForm.shopLogoUrl.trim(),
+          shopEmail:
+            editForm.shopEmail.trim(),
+          shopPhone:
+            editForm.shopPhone.trim(),
+          shopWhatsapp:
+            editForm.shopWhatsapp.trim(),
+          shopStreet:
+            editForm.shopStreet.trim(),
+          shopCity:
+            editForm.shopCity.trim(),
+          shopGovernorate:
+            editForm.shopGovernorate.trim(),
+          shopPostalCode:
+            editForm.shopPostalCode.trim(),
+          shopCountry:
+            editForm.shopCountry.trim(),
         }
       )
 
@@ -1019,26 +1232,105 @@ export default function UsersManagement() {
                           />
                         </label>
 
-                        <label className="space-y-1 md:col-span-2">
+                        <label className="space-y-1">
                           <span className="text-xs text-slate-500">
                             Téléphone
                           </span>
                           <input
-                            value={
-                              editForm.phoneNumber
-                            }
+                            value={editForm.phoneNumber}
                             onChange={event =>
-                              setEditForm(
-                                prev => ({
-                                  ...prev,
-                                  phoneNumber:
-                                    event.target
-                                      .value,
-                                })
-                              )
+                              setEditForm(prev => ({
+                                ...prev,
+                                phoneNumber:
+                                  event.target.value,
+                              }))
                             }
                             className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
                           />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            WhatsApp
+                          </span>
+                          <input
+                            value={editForm.whatsappNumber}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                whatsappNumber:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Pays
+                          </span>
+                          <input
+                            value={editForm.country}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                country:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Rôle
+                          </span>
+                          <select
+                            value={editForm.role}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                role:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          >
+                            <option value="shop_owner">
+                              Commerçant
+                            </option>
+                            <option value="operator">
+                              Opérateur
+                            </option>
+                            <option value="admin">
+                              Administrateur
+                            </option>
+                          </select>
+                        </label>
+
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-xs text-slate-500">
+                            Nouveau mot de passe
+                          </span>
+                          <input
+                            type="password"
+                            autoComplete="new-password"
+                            value={editForm.password}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                password:
+                                  event.target.value,
+                              }))
+                            }
+                            placeholder="Laisser vide pour conserver le mot de passe actuel"
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                          <p className="text-xs text-slate-400">
+                            Minimum 6 caractères. Le mot de passe actuel n&apos;est jamais affiché.
+                          </p>
                         </label>
                       </div>
                     ) : (
@@ -1092,6 +1384,41 @@ export default function UsersManagement() {
                         </div>
 
                         <div>
+                          <span className="text-slate-500">
+                            WhatsApp
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.user
+                              .whatsappNumber || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Pays
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.user
+                              .country || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Rôle
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.user.role ===
+                            'shop_owner'
+                              ? 'Commerçant'
+                              : selectedUser.user.role ===
+                                  'operator'
+                                ? 'Opérateur'
+                                : 'Administrateur'}
+                          </p>
+                        </div>
+
+                        <div>
                           <span className="text-slate-500 flex items-center gap-1">
                             <CalendarDaysIcon className="w-4 h-4" />
                             Création du compte
@@ -1128,49 +1455,279 @@ export default function UsersManagement() {
 
                     {editing &&
                     selectedUser.shop._id ? (
-                      <label className="block space-y-1">
-                        <span className="text-xs text-slate-500">
-                          Nom de la boutique
-                        </span>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                        <input
-                          value={
-                            editForm.shopName
-                          }
-                          onChange={event =>
-                            setEditForm(
-                              prev => ({
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-xs text-slate-500">
+                            Nom de la boutique
+                          </span>
+                          <input
+                            value={editForm.shopName}
+                            onChange={event =>
+                              setEditForm(prev => ({
                                 ...prev,
                                 shopName:
-                                  event.target
-                                    .value,
-                              })
-                            )
-                          }
-                          className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
-                        />
-                      </label>
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-xs text-slate-500">
+                            URL du logo
+                          </span>
+                          <input
+                            value={editForm.shopLogoUrl}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopLogoUrl:
+                                  event.target.value,
+                              }))
+                            }
+                            placeholder="https://..."
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Email boutique
+                          </span>
+                          <input
+                            type="email"
+                            value={editForm.shopEmail}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopEmail:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Téléphone boutique
+                          </span>
+                          <input
+                            value={editForm.shopPhone}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopPhone:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-xs text-slate-500">
+                            WhatsApp boutique
+                          </span>
+                          <input
+                            value={editForm.shopWhatsapp}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopWhatsapp:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1 md:col-span-2">
+                          <span className="text-xs text-slate-500">
+                            Adresse
+                          </span>
+                          <input
+                            value={editForm.shopStreet}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopStreet:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Ville
+                          </span>
+                          <input
+                            value={editForm.shopCity}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopCity:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Gouvernorat
+                          </span>
+                          <input
+                            value={editForm.shopGovernorate}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopGovernorate:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Code postal
+                          </span>
+                          <input
+                            value={editForm.shopPostalCode}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopPostalCode:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                        <label className="space-y-1">
+                          <span className="text-xs text-slate-500">
+                            Pays
+                          </span>
+                          <input
+                            value={editForm.shopCountry}
+                            onChange={event =>
+                              setEditForm(prev => ({
+                                ...prev,
+                                shopCountry:
+                                  event.target.value,
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700"
+                          />
+                        </label>
+
+                      </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
                         <div>
                           <span className="text-slate-500">
                             Nom
                           </span>
                           <p className="font-medium mt-1">
-                            {selectedUser.shop
-                              .name || '—'}
+                            {selectedUser.shop.name || '—'}
                           </p>
                         </div>
 
                         <div>
                           <span className="text-slate-500">
-                            Boutique(s) associée(s)
+                            Logo
+                          </span>
+                          <p className="font-medium mt-1 break-all">
+                            {selectedUser.shop.logoUrl || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Email
+                          </span>
+                          <p className="font-medium mt-1 break-all">
+                            {selectedUser.shop
+                              .contact?.email || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Téléphone
                           </span>
                           <p className="font-medium mt-1">
-                            {
-                              selectedUser.shop
-                                .numberOfShops
-                            }
+                            {selectedUser.shop
+                              .contact?.phone || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            WhatsApp
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .contact?.whatsapp || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Adresse
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .address?.street || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Ville
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .address?.city || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Gouvernorat
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .address?.governorate || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Code postal
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .address?.postalCode || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
+                            Pays
+                          </span>
+                          <p className="font-medium mt-1">
+                            {selectedUser.shop
+                              .address?.country || '—'}
                           </p>
                         </div>
 
@@ -1186,12 +1743,21 @@ export default function UsersManagement() {
 
                         <div>
                           <span className="text-slate-500">
+                            Domaine
+                          </span>
+                          <p className="font-medium mt-1 break-all">
+                            {selectedUser.shop
+                              .domain || '—'}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-500">
                             Date de création
                           </span>
                           <p className="font-medium mt-1">
                             {formatDate(
-                              selectedUser.shop
-                                .createdAt
+                              selectedUser.shop.createdAt
                             )}
                           </p>
                         </div>
@@ -1201,24 +1767,100 @@ export default function UsersManagement() {
                             Statut boutique
                           </span>
                           <p className="font-medium mt-1">
-                            {selectedUser.shop
-                              ._id
-                              ? selectedUser.shop
-                                  .isActive
+                            {selectedUser.shop._id
+                              ? selectedUser.shop.isActive
                                 ? 'Active'
                                 : 'Inactive'
                               : '—'}
                           </p>
                         </div>
+
                       </div>
                     )}
                   </section>
 
                   {/* Activity */}
                   <section className="card p-5">
-                    <h3 className="font-semibold mb-4">
-                      Activité
-                    </h3>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                      <div>
+                        <h3 className="font-semibold">
+                          Activité
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Données réelles selon la période sélectionnée
+                        </p>
+                      </div>
+
+                      <select
+                        value={activityPeriod}
+                        onChange={event => {
+                          const nextPeriod =
+                            event.target
+                              .value as ActivityPeriod
+
+                          void changeActivityPeriod(
+                            nextPeriod
+                          )
+                        }}
+                        className="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-sm"
+                      >
+                        <option value="today">
+                          Aujourd&apos;hui
+                        </option>
+                        <option value="7d">
+                          7 derniers jours
+                        </option>
+                        <option value="30d">
+                          30 derniers jours
+                        </option>
+                        <option value="this_month">
+                          Ce mois
+                        </option>
+                        <option value="previous_month">
+                          Mois précédent
+                        </option>
+                        <option value="custom">
+                          Période personnalisée
+                        </option>
+                      </select>
+                    </div>
+
+                    {activityPeriod ===
+                      'custom' && (
+                      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 mb-5">
+                        <input
+                          type="date"
+                          value={activityFrom}
+                          onChange={event =>
+                            setActivityFrom(
+                              event.target.value
+                            )
+                          }
+                          className="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-sm"
+                        />
+
+                        <input
+                          type="date"
+                          value={activityTo}
+                          onChange={event =>
+                            setActivityTo(
+                              event.target.value
+                            )
+                          }
+                          className="px-3 py-2 rounded-lg border bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-700 text-sm"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            void applyCustomActivityPeriod()
+                          }
+                          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium"
+                        >
+                          Appliquer
+                        </button>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {[
@@ -1233,6 +1875,11 @@ export default function UsersManagement() {
                             .confirmedOrders,
                         ],
                         [
+                          'Livrées',
+                          selectedUser.stats
+                            .deliveredOrders,
+                        ],
+                        [
                           'Annulées',
                           selectedUser.stats
                             .cancelledOrders,
@@ -1241,6 +1888,16 @@ export default function UsersManagement() {
                           'Reportées',
                           selectedUser.stats
                             .postponedOrders,
+                        ],
+                        [
+                          'Retours',
+                          selectedUser.stats
+                            .returnedOrders,
+                        ],
+                        [
+                          'Échecs livraison',
+                          selectedUser.stats
+                            .failedDeliveryOrders,
                         ],
                         [
                           'Tentatives',
@@ -1253,6 +1910,46 @@ export default function UsersManagement() {
                             1
                           )}%`,
                         ],
+                        [
+                          'Taux livraison',
+                          `${selectedUser.stats.deliveryRate.toFixed(
+                            1
+                          )}%`,
+                        ],
+                        [
+                          'Taux retour',
+                          `${selectedUser.stats.returnRate.toFixed(
+                            1
+                          )}%`,
+                        ],
+                        [
+                          'Taux annulation',
+                          `${selectedUser.stats.cancellationRate.toFixed(
+                            1
+                          )}%`,
+                        ],
+                        [
+                          'Revenu livré',
+                          `${selectedUser.stats.deliveredRevenue.toFixed(
+                            2
+                          )} TND`,
+                        ],
+                        [
+                          'Panier moyen livré',
+                          `${selectedUser.stats.deliveredAverageOrderValue.toFixed(
+                            2
+                          )} TND`,
+                        ],
+                        [
+                          'Score IA moyen',
+                          selectedUser.stats
+                            .averageAiScore !==
+                          null
+                            ? selectedUser.stats.averageAiScore.toFixed(
+                                1
+                              )
+                            : '—',
+                        ],
                       ].map(([label, value]) => (
                         <div
                           key={String(label)}
@@ -1261,27 +1958,12 @@ export default function UsersManagement() {
                           <p className="text-xs text-slate-500">
                             {label}
                           </p>
+
                           <p className="text-lg font-semibold mt-1">
                             {value}
                           </p>
                         </div>
                       ))}
-                    </div>
-
-                    <div className="mt-3 rounded-lg bg-gray-50 dark:bg-slate-900 p-3">
-                      <p className="text-xs text-slate-500">
-                        Score IA moyen
-                      </p>
-
-                      <p className="text-lg font-semibold mt-1">
-                        {selectedUser.stats
-                          .averageAiScore !==
-                        null
-                          ? selectedUser.stats.averageAiScore.toFixed(
-                              1
-                            )
-                          : '—'}
-                      </p>
                     </div>
                   </section>
 

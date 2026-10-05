@@ -6,7 +6,7 @@
  * as the main Orders table.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package } from 'lucide-react';
@@ -28,13 +28,6 @@ export interface RecentOrdersWidgetProps {
   className?: string;
 }
 
-type SortKey = 'confirmedId' | 'status' | 'aiScore' | 'totalAmount';
-type SortDirection = 'asc' | 'desc';
-
-interface SortConfig {
-  key: SortKey;
-  direction: SortDirection;
-}
 
 /**
  * Clean imported product names before displaying them.
@@ -95,7 +88,6 @@ export function RecentOrdersWidget({
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   const { t } = useLanguage();
 
@@ -134,185 +126,62 @@ export function RecentOrdersWidget({
 
   const displayOrders = getDisplayOrders(orders, maxOrders);
 
-  const sortedOrders = useMemo(() => {
-    if (!sortConfig) {
-      return displayOrders;
-    }
-
-    return [...displayOrders].sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortConfig.key) {
-        case 'confirmedId': {
-          comparison =
-            (a.confirmedId ?? 0) - (b.confirmedId ?? 0);
-          break;
-        }
-
-        case 'status': {
-          comparison = String(a.status).localeCompare(
-            String(b.status)
-          );
-          break;
-        }
-
-        case 'aiScore': {
-          const aScore =
-            canDisplayOrderAI(a.status) &&
-            typeof a.aiScore === 'number'
-              ? a.aiScore
-              : null;
-
-          const bScore =
-            canDisplayOrderAI(b.status) &&
-            typeof b.aiScore === 'number'
-              ? b.aiScore
-              : null;
-
-          if (aScore === null && bScore === null) {
-            comparison = 0;
-          } else if (aScore === null) {
-            return 1;
-          } else if (bScore === null) {
-            return -1;
-          } else {
-            comparison = aScore - bScore;
-          }
-
-          break;
-        }
-
-        case 'totalAmount': {
-          comparison =
-            (a.totalAmount ?? 0) - (b.totalAmount ?? 0);
-          break;
-        }
-      }
-
-      return sortConfig.direction === 'asc'
-        ? comparison
-        : -comparison;
-    });
-  }, [displayOrders, sortConfig]);
-
-  const handleSort = (key: SortKey) => {
-    setSortConfig((current) => {
-      if (current?.key === key) {
-        return {
-          key,
-          direction:
-            current.direction === 'asc' ? 'desc' : 'asc',
-        };
-      }
-
-      return {
-        key,
-        direction: key === 'status' ? 'asc' : 'desc',
-      };
-    });
-  };
-
-  const renderSortIndicator = (key: SortKey) => {
-    if (sortConfig?.key !== key) {
-      return (
-        <span
-          aria-hidden="true"
-          className="text-slate-600 dark:text-slate-600 light:text-gray-400"
-        >
-          ↕
-        </span>
-      );
-    }
-
-    return (
-      <span aria-hidden="true">
-        {sortConfig.direction === 'asc' ? '↑' : '↓'}
-      </span>
-    );
-  };
-
-  const sortableHeader = (
-    key: SortKey,
-    label: string,
-    align: 'left' | 'right' = 'left'
-  ) => (
-    <button
-      type="button"
-      onClick={() => handleSort(key)}
-      className={`inline-flex items-center gap-1 font-medium transition-colors hover:text-[#ADFF2F] ${
-        align === 'right' ? 'justify-end' : 'justify-start'
-      }`}
-    >
-      <span>{label}</span>
-      {renderSortIndicator(key)}
-    </button>
-  );
 
   return (
     <WidgetContainer
       title={t('widget.recentOrders')}
-      icon={<ShoppingBagIcon className="h-5 w-5" />}
+      icon={<ShoppingBagIcon className="h-5 w-5 text-[#32CD32]" />}
       isLoading={isLoading}
       error={error ?? undefined}
       onRetry={fetchOrders}
       className={className}
     >
-      {sortedOrders.length === 0 ? (
+      {displayOrders.length === 0 ? (
         <EmptyState t={t} />
       ) : (
-        <div data-testid="recent-orders-table">
-          <div className="overflow-x-auto">
+        <div
+          data-testid="recent-orders-table"
+          className="relative"
+        >
+          <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white/70 shadow-[0_6px_22px_rgba(15,23,42,0.035)] dark:border-slate-700/80 dark:bg-slate-900/50">
             <table className="w-full min-w-[1050px] text-sm">
-              <thead>
-                <tr className="border-b border-slate-700 dark:border-slate-700 light:border-gray-200">
-                  <th className="whitespace-nowrap px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                    {sortableHeader(
-                      'confirmedId',
-                      t('orders.orderId')
-                    )}
+              <thead className="bg-gradient-to-r from-[#ADFF2F]/[0.07] via-white to-[#00BFFF]/[0.07] dark:from-[#ADFF2F]/[0.035] dark:via-slate-900 dark:to-[#00BFFF]/[0.035]">
+                <tr className="border-b border-slate-200/90 dark:border-slate-700">
+                  <th className="whitespace-nowrap px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
+                    {t('orders.orderId')}
                   </th>
 
-                  <th className="px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
+                  <th className="px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
                     {t('orders.products')}
                   </th>
 
-                  <th className="px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
+                  <th className="px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
                     {t('orders.customer')}
                   </th>
 
-                  <th className="whitespace-nowrap px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
+                  <th className="whitespace-nowrap px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
                     {t('orders.phone')}
                   </th>
 
-                  <th className="whitespace-nowrap px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                    {sortableHeader(
-                      'status',
-                      t('orders.status')
-                    )}
+                  <th className="whitespace-nowrap px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
+                    {t('orders.status')}
                   </th>
 
-                  <th className="whitespace-nowrap px-2 py-3 text-left font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                    {sortableHeader(
-                      'aiScore',
-                      t('orders.aiScore')
-                    )}
+                  <th className="whitespace-nowrap px-2 py-3.5 text-left text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
+                    {t('orders.aiScore')}
                   </th>
 
-                  <th className="whitespace-nowrap px-2 py-3 text-right font-medium text-slate-400 dark:text-slate-400 light:text-gray-600">
-                    {sortableHeader(
-                      'totalAmount',
-                      t('orders.value'),
-                      'right'
-                    )}
+                  <th className="whitespace-nowrap px-2 py-3.5 text-right text-[11px] font-extrabold uppercase tracking-[0.075em] text-slate-500 dark:text-slate-400">
+                    {t('orders.value')}
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {sortedOrders.map((order) => (
+                {displayOrders.map((order) => (
                   <tr
                     key={order._id}
-                    className="border-b border-slate-800 transition-colors hover:bg-slate-800/50 dark:border-slate-800 dark:hover:bg-slate-800/50 light:border-gray-100 light:hover:bg-gray-50"
+                    className="border-b border-slate-100 transition-all duration-200 last:border-b-0 hover:bg-gradient-to-r hover:from-[#ADFF2F]/[0.04] hover:via-transparent hover:to-[#00BFFF]/[0.04] dark:border-slate-800 dark:hover:from-[#ADFF2F]/[0.025] dark:hover:to-[#00BFFF]/[0.025]"
                     data-testid="recent-order-row"
                   >
                     {/* ID */}
@@ -361,7 +230,7 @@ export function RecentOrdersWidget({
                                 className="flex items-center gap-3"
                                 title={productName}
                               >
-                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
+                                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm ring-1 ring-black/[0.02] dark:border-slate-700 dark:bg-slate-800 dark:ring-white/[0.03]">
                                   {imageUrl ? (
                                     <Image
                                       src={imageUrl}
@@ -450,10 +319,10 @@ export function RecentOrdersWidget({
             </table>
           </div>
 
-          <div className="flex justify-end border-t border-slate-800 pt-4 dark:border-slate-800 light:border-gray-200">
+          <div className="mt-3 flex justify-end border-t border-slate-200/80 pt-3 dark:border-slate-800">
             <Link
               href="/panel/client/orders"
-              className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-[#ADFF2F] transition-colors hover:bg-[#ADFF2F]/10"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#ADFF2F]/30 bg-gradient-to-r from-[#ADFF2F]/10 to-[#00BFFF]/[0.06] px-3.5 py-2 text-sm font-bold text-green-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ADFF2F]/60 hover:shadow-md dark:text-[#ADFF2F]"
             >
               {t('widget.recentOrders.viewAll')} →
             </Link>

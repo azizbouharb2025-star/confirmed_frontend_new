@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { UserCircleIcon, LockClosedIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
@@ -21,10 +21,32 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [formData, setFormData] = useState({
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+    firstName:
+      user?.firstName ||
+      user?.name?.split(' ')[0] ||
+      '',
+    lastName:
+      user?.lastName ||
+      user?.name?.split(' ').slice(1).join(' ') ||
+      '',
     email: user?.email || '',
   })
+
+  useEffect(() => {
+    if (!user) return
+
+    setFormData({
+      firstName:
+        user.firstName ||
+        user.name?.split(' ')[0] ||
+        '',
+      lastName:
+        user.lastName ||
+        user.name?.split(' ').slice(1).join(' ') ||
+        '',
+      email: user.email || '',
+    })
+  }, [user])
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -41,9 +63,33 @@ export default function ProfilePage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
       })
-      if (response.data && token && user) {
-        login({ ...user, name: `${formData.firstName} ${formData.lastName}` }, token)
+      const updatedUser = response.data?.user
+
+      if (updatedUser && token && user) {
+        const firstName =
+          updatedUser.firstName ?? formData.firstName
+
+        const lastName =
+          updatedUser.lastName ?? formData.lastName
+
+        login(
+          {
+            ...user,
+            ...updatedUser,
+            firstName,
+            lastName,
+            name: `${firstName} ${lastName}`.trim(),
+          },
+          token
+        )
+
+        setFormData({
+          firstName,
+          lastName,
+          email: updatedUser.email ?? formData.email,
+        })
       }
+
       toast.success(t('profile.profileUpdated'))
     } catch {
       toast.error(t('profile.profileError'))

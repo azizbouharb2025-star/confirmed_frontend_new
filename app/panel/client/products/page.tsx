@@ -456,12 +456,33 @@ export default function ProductsPage() {
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
       <DashboardLayout userRole="shop_owner">
-        <div className="space-y-6">
+        <div className="relative isolate space-y-6">
+
+          {/* Ambiance Confirmed - décorative uniquement */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] overflow-hidden rounded-[32px]"
+            aria-hidden="true"
+          >
+            <div className="absolute -left-24 -top-20 h-72 w-72 rounded-full bg-[#ADFF2F]/10 blur-3xl" />
+            <div className="absolute right-[5%] top-4 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-3xl" />
+            <div className="absolute left-[42%] top-52 h-56 w-56 rounded-full bg-[#32CD32]/[0.07] blur-3xl" />
+          </div>
+
           {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold">{t('products.title')}</h1>
-              <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('products.subtitle')}</p>
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/80 bg-white/90 px-5 py-4 shadow-[0_8px_30px_rgba(15,23,42,0.045)] backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/85 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative pl-4">
+              <span
+                className="absolute bottom-0 left-0 top-0 w-1 rounded-full bg-gradient-to-b from-[#ADFF2F] via-[#32CD32] to-[#00BFFF]"
+                aria-hidden="true"
+              />
+
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+                {t('products.title')}
+              </h1>
+
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {t('products.subtitle')}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {/* Shop Selector */}
@@ -469,7 +490,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedShop}
                   onChange={(e) => setSelectedShop(e.target.value)}
-                  className="appearance-none pl-4 pr-10 py-2.5 rounded-lg dark:bg-slate-800 light:bg-white border-2 dark:border-slate-700 light:border-gray-300 dark:text-white light:text-gray-900 font-medium outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                  className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-10 font-semibold text-slate-900 shadow-sm outline-none transition-all focus:border-[#32CD32] focus:ring-2 focus:ring-[#ADFF2F]/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 >
                   {shops.map((shop) => (
                     <option key={shop._id} value={shop._id}>{shop.name}</option>
@@ -483,7 +504,7 @@ export default function ProductsPage() {
                 <button
                   onClick={handleSync}
                   disabled={syncing || !selectedShop}
-                  className="flex items-center gap-2 px-4 py-2 dark:bg-slate-800 light:bg-white border dark:border-slate-700 light:border-gray-300 rounded-lg hover:opacity-80 transition-opacity disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 shadow-sm transition-all duration-200 hover:border-[#00BFFF]/40 hover:bg-[#00BFFF]/[0.04] hover:text-sky-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:text-sky-400"
                 >
                   <ArrowPathIcon className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
                   {syncing ? t('products.syncing') : t('products.syncNow')}
@@ -495,7 +516,7 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setShowModal(true)}
                   disabled={!selectedShop}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] px-4 py-2.5 font-semibold text-slate-950 shadow-[0_8px_22px_rgba(50,205,50,0.18)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(50,205,50,0.26)] disabled:opacity-50"
                 >
                   <PlusIcon className="w-5 h-5" />
                   {t('products.addManual')}
@@ -505,31 +526,31 @@ export default function ProductsPage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 border-b dark:border-slate-700 light:border-gray-200">
+          <div className="flex gap-1 rounded-xl border border-slate-200/80 bg-white/70 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/60">
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`relative rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
                 activeTab === 'products'
-                  ? 'text-blue-500'
-                  : 'dark:text-slate-400 light:text-gray-600 hover:dark:text-white hover:light:text-gray-900'
+                  ? 'bg-[#ADFF2F]/15 text-green-700 dark:text-[#ADFF2F]'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
               }`}
             >
               {t('products.productsTab')}
               {activeTab === 'products' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+                <div className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-[#ADFF2F] via-[#32CD32] to-[#00BFFF]"></div>
               )}
             </button>
             <button
               onClick={() => setActiveTab('performance')}
-              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              className={`relative rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
                 activeTab === 'performance'
-                  ? 'text-blue-500'
-                  : 'dark:text-slate-400 light:text-gray-600 hover:dark:text-white hover:light:text-gray-900'
+                  ? 'bg-[#00BFFF]/10 text-sky-700 dark:text-sky-400'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white'
               }`}
             >
               {t('products.performance')}
               {activeTab === 'performance' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></div>
+                <div className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-gradient-to-r from-[#ADFF2F] via-[#32CD32] to-[#00BFFF]"></div>
               )}
             </button>
           </div>
@@ -553,15 +574,15 @@ export default function ProductsPage() {
           {activeTab === 'products' ? (
             <>
               {/* Filter Tabs */}
-              <div className="flex gap-2">
+              <div className="inline-flex flex-wrap gap-1.5 rounded-2xl border border-slate-200/80 bg-white/80 p-1.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/70">
                 {['all', 'manual', 'synced'].map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                       filter === f
-                        ? 'bg-blue-500 text-white'
-                        : 'dark:bg-slate-800 light:bg-gray-100 dark:text-slate-300 light:text-gray-700 hover:opacity-80'
+                        ? 'bg-gradient-to-r from-[#ADFF2F] to-[#6FE52D] text-slate-950 shadow-sm'
+                        : 'text-slate-600 hover:bg-[#00BFFF]/[0.06] hover:text-slate-950 dark:text-slate-300 dark:hover:text-white'
                     }`}
                   >
                     {f === 'all' ? t('products.all') : f === 'manual' ? t('products.manual') : t('products.synced')} {filter === f && `(${filteredProducts.length})`}
@@ -573,7 +594,7 @@ export default function ProductsPage() {
               {/* Content */}
               {loading ? (
                 <div className="card p-12 text-center">
-                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-[#32CD32] border-t-transparent"></div>
                   <p className="dark:text-slate-400 light:text-gray-600">{t('common.loadingProducts')}</p>
                 </div>
               ) : filteredProducts.length === 0 ? (
@@ -591,13 +612,22 @@ export default function ProductsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
                   {filteredProducts.map((product) => (
                     <div
                       key={product._id}
-                      className="card p-4"
+                      className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-sky-50/50 p-4 shadow-[0_8px_28px_rgba(15,23,42,0.045)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ADFF2F]/40 hover:shadow-[0_14px_38px_rgba(15,23,42,0.08)] dark:border-slate-700/80 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20"
                     >
-                      <div className="flex gap-4">
+                      <div
+                        className="pointer-events-none absolute inset-x-12 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#ADFF2F]/80 to-transparent"
+                        aria-hidden="true"
+                      />
+                      <div
+                        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#00BFFF]/10 blur-3xl"
+                        aria-hidden="true"
+                      />
+
+                      <div className="relative flex gap-4">
 
                         {/* Miniature du produit */}
                         <div className="shrink-0">
@@ -616,7 +646,7 @@ export default function ProductsPage() {
 
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <h3 className="font-semibold truncate dark:text-white light:text-gray-900">
+                              <h3 className="truncate font-bold tracking-tight text-slate-950 dark:text-white">
                                 {product.name}
                               </h3>
 
@@ -634,7 +664,7 @@ export default function ProductsPage() {
                                   openEditModal(product)
                                 }
                                 title="Modifier"
-                                className="p-2 rounded-lg dark:bg-slate-800 light:bg-gray-100 hover:text-blue-500 transition-colors"
+                                className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition-all hover:border-[#00BFFF]/30 hover:bg-[#00BFFF]/10 hover:text-sky-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-sky-400"
                               >
                                 <PencilIcon className="w-4 h-4" />
                               </button>
@@ -645,7 +675,7 @@ export default function ProductsPage() {
                                   handleDelete(product)
                                 }
                                 title="Supprimer"
-                                className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                className="rounded-xl border border-red-500/10 bg-red-500/[0.07] p-2 text-red-500 transition-all hover:border-red-500/20 hover:bg-red-500/15"
                               >
                                 <TrashIcon className="w-4 h-4" />
                               </button>
@@ -655,10 +685,10 @@ export default function ProductsPage() {
                           {/* Badges */}
                           <div className="mt-3 flex flex-wrap items-center gap-2">
                             <span
-                              className={`text-xs px-2 py-1 rounded-full ${
+                              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
                                 product.syncMethod === 'manual'
-                                  ? 'bg-purple-500/10 text-purple-500'
-                                  : 'bg-green-500/10 text-green-500'
+                                  ? 'border-[#00BFFF]/20 bg-[#00BFFF]/10 text-sky-600 dark:text-sky-400'
+                                  : 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400'
                               }`}
                             >
                               {product.syncMethod === 'manual'
@@ -680,13 +710,13 @@ export default function ProductsPage() {
                           </div>
 
                           {/* Prix et livraison */}
-                          <div className="mt-4 pt-3 border-t dark:border-slate-700 light:border-gray-200 flex items-end justify-between gap-4">
+                          <div className="mt-4 flex items-end justify-between gap-4 border-t border-slate-200/80 pt-3 dark:border-slate-700">
                             <div>
                               <p className="text-xs dark:text-slate-400 light:text-gray-500">
                                 Prix
                               </p>
 
-                              <p className="text-lg font-bold text-blue-500">
+                              <p className="text-lg font-extrabold tracking-tight text-green-600 dark:text-[#ADFF2F]">
                                 {formatCurrency(product.price)}
                               </p>
                             </div>

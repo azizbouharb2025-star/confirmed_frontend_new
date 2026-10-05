@@ -39,6 +39,8 @@ export interface MetricCardProps {
   trendValue?: number;
   /** Whether the card is in loading state */
   isLoading?: boolean;
+  /** Optional visual accent. Does not affect metric logic. */
+  accent?: 'lime' | 'green' | 'cyan';
 }
 
 /**
@@ -133,6 +135,7 @@ export default function MetricCard({
   trend,
   trendValue,
   isLoading = false,
+  accent,
 }: MetricCardProps): JSX.Element {
   // Track value changes for animation - hooks must be called before any early returns
   const previousValueRef = useRef(value);
@@ -175,19 +178,71 @@ export default function MetricCard({
   // Use provided trendValue or calculated change
   const displayTrendValue = trendValue ?? calculatedChange;
 
+  const accentStyles = {
+    lime: {
+      card: 'border-[#ADFF2F]/35 hover:border-[#ADFF2F]/65',
+      line: 'from-transparent via-[#ADFF2F]/90 to-transparent',
+      glow: 'bg-[#ADFF2F]/15',
+      icon: 'bg-[#ADFF2F]/15 text-[#559900] dark:text-[#ADFF2F]',
+    },
+    green: {
+      card: 'border-[#32CD32]/25 hover:border-[#32CD32]/55',
+      line: 'from-transparent via-[#32CD32]/80 to-transparent',
+      glow: 'bg-[#32CD32]/12',
+      icon: 'bg-[#32CD32]/10 text-green-700 dark:text-green-400',
+    },
+    cyan: {
+      card: 'border-[#00BFFF]/20 hover:border-[#00BFFF]/45',
+      line: 'from-transparent via-[#00BFFF]/70 to-transparent',
+      glow: 'bg-[#00BFFF]/10',
+      icon: 'bg-[#00BFFF]/10 text-sky-600 dark:text-sky-400',
+    },
+  } as const;
+
+  const accentStyle = accent ? accentStyles[accent] : null;
+
   return (
-    <motion.div 
-      className="card p-6" 
+    <motion.div
+      className={
+        accentStyle
+          ? `group relative overflow-hidden rounded-2xl border bg-white/90 p-5 shadow-[0_8px_30px_rgba(15,23,42,0.055)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,0.09)] dark:bg-slate-900/85 ${accentStyle.card}`
+          : 'card p-6'
+      }
       data-testid="metric-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium dark:text-slate-400 light:text-gray-600">
+      {accentStyle && (
+        <>
+          <div
+            className={`pointer-events-none absolute inset-x-8 top-0 h-[2px] bg-gradient-to-r ${accentStyle.line}`}
+            aria-hidden="true"
+          />
+          <div
+            className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl ${accentStyle.glow}`}
+            aria-hidden="true"
+          />
+        </>
+      )}
+
+      <div className={`relative flex items-center justify-between ${accentStyle ? 'mb-3' : 'mb-4'}`}>
+        <h3
+          className={
+            accentStyle
+              ? 'text-sm font-semibold text-slate-600 dark:text-slate-300'
+              : 'text-sm font-medium dark:text-slate-400 light:text-gray-600'
+          }
+        >
           {title}
         </h3>
-        <div className="dark:text-slate-400 light:text-gray-400 [&>svg]:w-6 [&>svg]:h-6">
+        <div
+          className={
+            accentStyle
+              ? `rounded-xl p-2 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.05] [&>svg]:h-5 [&>svg]:w-5 ${accentStyle.icon}`
+              : 'dark:text-slate-400 light:text-gray-400 [&>svg]:w-6 [&>svg]:h-6'
+          }
+        >
           {icon}
         </div>
       </div>
@@ -195,7 +250,11 @@ export default function MetricCard({
       <div className="space-y-2">
         {/* Animated value with highlight on change - Requirements: 6.4 */}
         <motion.div 
-          className="text-2xl font-semibold" 
+          className={
+            accentStyle
+              ? 'text-[27px] font-bold tracking-tight text-slate-950 dark:text-white'
+              : 'text-2xl font-semibold'
+          }
           data-testid="metric-value"
           animate={{
             scale: hasValueChanged ? [1, 1.05, 1] : 1,

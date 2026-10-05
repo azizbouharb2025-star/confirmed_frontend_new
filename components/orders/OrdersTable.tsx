@@ -126,7 +126,7 @@ function Checkbox({
 function SkeletonRow({ columnCount }: { columnCount: number }) {
   return (
     <tr className="animate-pulse">
-      <td className="px-2 py-3">
+      <td className="px-2 py-2">
         <div className="h-4 w-4 bg-gray-200 dark:bg-slate-700 rounded" />
       </td>
       {Array.from({ length: columnCount }).map((_, i) => (
@@ -232,7 +232,7 @@ function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalOrders)
 
   return (
-    <div className="shrink-0 flex flex-col sm:flex-row items-center justify-between px-3 py-1.5 gap-1.5 border-t border-gray-200 dark:border-slate-700">
+    <div className="flex shrink-0 flex-col items-center justify-between gap-2 border-t border-slate-200/80 bg-gradient-to-r from-slate-50/90 via-white to-[#00BFFF]/[0.03] px-4 py-2.5 sm:flex-row dark:border-slate-700 dark:from-slate-950/70 dark:via-slate-950/55 dark:to-sky-950/20">
       <div className="text-xs text-gray-600 dark:text-slate-400">
         {labels.showing} {startItem} {labels.to} {endItem} {labels.of} {totalOrders}
       </div>
@@ -241,8 +241,8 @@ function Pagination({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
           className={clsx(
-            'px-2.5 py-0.5 rounded-md text-xs font-medium',
-            'border border-gray-300 dark:border-slate-600',
+            'rounded-lg px-3 py-1.5 text-xs font-semibold',
+            'border border-slate-200 dark:border-slate-600 shadow-sm',
             currentPage <= 1
               ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-slate-800'
               : 'bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700',
@@ -260,8 +260,8 @@ function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
           className={clsx(
-            'px-2.5 py-0.5 rounded-md text-xs font-medium',
-            'border border-gray-300 dark:border-slate-600',
+            'rounded-lg px-3 py-1.5 text-xs font-semibold',
+            'border border-slate-200 dark:border-slate-600 shadow-sm',
             currentPage >= totalPages
               ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-slate-800'
               : 'bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700',
@@ -314,6 +314,89 @@ function createColumnConfigs(
         </span>
       ),
     },
+    ...(userRole === 'admin'
+      ? [
+          {
+            key: 'shop',
+            label: 'Boutique',
+            minPlan: null,
+            render: (order: Order) => {
+              const shop =
+                order.shopId
+
+              const name =
+                typeof shop === 'object' &&
+                shop
+                  ? shop.name
+                  : null
+
+              return (
+                <span
+                  className="block max-w-[130px] truncate text-sm font-medium text-gray-700 dark:text-slate-300"
+                  title={name || 'Boutique inconnue'}
+                >
+                  {name || '—'}
+                </span>
+              )
+            },
+          },
+
+          {
+            key: 'operator',
+            label: 'Opérateur',
+            minPlan: null,
+            render: (order: Order) => {
+              const operator =
+                order.responsibleOperator as
+                  | string
+                  | {
+                      name?: string
+                      firstName?: string
+                      lastName?: string
+                      email?: string
+                    }
+                  | null
+                  | undefined
+
+              if (
+                !operator ||
+                typeof operator === 'string'
+              ) {
+                return (
+                  <span className="text-xs text-gray-400 dark:text-slate-500">
+                    Non assigné
+                  </span>
+                )
+              }
+
+              const fullName =
+                [
+                  operator.firstName,
+                  operator.lastName,
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+                  .trim()
+
+              const label =
+                operator.name ||
+                fullName ||
+                operator.email ||
+                'Assigné'
+
+              return (
+                <span
+                  className="block max-w-[130px] truncate text-sm text-gray-700 dark:text-slate-300"
+                  title={label}
+                >
+                  {label}
+                </span>
+              )
+            },
+          },
+        ]
+      : []),
+
     {
       key: 'products',
       label: t('orders.products'),
@@ -348,7 +431,7 @@ function createColumnConfigs(
                   className="flex min-w-0 items-center gap-2"
                   title={productName}
                 >
-                  <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-100 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="h-9 w-9 shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm ring-1 ring-black/[0.02] dark:border-slate-700 dark:bg-slate-800 dark:ring-white/[0.03]">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
@@ -566,6 +649,54 @@ function createColumnConfigs(
       },
     },
 
+    ...(userRole === 'admin'
+      ? [
+          {
+            key: 'createdAt',
+            label: 'Date',
+            minPlan: null,
+            render: (order: Order) => (
+              <span className="whitespace-nowrap text-xs text-gray-600 dark:text-slate-400">
+                {new Date(
+                  order.createdAt
+                ).toLocaleString(
+                  'fr-FR',
+                  {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }
+                )}
+              </span>
+            ),
+          },
+
+          {
+            key: 'updatedAt',
+            label: 'Mise à jour',
+            minPlan: null,
+            render: (order: Order) => (
+              <span className="whitespace-nowrap text-xs text-gray-600 dark:text-slate-400">
+                {new Date(
+                  order.updatedAt
+                ).toLocaleString(
+                  'fr-FR',
+                  {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }
+                )}
+              </span>
+            ),
+          },
+        ]
+      : []),
+
     {
       key: 'value',
       label: t('orders.value'),
@@ -680,7 +811,7 @@ export default function OrdersTable({
   return (
     <div
       className={clsx(
-        'flex min-h-0 flex-col bg-white dark:bg-slate-800 rounded-lg shadow overflow-hidden',
+        'relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/95 shadow-[0_10px_35px_rgba(15,23,42,0.055)] ring-1 ring-black/[0.015] dark:border-slate-700/80 dark:bg-slate-900/80 dark:ring-white/[0.02]',
         className
       )}
     >
@@ -691,9 +822,9 @@ export default function OrdersTable({
        * and therefore always visible.
        */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <div style={{ zoom: 0.9 }}>
+        <div style={{ zoom: 0.92 }}>
           <table className="w-full divide-y divide-gray-200 dark:divide-slate-700">
-          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900">
+          <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-50/95 via-white/95 to-[#00BFFF]/[0.045] backdrop-blur-xl dark:from-slate-950/95 dark:via-slate-950/95 dark:to-sky-950/30">
             <tr>
               {/* Checkbox column */}
               <th className="w-9 px-2 py-3">
@@ -738,8 +869,8 @@ export default function OrdersTable({
                   <th
                     key={column.key}
                     className={clsx(
-                      'px-2.5 py-3 text-left text-xs font-medium',
-                      'text-gray-500 dark:text-slate-400 uppercase tracking-wider',
+                      'px-3 py-2 text-left text-[10px] font-bold',
+                      'uppercase tracking-[0.09em] text-slate-500 dark:text-slate-400',
                       isSortable && 'cursor-pointer select-none hover:text-gray-800 dark:hover:text-white',
                       column.key === 'orderId' && 'w-[80px] min-w-[80px] max-w-[80px]',
                       column.key === 'aiScore' && 'w-[210px] min-w-[210px]',
@@ -767,7 +898,7 @@ export default function OrdersTable({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
             {isLoading ? (
               // Skeleton loading rows
               Array.from({ length: pageSize }).map((_, i) => (
@@ -780,15 +911,15 @@ export default function OrdersTable({
                   key={order._id}
                   onClick={(e) => handleRowClick(order, e)}
                   className={clsx(
-                    'cursor-pointer transition-colors duration-150',
+                    'cursor-pointer transition-all duration-200',
                     selectedSet.has(order._id)
-                      ? 'bg-[#ADFF2F]/10 dark:bg-[#ADFF2F]/5'
-                      : 'hover:bg-gray-50 dark:hover:bg-slate-700/50'
+                      ? 'bg-gradient-to-r from-[#ADFF2F]/12 to-[#00BFFF]/[0.035] dark:from-[#ADFF2F]/[0.07] dark:to-[#00BFFF]/[0.025]'
+                      : 'hover:bg-gradient-to-r hover:from-[#ADFF2F]/[0.035] hover:to-[#00BFFF]/[0.025] dark:hover:from-[#ADFF2F]/[0.025] dark:hover:to-sky-950/20'
                   )}
                   data-testid={`order-row-${order._id}`}
                 >
                   {/* Checkbox cell */}
-                  <td className="px-2 py-3">
+                  <td className="px-2 py-2">
                     <Checkbox
                       checked={selectedSet.has(order._id)}
                       onChange={(checked) => handleRowSelectionChange(order._id, checked)}
@@ -800,7 +931,7 @@ export default function OrdersTable({
                     <td
                       key={column.key}
                       className={clsx(
-                        'px-2.5 py-3 text-sm',
+                        'px-3 py-2 text-sm',
                         column.key === 'orderId' && 'w-[80px] min-w-[80px] max-w-[80px]',
                         column.key === 'aiScore' && 'w-[210px] min-w-[210px]',
                         column.className

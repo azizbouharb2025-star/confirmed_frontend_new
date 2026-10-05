@@ -387,15 +387,39 @@ export default function ShopsPage() {
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
       <DashboardLayout userRole="shop_owner">
-        <div className="space-y-6">
+        <div className="relative isolate space-y-6">
+
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[500px] overflow-hidden rounded-[32px]"
+            aria-hidden="true"
+          >
+            <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-[#ADFF2F]/10 blur-3xl" />
+            <div className="absolute right-10 top-10 h-72 w-72 rounded-full bg-[#00BFFF]/10 blur-3xl" />
+            <div className="absolute left-[38%] top-40 h-48 w-48 rounded-full bg-[#32CD32]/10 blur-3xl" />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold">{t('shops.title')}</h1>
-              <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('shops.subtitle')}</p>
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white/90 px-5 py-4 shadow-sm backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/80 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative pl-4">
+              <span
+                className="absolute bottom-0 left-0 top-0 w-1 rounded-full bg-gradient-to-b from-[#ADFF2F] via-[#32CD32] to-[#00BFFF]"
+                aria-hidden="true"
+              />
+
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+                {t('shops.title')}
+              </h1>
+
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                {t('shops.subtitle')}
+              </p>
             </div>
-            <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25">
-              <PlusIcon className="w-5 h-5" />
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ADFF2F] to-[#32CD32] px-4 py-2.5 font-semibold text-slate-950 shadow-lg shadow-green-500/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-green-500/20"
+            >
+              <PlusIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
               {t('shops.addNew')}
             </button>
           </div>
@@ -431,15 +455,27 @@ export default function ShopsPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
               {shops.map((shop) => {
                 const platform = platforms.find(p => p.id === shop.platform)
                 const PlatformIcon = platform?.Icon || BuildingStorefrontIcon
                 return (
-                  <div key={shop._id} className="card p-6 hover:shadow-lg transition-shadow">
+                  <div
+                    key={shop._id}
+                    className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-sky-50/60 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#ADFF2F]/50 hover:shadow-xl dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/20"
+                  >
+                    <div
+                      className="pointer-events-none absolute inset-x-10 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#ADFF2F] to-transparent"
+                      aria-hidden="true"
+                    />
+
+                    <div
+                      className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#00BFFF]/10 blur-3xl"
+                      aria-hidden="true"
+                    />
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500/10">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ADFF2F]/25 bg-gradient-to-br from-[#ADFF2F]/15 to-[#00BFFF]/10 shadow-sm">
                           {shop.platform === 'converty' ? (
                             <img
                               src="/assets/converty.png"
@@ -447,38 +483,64 @@ export default function ShopsPage() {
                               className="h-8 w-8 object-contain"
                             />
                           ) : (
-                            <PlatformIcon className="w-6 h-6 text-blue-500" />
+                            <PlatformIcon className="h-6 w-6 text-[#32CD32]" />
                           )}
                         </div>
                         <div>
-                          <h3 className="font-semibold">{shop.name}</h3>
-                          <p className="text-sm dark:text-slate-400 light:text-gray-600">{shop.domain}</p>
+                          <h3 className="font-bold tracking-tight text-slate-950 dark:text-white">
+                            {shop.name}
+                          </h3>
+                          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                            {shop.domain}
+                          </p>
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded-full ${shop.isActive ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                          shop.isActive
+                            ? 'border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400'
+                            : 'border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400'
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            shop.isActive ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                        />
                         {shop.isActive ? t('shops.active') : t('shops.inactive')}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="dark:text-slate-400 light:text-gray-600">{platform?.name || shop.platform}</span>
+                      <span className="font-medium text-slate-500 dark:text-slate-400">
+                        {platform?.name || shop.platform}
+                      </span>
                       {shop.subscriptionId && (
-                        <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded text-xs capitalize">{shop.subscriptionId.plan}</span>
+                        <span className="rounded-lg border border-[#00BFFF]/20 bg-[#00BFFF]/10 px-2.5 py-1 text-[11px] font-semibold capitalize text-sky-600 dark:text-sky-400">
+                          {shop.subscriptionId.plan}
+                        </span>
                       )}
                     </div>
 
                     {shop.platform === 'converty' && (
-                      <button
-                        type="button"
-                        onClick={() => handleReconnectConverty(shop._id)}
-                        disabled={reconnectingShopId === shop._id}
-                        className="mt-4 w-full rounded-lg border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-500 transition-colors hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {reconnectingShopId === shop._id
-                          ? 'Redirection vers Converty...'
-                          : shop.convertyConnected
-                            ? 'Reconnecter Converty'
-                            : 'Connecter Converty'}
-                      </button>
+                      <div className="mt-5">
+                        {shop.convertyConnected ? (
+                          <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                            <CheckCircleIcon className="h-5 w-5" />
+                            <span>Converty connecté</span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleReconnectConverty(shop._id)}
+                            disabled={reconnectingShopId === shop._id}
+                            className="w-full rounded-xl border border-[#32CD32]/35 bg-gradient-to-r from-[#ADFF2F]/10 to-[#00BFFF]/5 px-4 py-2.5 text-sm font-semibold text-green-700 transition-all duration-300 hover:border-[#32CD32]/60 hover:bg-[#ADFF2F]/15 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 dark:text-green-400"
+                          >
+                            {reconnectingShopId === shop._id
+                              ? 'Redirection vers Converty...'
+                              : 'Connecter Converty'}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )
@@ -502,29 +564,50 @@ export default function ShopsPage() {
                   {/* Platform Selection */}
                   <div>
                     <label className="block text-sm font-semibold mb-3 dark:text-white light:text-gray-900">{t('shops.platform')} *</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {platforms.map((platform) => {
-                        const Icon = platform.Icon
-                        const isSelected = formData.platform === platform.id
-                        return (
-                          <button
-                            key={platform.id}
-                            type="button"
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, platform: platform.id, apiCredentials: {} }))
-                              setFormErrors(prev => ({ ...prev, platform: '' }))
-                            }}
-                            className={`p-5 rounded-lg border-2 transition-all flex flex-col items-center gap-3 ${
-                              isSelected
-                                ? 'border-blue-500 dark:bg-blue-500/20 light:bg-blue-50'
-                                : 'dark:border-slate-600 light:border-gray-300 dark:bg-slate-800/50 light:bg-white dark:hover:border-slate-500 light:hover:border-gray-400'
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            platform: 'converty',
+                            apiCredentials: {}
+                          }))
+                          setFormErrors(prev => ({
+                            ...prev,
+                            platform: ''
+                          }))
+                        }}
+                        className={`group flex w-full max-w-sm flex-col items-center justify-center gap-4 rounded-2xl border-2 px-6 py-8 transition-all ${
+                          formData.platform === 'converty'
+                            ? 'border-[#ADFF2F] bg-[#ADFF2F]/10 shadow-[0_0_0_1px_rgba(173,255,47,0.08),0_12px_35px_rgba(173,255,47,0.08)]'
+                            : 'dark:border-slate-600 light:border-gray-300 dark:bg-slate-800/50 light:bg-white dark:hover:border-[#ADFF2F]/60 light:hover:border-[#ADFF2F]'
+                        }`}
+                      >
+                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-sm">
+                          <img
+                            src="/assets/converty.png"
+                            alt="Converty"
+                            className="h-full w-full object-contain"
+                          />
+                        </div>
+
+                        <div className="text-center">
+                          <p
+                            className={`text-base font-bold ${
+                              formData.platform === 'converty'
+                                ? 'text-[#ADFF2F]'
+                                : 'dark:text-white light:text-gray-900'
                             }`}
                           >
-                            <Icon className={`w-10 h-10 ${isSelected ? 'text-blue-500' : 'dark:text-slate-400 light:text-gray-500'}`} />
-                            <span className={`text-sm font-medium text-center ${isSelected ? 'text-blue-500' : 'dark:text-slate-300 light:text-gray-800'}`}>{platform.name}</span>
-                          </button>
-                        )
-                      })}
+                            Converty
+                          </p>
+
+                          <p className="mt-1 text-xs dark:text-slate-400 light:text-gray-500">
+                            Connecter votre boutique via Converty
+                          </p>
+                        </div>
+                      </button>
                     </div>
                     {formErrors.platform && <p className="text-red-500 text-xs mt-2">{formErrors.platform}</p>}
                   </div>

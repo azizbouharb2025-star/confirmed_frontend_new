@@ -335,6 +335,7 @@ export interface Order {
       value: string | number | boolean | null;
       impact: number;
     }>;
+    interpretation: string;
     conclusion: string;
     recommendation: string;
   };
@@ -342,13 +343,19 @@ export interface Order {
     key: string;
     level: 'positive' | 'neutral' | 'alert';
     description: string;
-    impact: 'positive' | 'neutral' | 'negative';
+    impact: 'positive' | 'neutral' | 'negative' | 'completeness' | 'incomplete';
+    scoreImpact?: number;
+    mode?: 'exclusive' | 'cumulative';
+    state?: string;
+    component?: string;
   }>;
   regionFindings?: Array<{
     key: string;
     level: 'positive' | 'neutral' | 'alert';
     description: string;
     impact: 'positive' | 'neutral' | 'negative';
+    scoreImpact?: number;
+    source?: string;
   }>;
   customerFindings?: Array<{
     key: string;
@@ -361,6 +368,8 @@ export interface Order {
     level: 'positive' | 'neutral' | 'alert';
     description: string;
     impact: 'positive' | 'neutral' | 'negative';
+    scoreImpact?: number;
+    ratio?: number;
   }>;
   orderTimeFindings?: Array<{
     key: string;
@@ -415,6 +424,12 @@ export interface Order {
   
   // Assignment and history
   assignedOperatorId?: string | OperatorRef;
+  /**
+   * Opérateur réellement identifié dans
+   * l'historique métier.
+   * Champ calculé par l'API Admin.
+   */
+  responsibleOperator?: OperatorRef | string | null;
   callHistory: CallHistoryEntry[];
   deliveryInfo?: DeliveryInfo;
   
@@ -455,6 +470,9 @@ export interface OrderFilters {
   courier?: string;                              // Business+
   hasComplaint?: boolean;                        // Business+ - NEW
   shopId?: string;                               // Admin only
+  operatorId?: string;                           // Admin only
+  minAmount?: number;                            // Admin only
+  maxAmount?: number;                            // Admin only
 }
 
 /**
@@ -469,8 +487,22 @@ export const DEFAULT_ORDER_FILTERS: OrderFilters = {
 /**
  * Paginated orders response
  */
+export interface OrderStatusSummary {
+  total: number;
+  pending: number;
+  confirmed: number;
+  shipped: number;
+  at_depot: number;
+  out_for_delivery: number;
+  delivered: number;
+  returned: number;
+  cancelled: number;
+  postponed: number;
+}
+
 export interface PaginatedOrders {
   orders: Order[];
+  summary?: OrderStatusSummary | null;
   total: number;
   page: number;
   limit: number;

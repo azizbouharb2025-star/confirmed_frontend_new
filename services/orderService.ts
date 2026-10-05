@@ -259,9 +259,139 @@ export const orderService = {
    * Requirements: 1.1, 6.1
    */
   async getOrders(params: GetOrdersParams): Promise<PaginatedOrders> {
-    const queryString = buildQueryString(params);
-    const response = await api.get(`/api/orders?${queryString}`);
-    return transformPaginatedResponse(response.data);
+    const queryString =
+      buildQueryString(params);
+
+    /*
+     * Filtres supplémentaires Admin.
+     * Ils sont ajoutés après buildQueryString
+     * pour ne pas modifier la logique Seller.
+     */
+    const adminParams =
+      new URLSearchParams();
+
+    /*
+     * Si buildQueryString ne gère pas courier,
+     * on le garantit ici.
+     *
+     * On évite de l'ajouter deux fois.
+     */
+    if (
+      params.filters.courier &&
+      !queryString.includes(
+        'courier='
+      )
+    ) {
+      adminParams.set(
+        'courier',
+        params.filters.courier
+      );
+    }
+
+    if (params.filters.operatorId) {
+      adminParams.set(
+        'operatorId',
+        params.filters.operatorId
+      );
+    }
+
+    if (
+      params.filters.minAmount !==
+      undefined
+    ) {
+      adminParams.set(
+        'minAmount',
+        String(
+          params.filters.minAmount
+        )
+      );
+    }
+
+    if (
+      params.filters.maxAmount !==
+      undefined
+    ) {
+      adminParams.set(
+        'maxAmount',
+        String(
+          params.filters.maxAmount
+        )
+      );
+    }
+
+    const extraQuery =
+      adminParams.toString();
+
+    const finalQuery =
+      [
+        queryString,
+        extraQuery
+      ]
+        .filter(Boolean)
+        .join('&');
+
+    const response =
+      await api.get(
+        `/api/orders?${finalQuery}`
+      );
+
+    const transformed =
+      transformPaginatedResponse(
+        response.data
+      );
+
+    const rawOrders =
+      Array.isArray(
+        response.data?.orders
+      )
+        ? (
+            response.data
+              .orders as Order[]
+          )
+        : [];
+
+    const responsibleOperatorById =
+      new Map(
+        rawOrders.map(
+          rawOrder => [
+            rawOrder._id,
+            rawOrder.responsibleOperator,
+          ] as const
+        )
+      );
+
+    const ordersWithResponsibleOperator =
+      transformed.orders.map(
+        order => ({
+          ...order,
+
+          responsibleOperator:
+            responsibleOperatorById.has(
+              order._id
+            )
+              ? (
+                  responsibleOperatorById.get(
+                    order._id
+                  ) ??
+                  null
+                )
+              : (
+                  order.responsibleOperator ??
+                  null
+                ),
+        })
+      );
+
+    return {
+      ...transformed,
+
+      orders:
+        ordersWithResponsibleOperator,
+
+      summary:
+        response.data?.summary ||
+        null,
+    };
   },
 
   /**

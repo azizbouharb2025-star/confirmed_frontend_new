@@ -18,7 +18,8 @@ import {
   UserGroupIcon,
   TruckIcon,
   ChartPieIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
@@ -48,6 +49,7 @@ const getNavigationItems = (
     { name: t('nav.users'), href: '/panel/admin/users', icon: UsersIcon },
     { name: 'Opérateurs', href: '/panel/admin/operators', icon: UserGroupIcon },
     { name: t('nav.orders'), href: '/panel/admin/orders', icon: ShoppingBagIcon },
+    { name: 'Portefeuilles', href: '/panel/admin/wallets', icon: BanknotesIcon },
     { name: t('nav.analytics'), href: '/panel/admin/analytics', icon: ChartBarIcon },
     { name: 'Moteur d’évaluation IA', href: '/panel/admin/ai-scoring', icon: ChartPieIcon },
     { name: 'Mapping transporteurs', href: '/panel/admin/carrier-status', icon: TruckIcon },
@@ -72,8 +74,7 @@ const getNavigationItems = (
     {
       name: t('nav.myShops'),
       href: '/panel/client/shops',
-      icon: BuildingStorefrontIcon,
-      badge: t('nav.comingSoon')
+      icon: BuildingStorefrontIcon
     },
     {
       name: t('nav.orders'),

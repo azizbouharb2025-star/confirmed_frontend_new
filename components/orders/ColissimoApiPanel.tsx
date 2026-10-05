@@ -74,6 +74,9 @@ export default function ColissimoApiPanel({
   const [dispatchResult, setDispatchResult] =
     useState<ColissimoDispatchResult | null>(null)
 
+  const [dispatchResults, setDispatchResults] =
+    useState<ColissimoDispatchResult[]>([])
+
   const [errorMsg, setErrorMsg] =
     useState<string | null>(null)
 
@@ -124,14 +127,18 @@ export default function ColissimoApiPanel({
   const liveEnabled =
     capabilities?.liveDispatchEnabled === true
 
+  const finalItems =
+    finalPreview?.wouldPost ?? []
+
   const finalItem =
-    finalPreview?.wouldPost?.[0]
+    finalItems[0]
 
   const resetPreparation = () => {
     setReservationId(null)
     setFinalPreview(null)
     setShowConfirmation(false)
     setDispatchResult(null)
+    setDispatchResults([])
   }
 
   const handleOptionsChanged = () => {
@@ -189,9 +196,9 @@ export default function ColissimoApiPanel({
   const prepareReservation = async (
     allowReview: boolean
   ) => {
-    if (orderIds.length !== 1) {
+    if (orderIds.length === 0) {
       setErrorMsg(
-        'La préparation API Colissimo est limitée à une seule commande.'
+        'Sélectionnez au moins une commande.'
       )
       return
     }
@@ -209,17 +216,33 @@ export default function ColissimoApiPanel({
           allowReview
         )
 
+      const reservedCount =
+        reservation.summary?.reserved ??
+        reservation.reserved?.length ??
+        0
+
+      const duplicateCount =
+        reservation.summary?.duplicate ??
+        reservation.duplicate?.length ??
+        0
+
+      /*
+       * Pour une sélection multiple, toutes les nouvelles
+       * réservations créées pendant cette action partagent
+       * le même reservationId.
+       *
+       * Pour une commande unique uniquement, on conserve
+       * le fallback historique vers une préparation active.
+       */
       let activeReservationId =
-        reservation.summary?.reserved === 1
+        reservedCount > 0
           ? reservation.reservationId
           : null
 
-      /*
-       * Si une préparation existe déjà,
-       * on reprend sa vraie réservation active.
-       * Aucun appel Colissimo distant ici.
-       */
-      if (!activeReservationId) {
+      if (
+        !activeReservationId &&
+        orderIds.length === 1
+      ) {
         const active =
           await colissimoDeliveryService.getActiveReservation(
             orderIds[0]
@@ -231,7 +254,9 @@ export default function ColissimoApiPanel({
 
       if (!activeReservationId) {
         throw new Error(
-          'La réservation locale Colissimo n’a pas pu être créée.'
+          duplicateCount > 0
+            ? 'Les commandes sélectionnées possèdent déjà une préparation Colissimo active. Actualisez la liste avant de continuer.'
+            : 'La réservation locale Colissimo n’a pas pu être créée.'
         )
       }
 
@@ -240,11 +265,22 @@ export default function ColissimoApiPanel({
           activeReservationId
         )
 
+      const dispatchableItems =
+        Array.isArray(checked.wouldPost)
+          ? checked.wouldPost
+          : []
+
+      const hasMissingSecurityData =
+        dispatchableItems.some(
+          item =>
+            !item.correlationId ||
+            !item.payloadHash
+        )
+
       if (
-        checked.summary?.wouldPost !== 1 ||
+        dispatchableItems.length === 0 ||
         (checked.summary?.invalid || 0) !== 0 ||
-        !checked.wouldPost?.[0]?.correlationId ||
-        !checked.wouldPost?.[0]?.payloadHash
+        hasMissingSecurityData
       ) {
         throw new Error(
           'Le contrôle final Colissimo nécessite une nouvelle vérification.'
@@ -257,8 +293,13 @@ export default function ColissimoApiPanel({
 
       setFinalPreview(checked)
 
+      const duplicateNotice =
+        duplicateCount > 0
+          ? ` ${duplicateCount} commande(s) déjà en préparation ont été exclues de cette nouvelle réservation.`
+          : ''
+
       setSuccessMsg(
-        'Réservation locale créée et contrôle final réussi. Aucun colis Colissimo n’a été créé.'
+        `${dispatchableItems.length} commande(s) prête(s) pour Colissimo.${duplicateNotice} Aucun colis distant n’a encore été créé.`
       )
     } catch (err) {
       const apiError =
@@ -276,6 +317,7 @@ export default function ColissimoApiPanel({
       setBusyState(false)
     }
   }
+
 
   const handleDispatch = async () => {
     if (!liveEnabled) {
@@ -299,7 +341,7 @@ export default function ColissimoApiPanel({
     try {
       /*
        * Le verrou serveur est revérifié
-       * juste avant tout appel LIVE.
+       * juste avant les appels LIVE.
        */
       const caps =
         await colissimoDeliveryService.getCapabilities()
@@ -313,21 +355,33 @@ export default function ColissimoApiPanel({
       }
 
       /*
-       * Recalcul complet du payload/hash.
+       * Recalcul complet des payloads / hashes
+       * juste avant l'expédition.
        */
       const freshPreview =
         await colissimoDeliveryService.previewReservation(
           reservationId
         )
 
-      const item =
-        freshPreview.wouldPost?.[0]
+      const items =
+        Array.isArray(freshPreview.wouldPost)
+          ? freshPreview.wouldPost
+          : []
+
+      const invalidCount =
+        freshPreview.summary?.invalid || 0
+
+      const hasMissingSecurityData =
+        items.some(
+          item =>
+            !item.correlationId ||
+            !item.payloadHash
+        )
 
       if (
-        freshPreview.summary?.wouldPost !== 1 ||
-        (freshPreview.summary?.invalid || 0) !== 0 ||
-        !item?.correlationId ||
-        !item?.payloadHash
+        items.length === 0 ||
+        invalidCount !== 0 ||
+        hasMissingSecurityData
       ) {
         throw new Error(
           'Le contrôle final Colissimo n’est plus valide.'
@@ -347,86 +401,225 @@ export default function ColissimoApiPanel({
 
       setFinalPreview(freshPreview)
 
-      const result =
-        await colissimoDeliveryService.dispatchReservation({
-          reservationId,
+      const successfulResults:
+        ColissimoDispatchResult[] = []
 
-          expectedCorrelationId:
-            item.correlationId,
+      const errorDetails: string[] = []
 
-          expectedPayloadHash:
-            item.payloadHash,
-        })
+      let failedCount = 0
+      let reconcileCount = 0
+      let notAttemptedCount = 0
 
-      if (
-        result.success !== true ||
-        !result.externalId
+      /*
+       * IMPORTANT :
+       * chaque appel /dispatch reste unitaire.
+       *
+       * On ne fait jamais un gros POST Colissimo
+       * contenant plusieurs colis.
+       */
+      for (
+        let index = 0;
+        index < items.length;
+        index += 1
       ) {
-        throw new Error(
-          'Réponse Colissimo inattendue après création.'
+        const item =
+          items[index]
+
+        const correlationId =
+          item.correlationId
+
+        const payloadHash =
+          item.payloadHash
+
+        const orderLabel =
+          item.confirmedId
+            ? `Commande #${item.confirmedId}`
+            : `Commande ${index + 1}`
+
+        if (
+          !correlationId ||
+          !payloadHash
+        ) {
+          failedCount += 1
+
+          errorDetails.push(
+            `${orderLabel} : contrôle de sécurité incomplet.`
+          )
+
+          continue
+        }
+
+        try {
+          const result =
+            await colissimoDeliveryService.dispatchReservation({
+              reservationId,
+
+              expectedCorrelationId:
+                correlationId,
+
+              expectedPayloadHash:
+                payloadHash,
+            })
+
+          if (
+            result.success !== true ||
+            !result.externalId
+          ) {
+            throw new Error(
+              'Réponse Colissimo inattendue après création.'
+            )
+          }
+
+          successfulResults.push(
+            result
+          )
+        } catch (err) {
+          const apiError =
+            getApiErrorData(err)
+
+          /*
+           * Cas incertain :
+           * surtout ne pas renvoyer automatiquement.
+           */
+          if (
+            apiError?.remoteCreated === true ||
+            apiError?.shipmentState ===
+              'reconcile_required'
+          ) {
+            reconcileCount += 1
+
+            errorDetails.push(
+              apiError.externalId
+                ? `${orderLabel} : colis ${apiError.externalId} créé ou potentiellement créé, réconciliation nécessaire.`
+                : `${orderLabel} : résultat Colissimo incertain, réconciliation nécessaire.`
+            )
+
+            continue
+          }
+
+          /*
+           * Si le serveur coupe le LIVE pendant le batch,
+           * on arrête immédiatement les commandes restantes.
+           */
+          if (
+            apiError?.liveDispatchDisabled
+          ) {
+            setCapabilities(current =>
+              current
+                ? {
+                    ...current,
+                    liveDispatchEnabled:
+                      false,
+                  }
+                : current
+            )
+
+            notAttemptedCount =
+              items.length - index
+
+            errorDetails.push(
+              'L’envoi réel Colissimo a été désactivé par le serveur. Les commandes restantes n’ont pas été envoyées.'
+            )
+
+            break
+          }
+
+          if (
+            apiError?.liveDispatchNotAllowed
+          ) {
+            failedCount += 1
+
+            errorDetails.push(
+              `${orderLabel} : non autorisée dans l’allowlist Colissimo.`
+            )
+
+            continue
+          }
+
+          failedCount += 1
+
+          errorDetails.push(
+            `${orderLabel} : ${
+              apiError?.error ||
+              (
+                err instanceof Error
+                  ? err.message
+                  : 'Erreur lors de l’envoi Colissimo.'
+              )
+            }`
+          )
+        }
+      }
+
+      const successCount =
+        successfulResults.length
+
+      setDispatchResults(
+        successfulResults
+      )
+
+      /*
+       * On conserve l'ancien affichage détaillé
+       * lorsqu'un seul colis a été créé.
+       */
+      setDispatchResult(
+        successfulResults.length === 1
+          ? successfulResults[0]
+          : null
+      )
+
+      setReservationId(null)
+      setFinalPreview(null)
+      setShowConfirmation(false)
+
+      if (successCount > 0) {
+        setSuccessMsg(
+          `${successCount} commande(s) expédiée(s) avec succès via Colissimo.`
         )
       }
 
-      setDispatchResult(result)
-      setReservationId(null)
-      setShowConfirmation(false)
+      const problemSummary: string[] = []
 
-      setSuccessMsg(
-        `Colis Colissimo créé avec succès. N° de suivi : ${result.externalId}`
-      )
+      if (failedCount > 0) {
+        problemSummary.push(
+          `${failedCount} commande(s) non expédiée(s).`
+        )
+      }
 
-      await onDispatchSuccess?.()
+      if (reconcileCount > 0) {
+        problemSummary.push(
+          `${reconcileCount} commande(s) nécessite(nt) une réconciliation.`
+        )
+      }
+
+      if (notAttemptedCount > 0) {
+        problemSummary.push(
+          `${notAttemptedCount} commande(s) restante(s) n’ont pas été tentées.`
+        )
+      }
+
+      if (problemSummary.length > 0) {
+        const details =
+          errorDetails.length > 0
+            ? ` Détails : ${errorDetails
+                .slice(0, 5)
+                .join(' • ')}`
+            : ''
+
+        setErrorMsg(
+          `${problemSummary.join(' ')}${details}`
+        )
+      }
+
+      /*
+       * Une seule actualisation après tout le batch.
+       */
+      if (successCount > 0) {
+        await onDispatchSuccess?.()
+      }
     } catch (err) {
       const apiError =
         getApiErrorData(err)
-
-      if (
-        apiError?.remoteCreated === true ||
-        apiError?.shipmentState ===
-          'reconcile_required'
-      ) {
-        setReservationId(null)
-        setShowConfirmation(false)
-
-        setErrorMsg(
-          apiError.externalId
-            ? `Colissimo a créé le colis ${apiError.externalId}, mais Confirmed nécessite une réconciliation. Ne renvoyez pas cette commande.`
-            : 'Le résultat Colissimo est incertain. Une réconciliation est nécessaire. Ne relancez pas l’envoi.'
-        )
-
-        return
-      }
-
-      if (
-        apiError?.liveDispatchDisabled
-      ) {
-        setCapabilities(current =>
-          current
-            ? {
-                ...current,
-                liveDispatchEnabled:
-                  false,
-              }
-            : current
-        )
-
-        setShowConfirmation(false)
-
-        setErrorMsg(
-          'L’envoi réel Colissimo est désactivé par le serveur.'
-        )
-
-        return
-      }
-
-      if (
-        apiError?.liveDispatchNotAllowed
-      ) {
-        setErrorMsg(
-          'Cette commande n’est pas autorisée dans l’allowlist Colissimo.'
-        )
-        return
-      }
 
       setErrorMsg(
         apiError?.error ||
@@ -440,6 +633,7 @@ export default function ColissimoApiPanel({
       setBusyState(false)
     }
   }
+
 
   const renderPreviewItem = (
     item: ColissimoPreviewItem,
@@ -518,7 +712,7 @@ export default function ColissimoApiPanel({
         </div>
       )}
 
-      {!dispatchResult && (
+      {dispatchResults.length === 0 && (
         <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-slate-700">
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-white">
@@ -616,15 +810,15 @@ export default function ColissimoApiPanel({
               : 'Analyser pour Colissimo'}
           </button>
 
-          {orderIds.length !== 1 && (
-            <p className="text-xs text-amber-600 dark:text-amber-400">
-              L&apos;analyse peut couvrir plusieurs commandes, mais la préparation API et l&apos;envoi réel sont limités à une seule commande.
+          {orderIds.length > 1 && (
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              Les commandes seront contrôlées puis expédiées une par une afin de conserver les protections Colissimo pour chaque colis.
             </p>
           )}
         </div>
       )}
 
-      {preview && !dispatchResult && (
+      {preview && dispatchResults.length === 0 && (
         <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-slate-700">
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -696,28 +890,30 @@ export default function ColissimoApiPanel({
               )
           )}
 
-          {orderIds.length === 1 &&
+          {orderIds.length > 0 &&
             !finalPreview &&
+            dispatchResults.length === 0 &&
             invalidItems.length === 0 &&
             (
-              readyItems.length === 1 ||
-              reviewItems.length === 1
+              readyItems.length +
+              reviewItems.length >
+              0
             ) && (
               <button
                 type="button"
                 disabled={busy}
                 onClick={() =>
                   prepareReservation(
-                    reviewItems.length === 1
+                    reviewItems.length > 0
                   )
                 }
                 className="w-full rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy
                   ? 'Préparation en cours…'
-                  : reviewItems.length === 1
-                    ? 'Valider et préparer le colis'
-                    : 'Préparer le colis'}
+                  : reviewItems.length > 0
+                    ? `Valider et préparer ${readyItems.length + reviewItems.length} colis`
+                    : `Préparer ${readyItems.length} colis`}
               </button>
             )}
         </div>
@@ -725,7 +921,7 @@ export default function ColissimoApiPanel({
 
       {finalPreview &&
         finalItem &&
-        !dispatchResult && (
+        dispatchResults.length === 0 && (
           <div className="space-y-4 rounded-xl border border-gray-200 p-4 dark:border-slate-700">
             <div className="rounded-lg bg-green-500/10 p-3 text-sm text-green-700 dark:text-green-400">
               ✓ Réservation locale active
@@ -865,7 +1061,7 @@ export default function ColissimoApiPanel({
                 </p>
 
                 <p className="mt-1 text-xs text-gray-600 dark:text-slate-300">
-                  Cette action créera réellement le colis chez Colissimo.
+                  Cette action créera réellement {finalItems.length} colis chez Colissimo, un par un.
                 </p>
 
                 <div className="mt-4 flex gap-2">
@@ -891,7 +1087,7 @@ export default function ColissimoApiPanel({
                   >
                     {busy
                       ? 'Envoi en cours…'
-                      : 'Confirmer l’envoi réel'}
+                      : `Confirmer l’envoi réel (${finalItems.length} colis)`}
                   </button>
                 </div>
               </div>

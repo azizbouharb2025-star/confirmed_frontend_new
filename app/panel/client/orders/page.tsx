@@ -936,34 +936,47 @@ export default function ClientOrdersPage() {
   return (
     <DashboardLayout userRole="shop_owner">
       <div
-        className="-mt-2 flex h-[calc(100dvh-5.5rem)] min-h-0 w-full flex-col gap-2 overflow-hidden sm:h-[calc(100dvh-6.5rem)]"
+        className="-mt-2 flex min-h-[calc(100dvh-5.5rem)] w-full flex-col gap-2 overflow-visible sm:min-h-[calc(100dvh-6.5rem)]"
         style={{ zoom: 1.10 }}
       >
         {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-            {t('orders.title')}
-          </h1>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-900/80">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-xl font-bold tracking-tight text-gray-950 dark:text-white">
+                {t('orders.title')}
+              </h1>
+
+              <span className="rounded-full border border-[#ADFF2F]/25 bg-[#ADFF2F]/10 px-2.5 py-1 text-xs font-bold text-gray-800 dark:text-[#ADFF2F]">
+                {totalOrders} {totalOrders > 1 ? 'commandes' : 'commande'}
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+              Gérez, recherchez et suivez vos commandes depuis un seul espace.
+            </p>
+          </div>
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowLogisticsExportModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors shadow-lg shadow-purple-500/25"
+              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2 text-sm font-semibold text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
               Export Logistique
             </button>
+
             <button
               onClick={() => setShowManualModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25"
+              className="flex items-center gap-2 rounded-xl bg-[#ADFF2F] px-3.5 py-2 text-sm font-bold text-slate-950 shadow-sm shadow-[#ADFF2F]/20 transition-all hover:bg-[#9FEF2A] hover:shadow-md"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
               {t('orders.addManual')}
             </button>
-            <div className="text-xs text-gray-500 dark:text-slate-400">
-              {totalOrders} {totalOrders > 1 ? 'commandes' : 'commande'} au total
-            </div>
           </div>
         </div>
 
@@ -996,7 +1009,7 @@ export default function ClientOrdersPage() {
 
         {/* Orders Table - Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 3.1, 3.2 */}
         <OrdersTable
-          className="min-h-0 flex-1 [&_th]:py-1 [&_td]:py-1"
+          className="h-[520px] flex-none"
           orders={orders}
           userRole="seller"
           subscriptionPlan={subscriptionPlan}

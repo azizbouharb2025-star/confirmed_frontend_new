@@ -14,7 +14,8 @@ export const useLanguage = create<LanguageStore>()(
   persist(
     (set, get) => ({
       language: 'fr',
-      setLanguage: (lang: Language) => set({ language: lang }),
+      setLanguage: (lang: Language) =>
+        set({ language: lang === 'ar' ? 'fr' : lang }),
       t: (key: TranslationKey) => {
         const { language } = get()
         return (translations[language] as Record<string, string>)[key] || (translations.en as Record<string, string>)[key] || key
@@ -23,6 +24,19 @@ export const useLanguage = create<LanguageStore>()(
     {
       name: 'language-storage',
       storage: createJSONStorage(() => localStorage),
+      merge: (persistedState, currentState) => {
+        const persisted =
+          persistedState as Partial<LanguageStore> | undefined
+
+        return {
+          ...currentState,
+          ...persisted,
+          language:
+            persisted?.language === 'ar'
+              ? 'fr'
+              : persisted?.language || 'fr',
+        }
+      },
     }
   )
 )

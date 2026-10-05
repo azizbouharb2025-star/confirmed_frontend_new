@@ -13,6 +13,7 @@ import ShopWalletButton from '@/components/dashboard/ShopWalletButton'
 import { useAuth } from '@/hooks/useAuth'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useTheme } from '@/hooks/useTheme'
+import api from '@/lib/api'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -29,6 +30,108 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
   const profileRef = useRef<HTMLDivElement>(null)
 
   const isDark = theme === 'dark'
+
+  const handleLogout = async () => {
+    /*
+     * Seul l'opérateur possède actuellement
+     * une session de présence métier.
+     */
+    if (userRole === 'operator') {
+      try {
+        await api.post(
+          '/api/auth/logout',
+          {}
+        )
+      } catch {
+        /*
+         * Une panne réseau ne doit jamais empêcher
+         * l'utilisateur de se déconnecter localement.
+         */
+      }
+    }
+
+    logout()
+  }
+
+  /*
+   * Présence opérateur.
+   *
+   * Ce heartbeat indique uniquement que la session
+   * est encore connectée.
+   *
+   * Il NE compte PAS comme activité opérationnelle.
+   */
+  useEffect(() => {
+    if (userRole !== 'operator') {
+      return
+    }
+
+    let stopped = false
+
+    const sendPresence = async () => {
+      if (stopped) {
+        return
+      }
+
+      try {
+        await api.post(
+          '/api/operators/presence',
+          {}
+        )
+      } catch {
+        /*
+         * Une erreur temporaire de présence ne doit
+         * pas bloquer l'interface opérateur.
+         */
+      }
+    }
+
+    /*
+     * Heartbeat immédiat à l'ouverture
+     * d'une page opérateur.
+     */
+    void sendPresence()
+
+    const interval =
+      window.setInterval(
+        () => {
+          void sendPresence()
+        },
+        30000
+      )
+
+    /*
+     * Si le navigateur a fortement ralenti les timers
+     * pendant que l'onglet était masqué, on renvoie
+     * immédiatement une présence au retour.
+     */
+    const handleVisibilityChange = () => {
+      if (
+        document.visibilityState ===
+        'visible'
+      ) {
+        void sendPresence()
+      }
+    }
+
+    document.addEventListener(
+      'visibilitychange',
+      handleVisibilityChange
+    )
+
+    return () => {
+      stopped = true
+
+      window.clearInterval(
+        interval
+      )
+
+      document.removeEventListener(
+        'visibilitychange',
+        handleVisibilityChange
+      )
+    }
+  }, [userRole])
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -129,7 +232,7 @@ export default function DashboardLayout({ children, userRole }: DashboardLayoutP
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}>{t('nav.settings')}</button>
                     <div className={`my-1 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`} />
-                    <button onClick={logout} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors text-red-500 ${
+                    <button onClick={() => { void handleLogout() }} className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors text-red-500 ${
                       isDark ? 'hover:bg-slate-700' : 'hover:bg-red-50'
                     }`}>{t('common.signOut')}</button>
                   </div>

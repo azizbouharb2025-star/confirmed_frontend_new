@@ -1,11 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ServerIcon, CreditCardIcon } from '@heroicons/react/24/outline'
+import {
+  ServerIcon,
+  CreditCardIcon,
+  AdjustmentsHorizontalIcon
+} from '@heroicons/react/24/outline'
 import DashboardLayout from '@/components/dashboard/DashboardLayout'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useLanguage } from '@/hooks/useLanguage'
 import api from '@/lib/api'
+import toast from 'react-hot-toast'
+import BillingSettings from '@/components/wallet/BillingSettings'
 
 interface ServiceStatus {
   status?: string;
@@ -52,21 +58,66 @@ interface PlanData {
   limits?: Record<string, number>;
 }
 
+interface OperatorActivityConfig {
+  activeThresholdMinutes: number;
+  inactiveThresholdMinutes: number;
+  offlineThresholdSeconds: number;
+}
+
 export default function SystemSettings() {
   const { t } = useLanguage()
   const [health, setHealth] = useState<HealthData | null>(null)
   const [plans, setPlans] = useState<PlanData[]>([])
+
+  const [
+    operatorActivityConfig,
+    setOperatorActivityConfig
+  ] = useState<OperatorActivityConfig>({
+    activeThresholdMinutes: 5,
+    inactiveThresholdMinutes: 15,
+    offlineThresholdSeconds: 120
+  })
+
+  const [
+    savingOperatorConfig,
+    setSavingOperatorConfig
+  ] = useState(false)
+
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [healthRes, plansRes] = await Promise.all([
+        const [
+          healthRes,
+          plansRes,
+          operatorConfigRes
+        ] = await Promise.all([
           api.get('/health/detailed'),
-          api.get('/api/subscriptions/plans')
+          api.get('/api/subscriptions/plans'),
+          api.get(
+            '/api/admin/operator-activity-config'
+          )
         ])
+
         setHealth(healthRes.data)
         setPlans(plansRes.data)
+
+        if (operatorConfigRes.data?.config) {
+          setOperatorActivityConfig({
+            activeThresholdMinutes:
+              operatorConfigRes.data.config
+                .activeThresholdMinutes,
+
+            inactiveThresholdMinutes:
+              operatorConfigRes.data.config
+                .inactiveThresholdMinutes,
+
+            offlineThresholdSeconds:
+              operatorConfigRes.data.config
+                .offlineThresholdSeconds
+          })
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error)
       } finally {
@@ -75,6 +126,96 @@ export default function SystemSettings() {
     }
     fetchData()
   }, [])
+
+  const saveOperatorActivityConfig =
+    async () => {
+      const {
+        activeThresholdMinutes,
+        inactiveThresholdMinutes,
+        offlineThresholdSeconds
+      } = operatorActivityConfig
+
+      if (
+        activeThresholdMinutes < 1 ||
+        activeThresholdMinutes > 120
+      ) {
+        toast.error(
+          'Le seuil Actif doit être compris entre 1 et 120 minutes'
+        )
+        return
+      }
+
+      if (
+        inactiveThresholdMinutes < 2 ||
+        inactiveThresholdMinutes > 480
+      ) {
+        toast.error(
+          'Le seuil Inactif doit être compris entre 2 et 480 minutes'
+        )
+        return
+      }
+
+      if (
+        inactiveThresholdMinutes <=
+        activeThresholdMinutes
+      ) {
+        toast.error(
+          'Le seuil Inactif doit être supérieur au seuil Actif'
+        )
+        return
+      }
+
+      if (
+        offlineThresholdSeconds < 60 ||
+        offlineThresholdSeconds > 3600
+      ) {
+        toast.error(
+          'Le seuil Hors ligne doit être compris entre 60 et 3600 secondes'
+        )
+        return
+      }
+
+      setSavingOperatorConfig(true)
+
+      try {
+        const response =
+          await api.patch(
+            '/api/admin/operator-activity-config',
+            operatorActivityConfig
+          )
+
+        if (response.data?.config) {
+          setOperatorActivityConfig({
+            activeThresholdMinutes:
+              response.data.config
+                .activeThresholdMinutes,
+
+            inactiveThresholdMinutes:
+              response.data.config
+                .inactiveThresholdMinutes,
+
+            offlineThresholdSeconds:
+              response.data.config
+                .offlineThresholdSeconds
+          })
+        }
+
+        toast.success(
+          'Seuils opérateurs enregistrés'
+        )
+      } catch (error) {
+        console.error(
+          'Failed to save operator activity config:',
+          error
+        )
+
+        toast.error(
+          'Impossible d’enregistrer les seuils opérateurs'
+        )
+      } finally {
+        setSavingOperatorConfig(false)
+      }
+    }
 
   if (loading) {
     return (
@@ -98,6 +239,8 @@ export default function SystemSettings() {
             <h1 className="text-2xl font-semibold">{t('page.systemSettings')}</h1>
             <p className="text-sm dark:text-slate-400 light:text-gray-600 mt-1">{t('page.systemSettingsDesc')}</p>
           </div>
+
+          <BillingSettings />
 
           {health && (
             <div className="card p-6">
@@ -155,6 +298,157 @@ export default function SystemSettings() {
               )}
             </div>
           )}
+
+          <div className="card p-6">
+            <div className="flex flex-col gap-1 mb-5">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <AdjustmentsHorizontalIcon className="h-5 w-5" />
+                Présence et activité des opérateurs
+              </h2>
+
+              <p className="text-sm dark:text-slate-400 light:text-gray-600">
+                Configure les délais utilisés par l’administration pour distinguer un opérateur actif, disponible, inactif ou hors ligne.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Actif après une action
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={
+                      operatorActivityConfig
+                        .activeThresholdMinutes
+                    }
+                    onChange={event =>
+                      setOperatorActivityConfig(
+                        previous => ({
+                          ...previous,
+                          activeThresholdMinutes:
+                            Number(
+                              event.target.value
+                            )
+                        })
+                      )
+                    }
+                    className="w-full rounded-lg border px-3 py-2 pr-20 bg-transparent dark:border-slate-700 light:border-gray-300"
+                  />
+
+                  <span className="absolute right-3 top-2.5 text-sm text-slate-500">
+                    minutes
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Une action métier récente affiche l’opérateur comme Actif.
+                </p>
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Passage en Inactif
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={2}
+                    max={480}
+                    value={
+                      operatorActivityConfig
+                        .inactiveThresholdMinutes
+                    }
+                    onChange={event =>
+                      setOperatorActivityConfig(
+                        previous => ({
+                          ...previous,
+                          inactiveThresholdMinutes:
+                            Number(
+                              event.target.value
+                            )
+                        })
+                      )
+                    }
+                    className="w-full rounded-lg border px-3 py-2 pr-20 bg-transparent dark:border-slate-700 light:border-gray-300"
+                  />
+
+                  <span className="absolute right-3 top-2.5 text-sm text-slate-500">
+                    minutes
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  La session reste connectée, mais aucune action métier n’a été détectée.
+                </p>
+              </div>
+
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Passage Hors ligne
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={60}
+                    max={3600}
+                    value={
+                      operatorActivityConfig
+                        .offlineThresholdSeconds
+                    }
+                    onChange={event =>
+                      setOperatorActivityConfig(
+                        previous => ({
+                          ...previous,
+                          offlineThresholdSeconds:
+                            Number(
+                              event.target.value
+                            )
+                        })
+                      )
+                    }
+                    className="w-full rounded-lg border px-3 py-2 pr-20 bg-transparent dark:border-slate-700 light:border-gray-300"
+                  />
+
+                  <span className="absolute right-3 top-2.5 text-sm text-slate-500">
+                    secondes
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  Sans heartbeat récent, la session est considérée hors ligne.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4 dark:border-slate-700 light:border-gray-200">
+              <p className="text-xs text-slate-500">
+                Valeurs par défaut : Actif 5 min · Inactif 15 min · Hors ligne 120 s
+              </p>
+
+              <button
+                type="button"
+                onClick={
+                  saveOperatorActivityConfig
+                }
+                disabled={savingOperatorConfig}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {savingOperatorConfig
+                  ? 'Enregistrement...'
+                  : 'Enregistrer les seuils'}
+              </button>
+            </div>
+          </div>
+
 
           <div className="card p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">

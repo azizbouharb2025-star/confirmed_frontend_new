@@ -363,10 +363,10 @@ export default function OrderFilters({
 
   // Base input styles
   const inputBaseStyles = clsx(
-    'w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg',
-    'text-gray-900 dark:text-white text-sm',
-    'focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]/50 focus:border-[#ADFF2F]/50',
-    'transition-all duration-200'
+    'w-full rounded-xl border border-slate-200/90 bg-white/90 px-3 py-2 text-sm shadow-[0_2px_8px_rgba(15,23,42,0.025)] dark:border-slate-700 dark:bg-slate-900/90',
+    'text-gray-900 dark:text-white',
+    'focus:outline-none focus:ring-2 focus:ring-[#ADFF2F]/30 focus:border-[#32CD32]/60',
+    'hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200'
   )
   
   const selectBaseStyles = clsx(
@@ -375,12 +375,17 @@ export default function OrderFilters({
   )
 
   return (
-    <div className={clsx('space-y-2', className)}>
+    <div
+      className={clsx(
+        'relative space-y-2.5 overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-[#00BFFF]/[0.025] px-3.5 py-3 shadow-[0_8px_28px_rgba(15,23,42,0.045)] dark:border-slate-700/80 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/15',
+        className
+      )}
+    >
       {/* Main filters row */}
-      <div className="flex flex-wrap gap-2 items-end">
+      <div className="flex flex-wrap items-end gap-1.5">
         {/* Search input with debounce */}
         <div className="flex-1 min-w-[200px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.search')}
           </label>
           <div className="relative">
@@ -400,7 +405,7 @@ export default function OrderFilters({
         
         {/* Status dropdown */}
         <div className="w-[180px]">
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.status')}
           </label>
           <select
@@ -430,7 +435,7 @@ export default function OrderFilters({
         {/* Date range picker */}
         <div className="flex gap-2 items-end">
           <div className="w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
               {t('orders.fromDate')}
             </label>
             <div className="relative">
@@ -444,7 +449,7 @@ export default function OrderFilters({
             </div>
           </div>
           <div className="w-[150px]">
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
               {t('orders.toDate')}
             </label>
             <div className="relative">
@@ -478,15 +483,15 @@ export default function OrderFilters({
       </div>
 
       {/* AI filters */}
-      <div className="relative grid grid-cols-1 gap-2 rounded-xl border border-gray-200/70 bg-gray-50/30 px-3 pb-1.5 pt-3 dark:border-slate-700/70 dark:bg-slate-900/20 lg:grid-cols-[1.2fr_1fr_1fr]">
-        <div className="absolute -top-2.5 left-3 flex items-center gap-1 rounded-full border border-[#ADFF2F]/20 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:bg-slate-900 dark:text-slate-400">
+      <div className="relative grid grid-cols-1 gap-4 rounded-2xl border border-[#ADFF2F]/25 bg-gradient-to-r from-[#ADFF2F]/[0.055] via-white/70 to-[#00BFFF]/[0.045] px-4 pb-3.5 pt-5 shadow-inner dark:border-[#ADFF2F]/15 dark:from-[#ADFF2F]/[0.035] dark:via-slate-900/80 dark:to-[#00BFFF]/[0.025] lg:grid-cols-[1.2fr_1fr_1fr]">
+        <div className="absolute -top-2.5 left-4 flex items-center gap-1.5 rounded-full border border-[#ADFF2F]/40 bg-white px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-slate-600 shadow-[0_4px_12px_rgba(173,255,47,0.12)] dark:bg-slate-900 dark:text-slate-300">
           <span className="text-[#ADFF2F]">✦</span>
           Filtres IA
         </div>
 
         {/* AI Decision */}
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.aiDecision')}
           </div>
 
@@ -508,9 +513,9 @@ export default function OrderFilters({
                     )
                   }
                   className={clsx(
-                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-all duration-200',
                     active
-                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      ? 'border-[#ADFF2F] bg-gradient-to-r from-[#ADFF2F] to-[#6FE52D] text-slate-950 shadow-[0_4px_12px_rgba(173,255,47,0.18)]'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                   )}
                 >
@@ -523,7 +528,7 @@ export default function OrderFilters({
 
         {/* AI Confidence */}
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.aiConfidenceLevel')}
           </div>
 
@@ -545,9 +550,9 @@ export default function OrderFilters({
                   type="button"
                   onClick={() => handleAiScoreRangeChange(min, max)}
                   className={clsx(
-                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-all duration-200',
                     active
-                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      ? 'border-[#ADFF2F] bg-gradient-to-r from-[#ADFF2F] to-[#6FE52D] text-slate-950 shadow-[0_4px_12px_rgba(173,255,47,0.18)]'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                   )}
                 >
@@ -560,7 +565,7 @@ export default function OrderFilters({
 
         {/* Risk Level */}
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {t('orders.riskLevel')}
           </div>
 
@@ -589,9 +594,9 @@ export default function OrderFilters({
                     )
                   }
                   className={clsx(
-                    'rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors',
+                    'rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-all duration-200',
                     active
-                      ? 'border-[#ADFF2F]/70 bg-[#ADFF2F]/15 text-gray-900 shadow-sm dark:text-white'
+                      ? 'border-[#ADFF2F] bg-gradient-to-r from-[#ADFF2F] to-[#6FE52D] text-slate-950 shadow-[0_4px_12px_rgba(173,255,47,0.18)]'
                       : 'border-gray-300/80 bg-white/70 text-gray-600 hover:border-[#ADFF2F]/60 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/70 dark:text-slate-300 dark:hover:bg-slate-800'
                   )}
                 >

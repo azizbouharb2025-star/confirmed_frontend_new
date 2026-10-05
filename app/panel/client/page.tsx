@@ -133,11 +133,27 @@ export default function ClientDashboard() {
   return (
     <ProtectedRoute allowedRoles={['shop_owner']}>
       <DashboardLayout userRole="shop_owner">
-        <div className="space-y-5">
+        <div className="relative isolate space-y-6">
+
+          {/* Ambiance visuelle Confirmed - purement décorative */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] overflow-hidden rounded-[32px]"
+            aria-hidden="true"
+          >
+            <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#ADFF2F]/10 blur-3xl" />
+            <div className="absolute right-[8%] top-0 h-80 w-80 rounded-full bg-[#00BFFF]/10 blur-3xl" />
+            <div className="absolute left-[42%] top-28 h-56 w-56 rounded-full bg-[#32CD32]/[0.07] blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#ADFF2F]/[0.035] via-transparent to-[#00BFFF]/[0.045]" />
+          </div>
+
           {/* Header */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold">
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/70 bg-white/80 px-5 py-4 shadow-[0_8px_30px_rgba(15,23,42,0.04)] backdrop-blur-xl dark:border-slate-700/70 dark:bg-slate-900/75 lg:flex-row lg:items-end lg:justify-between">
+            <div className="relative pl-4">
+              <span
+                className="absolute bottom-0 left-0 top-0 w-1 rounded-full bg-gradient-to-b from-[#ADFF2F] via-[#32CD32] to-[#00BFFF]"
+                aria-hidden="true"
+              />
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
                 {t('dashboard.client')}
               </h1>
 
@@ -147,7 +163,7 @@ export default function ClientDashboard() {
             </div>
 
             <div
-              className="inline-flex w-fit flex-wrap gap-1 rounded-xl border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
+              className="inline-flex w-fit flex-wrap gap-1 rounded-2xl border border-slate-200/80 bg-white/90 p-1.5 shadow-sm backdrop-blur-xl dark:border-slate-700 dark:bg-slate-800/90"
               role="group"
               aria-label={t('dashboard.period')}
             >
@@ -163,10 +179,10 @@ export default function ClientDashboard() {
                       setSelectedPeriod(option.value)
                     }
                     aria-pressed={active}
-                    className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
                       active
-                        ? 'bg-[#ADFF2F] text-slate-950'
-                        : 'text-gray-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                        ? 'bg-gradient-to-r from-[#ADFF2F] to-[#6FE52D] text-slate-950 shadow-[0_5px_16px_rgba(173,255,47,0.28)]'
+                        : 'text-gray-600 hover:bg-[#00BFFF]/[0.06] hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
                     {option.label}
@@ -200,6 +216,7 @@ export default function ClientDashboard() {
                 }
                 change={dashboardKpis?.ordersReceived.change ?? undefined}
                 icon={<ShoppingBagIcon className="h-6 w-6" />}
+                accent="cyan"
                 isLoading={isLoading}
               />
 
@@ -212,6 +229,7 @@ export default function ClientDashboard() {
                 }
                 change={dashboardKpis?.ordersConfirmed.change ?? undefined}
                 icon={<CheckCircleIcon className="h-6 w-6" />}
+                accent="green"
                 isLoading={isLoading}
               />
 
@@ -226,6 +244,7 @@ export default function ClientDashboard() {
                 suffix="%"
                 decimals={1}
                 icon={<ChartBarIcon className="h-6 w-6" />}
+                accent="lime"
                 isLoading={isLoading}
               />
 
@@ -238,6 +257,7 @@ export default function ClientDashboard() {
                 decimals={1}
                 secondaryLabel={aiQualityLabel}
                 icon={<SparklesIcon className="h-6 w-6" />}
+                accent="cyan"
                 isLoading={isLoading}
               />
 
@@ -249,12 +269,16 @@ export default function ClientDashboard() {
                 )}
                 change={dashboardKpis?.potentialRevenue.change ?? undefined}
                 icon={<BanknotesIcon className="h-6 w-6" />}
+                accent="green"
                 isLoading={isLoading}
               />
           </div>
 
           {/* Recent Orders Widget - Requirements: 1.2 */}
-          <RecentOrdersWidget maxOrders={5} />
+          <RecentOrdersWidget
+            maxOrders={5}
+            className="!overflow-hidden !rounded-2xl !border !border-slate-200/80 !bg-gradient-to-br !from-white !via-white !to-[#00BFFF]/[0.025] !shadow-[0_14px_42px_rgba(15,23,42,0.065)] !ring-1 !ring-[#ADFF2F]/10 !backdrop-blur-xl dark:!border-slate-700/80 dark:!from-slate-900 dark:!via-slate-900 dark:!to-sky-950/20"
+          />
 
           {/* Cancelled Orders Widget - Requirements: 9.1, 9.2, 9.6 */}
           {SHOW_CANCELLED_ORDERS_WIDGET && <CancelledOrdersWidget />}

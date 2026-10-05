@@ -56,32 +56,53 @@ export function LockedWidget({
   if (previewOnly) {
     return (
       <div
-        className="card min-h-[220px] cursor-default select-none p-6"
+        className="group relative min-h-[220px] cursor-default select-none overflow-hidden rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-[#00BFFF]/[0.035] p-6 shadow-[0_10px_35px_rgba(15,23,42,0.055)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#ADFF2F]/35 hover:shadow-[0_16px_40px_rgba(15,23,42,0.09)] dark:border-slate-700/80 dark:from-slate-900 dark:via-slate-900 dark:to-[#00BFFF]/[0.045]"
         aria-disabled="true"
         data-testid="locked-widget-preview"
       >
-        <div className="flex h-full min-h-[172px] flex-col">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ADFF2F]/20 bg-[#ADFF2F]/10">
-              <LockClosedIcon className="h-5 w-5 text-[#ADFF2F]" />
+        <div
+          className="pointer-events-none absolute inset-x-10 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#ADFF2F] to-transparent opacity-80"
+          aria-hidden="true"
+        />
+
+        <div
+          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[#00BFFF]/[0.08] blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div
+          className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-[#32CD32]/[0.07] blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 flex h-full min-h-[172px] flex-col">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#ADFF2F]/30 bg-gradient-to-br from-[#ADFF2F]/20 to-[#32CD32]/[0.08] shadow-[0_6px_18px_rgba(173,255,47,0.16)] ring-1 ring-[#ADFF2F]/10 transition-transform duration-300 group-hover:scale-105">
+              <LockClosedIcon className="h-5 w-5 text-[#67b900] dark:text-[#ADFF2F]" />
             </div>
 
-            <span className="inline-flex shrink-0 items-center rounded-full border border-[#ADFF2F]/30 bg-[#ADFF2F]/10 px-2.5 py-1 text-[11px] font-semibold text-[#8fdc00]">
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#ADFF2F]/35 bg-gradient-to-r from-[#ADFF2F]/15 to-[#32CD32]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.04em] text-[#67b900] shadow-sm dark:text-[#ADFF2F]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#32CD32] shadow-[0_0_8px_rgba(50,205,50,0.7)]" />
               {previewLabel}
             </span>
           </div>
 
           <div className="flex flex-1 flex-col">
-            <h3 className="mb-2 text-base font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-[17px] font-bold tracking-tight text-slate-950 dark:text-white">
               {featureName}
             </h3>
 
-            <p className="mb-5 text-sm leading-6 text-gray-600 dark:text-slate-400">
+            <p className="mb-5 max-w-[95%] text-sm leading-6 text-slate-600 dark:text-slate-400">
               {featureDescription}
             </p>
 
-            <div className="mt-auto border-t border-gray-200 pt-3 text-xs font-medium text-gray-500 dark:border-slate-800 dark:text-slate-500">
-              Fonctionnalité premium CONFIRMED
+            <div className="mt-auto border-t border-slate-200/80 pt-3 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.02em] text-slate-500 dark:text-slate-400">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#00BFFF]/10 text-[#00A6E6]">
+                  ✦
+                </span>
+                <span>Fonctionnalité premium CONFIRMED</span>
+              </div>
             </div>
           </div>
         </div>

@@ -8,9 +8,8 @@ import { useTheme } from '@/hooks/useTheme'
 import { Language } from '@/lib/i18n'
 
 const languages = [
-  { code: 'en' as Language, name: 'English', flag: '🇺🇸' },
   { code: 'fr' as Language, name: 'Français', flag: '🇫🇷' },
-  { code: 'ar' as Language, name: 'العربية', flag: '🇹🇳' }
+  { code: 'en' as Language, name: 'English', flag: '🇺🇸' }
 ]
 
 export default function LanguageSelector() {
@@ -75,7 +74,6 @@ export default function LanguageSelector() {
                         ? 'text-white hover:bg-white/10'
                         : 'text-gray-900 hover:bg-gray-100'
                   }`}
-                  dir={lang.code === 'ar' ? 'rtl' : 'ltr'}
                 >
                   <span className="text-lg">{lang.flag}</span>
                   <span>{lang.name}</span>
